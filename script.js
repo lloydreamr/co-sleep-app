@@ -241,6 +241,8 @@ class CoSleepApp {
     }
 
     async setupPeerConnection() {
+        console.log('🔧 Setting up peer connection...');
+        
         this.peerConnection = new RTCPeerConnection({
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -256,35 +258,58 @@ class CoSleepApp {
             sdpSemantics: 'unified-plan'
         });
 
+        console.log('✅ RTCPeerConnection created');
+
         // Add local stream
-        this.localStream.getTracks().forEach(track => {
-            this.peerConnection.addTrack(track, this.localStream);
-        });
+        if (this.localStream) {
+            console.log('🎤 Adding local stream tracks...');
+            this.localStream.getTracks().forEach(track => {
+                console.log('Adding track:', track.kind, track.id);
+                this.peerConnection.addTrack(track, this.localStream);
+            });
+        } else {
+            console.error('❌ No local stream available!');
+            this.handleConnectionFailure();
+            return;
+        }
 
         // Handle incoming tracks
         this.peerConnection.ontrack = (event) => {
-            console.log('Received remote stream');
+            console.log('📡 Received remote stream:', event.streams.length, 'streams');
             this.remoteStream = event.streams[0];
             this.playRemoteAudio();
         };
 
         // Handle ICE candidates
         this.peerConnection.onicecandidate = (event) => {
-            console.log("ICE candidate event:", event.candidate ? "candidate" : "null");
             if (event.candidate) {
-                console.log('Sending ICE candidate');
+                console.log('🧊 ICE candidate generated:', event.candidate.type);
                 this.socket.emit('ice-candidate', {
                     candidate: event.candidate,
                     target: this.partnerId
                 });
+            } else {
+                console.log('✅ ICE candidate gathering complete');
+            }
+        };
+
+        // Handle ICE connection state changes
+        this.peerConnection.oniceconnectionstatechange = () => {
+            console.log('🧊 ICE connection state:', this.peerConnection.iceConnectionState);
+            
+            if (this.peerConnection.iceConnectionState === 'connected') {
+                console.log('✅ ICE connection established!');
+            } else if (this.peerConnection.iceConnectionState === 'failed') {
+                console.log('❌ ICE connection failed');
+                this.handleConnectionFailure();
             }
         };
 
         // Handle connection state changes
         this.peerConnection.onconnectionstatechange = () => {
-            console.log("Connection state changed:", this.peerConnection.connectionState);
-            console.log("ICE connection state:", this.peerConnection.iceConnectionState);
-            console.log("Signaling state:", this.peerConnection.signalingState);
+            console.log('🔗 Connection state changed:', this.peerConnection.connectionState);
+            console.log('🧊 ICE connection state:', this.peerConnection.iceConnectionState);
+            console.log('📡 Signaling state:', this.peerConnection.signalingState);
             
             if (this.peerConnection.connectionState === 'connected') {
                 console.log('✅ WebRTC connection established!');
@@ -299,64 +324,129 @@ class CoSleepApp {
             } else if (this.peerConnection.connectionState === 'failed') {
                 console.log('❌ WebRTC connection failed');
                 this.handleConnectionFailure();
+            } else if (this.peerConnection.connectionState === 'disconnected') {
+                console.log('🔌 WebRTC connection disconnected');
+                this.handleConnectionFailure();
+            }
+        };
+
+        // Handle signaling state changes
+        this.peerConnection.onsignalingstatechange = () => {
+            console.log('📡 Signaling state changed:', this.peerConnection.signalingState);
+            
+            // Process any queued ICE candidates when remote description is set
+            if (this.peerConnection.signalingState === 'stable' && this.pendingIceCandidates) {
+                this.processQueuedIceCandidates();
             }
         };
 
         // Create and send offer
         try {
-            const offer = await this.peerConnection.createOffer();
+            console.log('📤 Creating offer...');
+            const offer = await this.peerConnection.createOffer({
+                offerToReceiveAudio: true,
+                offerToReceiveVideo: false
+            });
+            
+            console.log('📤 Setting local description...');
             await this.peerConnection.setLocalDescription(offer);
             
-            console.log('Sending offer to partner');
+            console.log('📤 Sending offer to partner:', this.partnerId);
             this.socket.emit('offer', {
                 offer: offer,
                 target: this.partnerId
             });
         } catch (error) {
-            console.error('Error creating offer:', error);
+            console.error('❌ Error creating offer:', error);
             this.handleConnectionFailure();
         }
     }
 
+    async processQueuedIceCandidates() {
+        if (!this.pendingIceCandidates || this.pendingIceCandidates.length === 0) {
+            return;
+        }
+        
+        console.log(`📥 Processing ${this.pendingIceCandidates.length} queued ICE candidates...`);
+        
+        for (const candidate of this.pendingIceCandidates) {
+            try {
+                await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                console.log('✅ Queued ICE candidate added successfully');
+            } catch (error) {
+                console.error('❌ Error adding queued ICE candidate:', error);
+            }
+        }
+        
+        this.pendingIceCandidates = [];
+    }
+
     async handleOffer(offer, from) {
-        console.log('Handling offer from:', from);
+        console.log('📥 Handling offer from:', from);
         
         if (!this.peerConnection) {
+            console.log('🔧 Setting up peer connection for offer...');
             await this.setupPeerConnection();
         }
         
         try {
+            console.log('📥 Setting remote description (offer)...');
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
             
-            const answer = await this.peerConnection.createAnswer();
+            console.log('📤 Creating answer...');
+            const answer = await this.peerConnection.createAnswer({
+                offerToReceiveAudio: true,
+                offerToReceiveVideo: false
+            });
+            
+            console.log('📤 Setting local description (answer)...');
             await this.peerConnection.setLocalDescription(answer);
             
-            console.log('Sending answer to partner');
+            console.log('📤 Sending answer to partner:', from);
             this.socket.emit('answer', {
                 answer: answer,
                 target: from
             });
         } catch (error) {
-            console.error('Error handling offer:', error);
+            console.error('❌ Error handling offer:', error);
             this.handleConnectionFailure();
         }
     }
 
     async handleAnswer(answer) {
-        console.log('Handling answer');
+        console.log('📥 Handling answer...');
         try {
+            console.log('📥 Setting remote description (answer)...');
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            console.log('✅ Answer processed successfully');
+            
+            // Process any queued ICE candidates
+            if (this.pendingIceCandidates) {
+                this.processQueuedIceCandidates();
+            }
         } catch (error) {
-            console.error('Error handling answer:', error);
+            console.error('❌ Error handling answer:', error);
+            this.handleConnectionFailure();
         }
     }
 
     async handleIceCandidate(candidate) {
-        console.log('Handling ICE candidate');
+        console.log('📥 Handling ICE candidate...');
         try {
-            await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            if (this.peerConnection && this.peerConnection.remoteDescription) {
+                console.log('📥 Adding ICE candidate...');
+                await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                console.log('✅ ICE candidate added successfully');
+            } else {
+                console.log('⏳ Queuing ICE candidate (no remote description yet)');
+                // Queue the candidate if remote description isn't set yet
+                if (!this.pendingIceCandidates) {
+                    this.pendingIceCandidates = [];
+                }
+                this.pendingIceCandidates.push(candidate);
+            }
         } catch (error) {
-            console.error('Error handling ICE candidate:', error);
+            console.error('❌ Error handling ICE candidate:', error);
         }
     }
 
