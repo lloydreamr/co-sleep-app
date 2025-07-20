@@ -291,6 +291,18 @@ class CoSleepApp {
         if (this.statusText && this.isInCall) {
             console.log('📊 Updating status text to:', text);
             this.statusText.textContent = text;
+            
+            // Force a re-render by triggering a small DOM change
+            this.statusText.style.display = 'none';
+            setTimeout(() => {
+                this.statusText.style.display = 'inline-block';
+            }, 10);
+        } else {
+            console.log('⚠️ Cannot update status text:', {
+                statusTextExists: !!this.statusText,
+                isInCall: this.isInCall,
+                requestedText: text
+            });
         }
     }
 
@@ -417,6 +429,9 @@ class CoSleepApp {
                     clearTimeout(this.connectionTimeout);
                     this.connectionTimeout = null;
                 }
+                
+                // Set up periodic status check
+                this.startStatusCheck();
             } else if (this.peerConnection.connectionState === 'failed') {
                 console.log('❌ WebRTC connection failed');
                 this.updateStatusText('Connection failed');
@@ -574,7 +589,10 @@ class CoSleepApp {
 
     handleConnectionFailure() {
         console.log('Handling connection failure...');
-        this.statusText.textContent = 'Connection failed';
+        this.updateStatusText('Connection failed');
+        
+        // Stop status check
+        this.stopStatusCheck();
         
         // Clear connection timeout
         if (this.connectionTimeout) {
@@ -605,6 +623,9 @@ class CoSleepApp {
         this.isInCall = false;
         this.partnerId = null;
         this.isInitiator = null;
+        
+        // Stop status check
+        this.stopStatusCheck();
         
         // Clear connection timeout
         if (this.connectionTimeout) {
@@ -813,6 +834,9 @@ class CoSleepApp {
     endCall() {
         this.isInCall = false;
         
+        // Stop status check
+        this.stopStatusCheck();
+        
         // Notify server about call end
         if (this.socket) {
             this.socket.emit('end-call');
@@ -852,6 +876,59 @@ class CoSleepApp {
         
         // Reinitialize microphone access
         this.initializeWebRTC();
+    }
+
+    startStatusCheck() {
+        // Clear any existing status check
+        if (this.statusCheckInterval) {
+            clearInterval(this.statusCheckInterval);
+        }
+        
+        // Check status every 2 seconds
+        this.statusCheckInterval = setInterval(() => {
+            if (!this.isInCall || !this.peerConnection) {
+                this.stopStatusCheck();
+                return;
+            }
+            
+            const currentStatus = this.statusText?.textContent;
+            const expectedStatus = this.getExpectedStatus();
+            
+            if (currentStatus !== expectedStatus) {
+                console.log('🔄 Status mismatch detected:', {
+                    current: currentStatus,
+                    expected: expectedStatus
+                });
+                this.updateStatusText(expectedStatus);
+            }
+        }, 2000);
+    }
+    
+    stopStatusCheck() {
+        if (this.statusCheckInterval) {
+            clearInterval(this.statusCheckInterval);
+            this.statusCheckInterval = null;
+        }
+    }
+    
+    getExpectedStatus() {
+        if (!this.peerConnection) {
+            return 'Setting up...';
+        }
+        
+        if (this.peerConnection.connectionState === 'connected') {
+            return 'Connected';
+        } else if (this.peerConnection.connectionState === 'connecting') {
+            return 'Connecting...';
+        } else if (this.peerConnection.connectionState === 'failed') {
+            return 'Connection failed';
+        } else if (this.peerConnection.connectionState === 'disconnected') {
+            return 'Disconnected';
+        } else if (this.peerConnection.connectionState === 'new') {
+            return 'Setting up...';
+        }
+        
+        return 'Setting up...';
     }
 
     // Handle page unload
