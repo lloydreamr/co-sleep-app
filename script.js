@@ -265,7 +265,7 @@ class CoSleepApp {
         this.syncMuteState();
         
         // Update status to show connecting
-        this.statusText.textContent = 'Connecting...';
+        this.statusText.textContent = 'Setting up connection...';
         
         try {
             if (this.isInitiator) {
@@ -274,7 +274,7 @@ class CoSleepApp {
                 await this.setupPeerConnection();
             } else {
                 console.log('⏳ Waiting for offer as responder...');
-                this.statusText.textContent = 'Waiting...';
+                this.statusText.textContent = 'Waiting for partner...';
                 // Don't create peer connection yet - wait for offer
             }
         } catch (error) {
@@ -394,12 +394,18 @@ class CoSleepApp {
                 }
             } else if (this.peerConnection.connectionState === 'failed') {
                 console.log('❌ WebRTC connection failed');
+                this.statusText.textContent = 'Connection failed';
                 this.handleConnectionFailure();
             } else if (this.peerConnection.connectionState === 'disconnected') {
                 console.log('🔌 WebRTC connection disconnected');
+                this.statusText.textContent = 'Disconnected';
                 this.handleConnectionFailure();
             } else if (this.peerConnection.connectionState === 'connecting') {
                 console.log('🔄 WebRTC connecting...');
+                this.statusText.textContent = 'Connecting...';
+            } else if (this.peerConnection.connectionState === 'new') {
+                console.log('🆕 WebRTC connection new');
+                this.statusText.textContent = 'Setting up...';
             }
         };
 
