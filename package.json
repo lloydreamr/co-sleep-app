@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "start:https": "echo "HTTPS is handled by Railway automatically"",
-    "dev:https": "echo "Use npm run dev for local development"",
+    "start:https": "echo \"HTTPS is handled by Railway automatically\"",
+    "dev:https": "echo \"Use npm run dev for local development\"",
     "qr": "echo \"Your app is live at: https://co-sleep-app-production.up.railway.app\""
   },
   "keywords": ["co-sleep", "sleep", "presence", "voice", "webrtc"],
@@ -21,4 +21,4 @@
   "devDependencies": {
     "nodemon": "^3.0.1"
   }
-} 
+}
