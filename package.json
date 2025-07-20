@@ -5,10 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "start:https": "echo \"HTTPS is handled by Railway automatically\"",
-    "dev:https": "echo \"Use npm run dev for local development\"",
-    "qr": "echo \"Your app is live at: https://co-sleep-app-production.up.railway.app\""
+    "dev": "nodemon server.js"
   },
   "keywords": ["co-sleep", "sleep", "presence", "voice", "webrtc"],
   "author": "Co-Sleep Team",
