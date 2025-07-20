@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
@@ -40,6 +41,7 @@
 
                 <div class="action-section">
                     <button id="connect-btn" class="primary-button">
+                        <i class="fas fa-play"></i>
                         <span class="button-text">Start</span>
                         <div class="button-ripple"></div>
                     </button>
@@ -62,7 +64,10 @@
                         <p>Looking for peaceful presence</p>
                     </div>
                     
-                    <button id="cancel-btn" class="secondary-button">Cancel</button>
+                    <button id="cancel-btn" class="secondary-button">
+                        <i class="fas fa-times"></i>
+                        <span>Cancel</span>
+                    </button>
                 </div>
             </div>
 
@@ -79,11 +84,15 @@
                     
                     <div class="call-controls">
                         <button id="mute-btn" class="control-button">
-                            <span class="control-text">Mute</span>
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        
+                        <button id="skip-btn" class="control-button skip">
+                            <i class="fas fa-forward"></i>
                         </button>
                         
                         <button id="end-call-btn" class="control-button end-call">
-                            <span class="control-text">End</span>
+                            <i class="fas fa-phone-slash"></i>
                         </button>
                     </div>
                 </div>

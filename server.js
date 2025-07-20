@@ -81,6 +81,32 @@ io.on('connection', (socket) => {
         });
     });
 
+    // Handle skip partner
+    socket.on('skip-partner', () => {
+        console.log(`User ${socket.id} skipped partner`);
+        
+        const connection = activeConnections.get(socket.id);
+        if (connection) {
+            const partnerId = connection.partnerId;
+            activeConnections.delete(socket.id);
+            activeConnections.delete(partnerId);
+            
+            // Notify partner about skip
+            socket.to(partnerId).emit('partner-skipped');
+            
+            // Return both users to queue
+            if (io.sockets.sockets.has(partnerId)) {
+                waitingQueue.push(partnerId);
+                io.to(partnerId).emit('return-to-queue');
+            }
+            
+            if (io.sockets.sockets.has(socket.id)) {
+                waitingQueue.push(socket.id);
+                socket.emit('return-to-queue');
+            }
+        }
+    });
+
     // Handle disconnection
     socket.on('disconnect', () => {
         console.log(`User disconnected: ${socket.id}`);
