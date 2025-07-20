@@ -275,6 +275,7 @@ class CoSleepApp {
             } else {
                 console.log('⏳ Waiting for offer as responder...');
                 this.statusText.textContent = 'Waiting...';
+                // Don't create peer connection yet - wait for offer
             }
         } catch (error) {
             console.error('❌ Error setting up connection:', error);
@@ -284,6 +285,12 @@ class CoSleepApp {
 
     async setupPeerConnection() {
         console.log('🔧 Setting up peer connection...');
+        
+        // Don't create if already exists
+        if (this.peerConnection) {
+            console.log('⚠️ Peer connection already exists, skipping setup');
+            return;
+        }
         
         this.peerConnection = new RTCPeerConnection({
             iceServers: [
@@ -406,25 +413,27 @@ class CoSleepApp {
             }
         };
 
-        // Create and send offer
-        try {
-            console.log('📤 Creating offer...');
-            const offer = await this.peerConnection.createOffer({
-                offerToReceiveAudio: true,
-                offerToReceiveVideo: false
-            });
-            
-            console.log('📤 Setting local description...');
-            await this.peerConnection.setLocalDescription(offer);
-            
-            console.log('📤 Sending offer to partner:', this.partnerId);
-            this.socket.emit('offer', {
-                offer: offer,
-                target: this.partnerId
-            });
-        } catch (error) {
-            console.error('❌ Error creating offer:', error);
-            this.handleConnectionFailure();
+        // Only create and send offer if we're the initiator
+        if (this.isInitiator) {
+            try {
+                console.log('📤 Creating offer...');
+                const offer = await this.peerConnection.createOffer({
+                    offerToReceiveAudio: true,
+                    offerToReceiveVideo: false
+                });
+                
+                console.log('📤 Setting local description...');
+                await this.peerConnection.setLocalDescription(offer);
+                
+                console.log('📤 Sending offer to partner:', this.partnerId);
+                this.socket.emit('offer', {
+                    offer: offer,
+                    target: this.partnerId
+                });
+            } catch (error) {
+                console.error('❌ Error creating offer:', error);
+                this.handleConnectionFailure();
+            }
         }
     }
 
@@ -450,29 +459,40 @@ class CoSleepApp {
     async handleOffer(offer, from) {
         console.log('📥 Handling offer from:', from);
         
+        // Only handle offer if we're the responder
+        if (this.isInitiator) {
+            console.log('⚠️ Ignoring offer - we are the initiator');
+            return;
+        }
+        
         if (!this.peerConnection) {
             console.log('🔧 Setting up peer connection for offer...');
             await this.setupPeerConnection();
         }
         
         try {
-            console.log('📥 Setting remote description (offer)...');
-            await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-            
-            console.log('📤 Creating answer...');
-            const answer = await this.peerConnection.createAnswer({
-                offerToReceiveAudio: true,
-                offerToReceiveVideo: false
-            });
-            
-            console.log('📤 Setting local description (answer)...');
-            await this.peerConnection.setLocalDescription(answer);
-            
-            console.log('📤 Sending answer to partner:', from);
-            this.socket.emit('answer', {
-                answer: answer,
-                target: from
-            });
+            // Check if we're in the right state to set remote description
+            if (this.peerConnection.signalingState === 'stable') {
+                console.log('📥 Setting remote description (offer)...');
+                await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                
+                console.log('📤 Creating answer...');
+                const answer = await this.peerConnection.createAnswer({
+                    offerToReceiveAudio: true,
+                    offerToReceiveVideo: false
+                });
+                
+                console.log('📤 Setting local description (answer)...');
+                await this.peerConnection.setLocalDescription(answer);
+                
+                console.log('📤 Sending answer to partner:', from);
+                this.socket.emit('answer', {
+                    answer: answer,
+                    target: from
+                });
+            } else {
+                console.log('⚠️ Ignoring offer - wrong signaling state:', this.peerConnection.signalingState);
+            }
         } catch (error) {
             console.error('❌ Error handling offer:', error);
             this.handleConnectionFailure();
@@ -482,17 +502,22 @@ class CoSleepApp {
     async handleAnswer(answer) {
         console.log('📥 Handling answer...');
         try {
-            console.log('📥 Setting remote description (answer)...');
-            await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-            console.log('✅ Answer processed successfully');
-            
-            // Process any queued ICE candidates
-            if (this.pendingIceCandidates) {
-                this.processQueuedIceCandidates();
+            // Check if we're in the right state to set remote description
+            if (this.peerConnection.signalingState === 'have-local-offer') {
+                console.log('📥 Setting remote description (answer)...');
+                await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                console.log('✅ Answer processed successfully');
+                
+                // Process any queued ICE candidates
+                if (this.pendingIceCandidates) {
+                    this.processQueuedIceCandidates();
+                }
+            } else {
+                console.log('⚠️ Ignoring answer - wrong signaling state:', this.peerConnection.signalingState);
             }
         } catch (error) {
             console.error('❌ Error handling answer:', error);
-            this.handleConnectionFailure();
+            // Don't call handleConnectionFailure for answer errors - they're often recoverable
         }
     }
 
