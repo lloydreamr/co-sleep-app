@@ -158,19 +158,11 @@ io.on('connection', (socket) => {
             activeConnections.delete(socket.id);
             activeConnections.delete(partnerId);
             
-            // Notify partner
+            // Notify partner about call end
             socket.to(partnerId).emit('call-ended');
             
-            // Return both users to queue
-            if (io.sockets.sockets.has(partnerId)) {
-                waitingQueue.push(partnerId);
-                io.to(partnerId).emit('return-to-queue');
-            }
-            
-            if (io.sockets.sockets.has(socket.id)) {
-                waitingQueue.push(socket.id);
-                socket.emit('return-to-queue');
-            }
+            // Don't requeue users - just end the call
+            // Users will return to main page
         }
     });
 });
