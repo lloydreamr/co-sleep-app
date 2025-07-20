@@ -677,7 +677,7 @@ class CoSleepApp {
 
 // Initialize the app when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    const app = new HenceApp();
+    const app = new CoSleepApp();
     
     // Handle page unload
     window.addEventListener('beforeunload', () => {
