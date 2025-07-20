@@ -225,6 +225,10 @@ class CoSleepApp {
         switch (interfaceName) {
             case 'main':
                 this.mainInterface.classList.remove('hidden');
+                // Reset status text when returning to main
+                if (this.statusText) {
+                    this.statusText.textContent = 'Find Quiet Presence';
+                }
                 break;
             case 'waiting':
                 this.waitingInterface.classList.remove('hidden');
@@ -382,9 +386,16 @@ class CoSleepApp {
             console.log('🧊 ICE connection state:', this.peerConnection.iceConnectionState);
             console.log('📡 Signaling state:', this.peerConnection.signalingState);
             
+            // Only update status if we're still in call
+            if (!this.isInCall) {
+                return;
+            }
+            
             if (this.peerConnection.connectionState === 'connected') {
                 console.log('✅ WebRTC connection established!');
-                this.statusText.textContent = 'Connected';
+                if (this.statusText) {
+                    this.statusText.textContent = 'Connected';
+                }
                 this.playConnectionSound();
                 
                 // Clear connection timeout
@@ -394,18 +405,26 @@ class CoSleepApp {
                 }
             } else if (this.peerConnection.connectionState === 'failed') {
                 console.log('❌ WebRTC connection failed');
-                this.statusText.textContent = 'Connection failed';
+                if (this.statusText) {
+                    this.statusText.textContent = 'Connection failed';
+                }
                 this.handleConnectionFailure();
             } else if (this.peerConnection.connectionState === 'disconnected') {
                 console.log('🔌 WebRTC connection disconnected');
-                this.statusText.textContent = 'Disconnected';
+                if (this.statusText) {
+                    this.statusText.textContent = 'Disconnected';
+                }
                 this.handleConnectionFailure();
             } else if (this.peerConnection.connectionState === 'connecting') {
                 console.log('🔄 WebRTC connecting...');
-                this.statusText.textContent = 'Connecting...';
+                if (this.statusText) {
+                    this.statusText.textContent = 'Connecting...';
+                }
             } else if (this.peerConnection.connectionState === 'new') {
                 console.log('🆕 WebRTC connection new');
-                this.statusText.textContent = 'Setting up...';
+                if (this.statusText) {
+                    this.statusText.textContent = 'Setting up...';
+                }
             }
         };
 
