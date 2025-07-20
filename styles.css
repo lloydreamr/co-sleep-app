@@ -413,3 +413,50 @@ body {
         max-width: 200px;
     }
 }
+
+/* Online Counter */
+.online-counter {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.8rem;
+    font-weight: 500;
+    animation: fadeIn 0.6s ease-out 0.2s both;
+}
+
+.online-dot {
+    width: 8px;
+    height: 8px;
+    background: #48bb78;
+    border-radius: 50%;
+    animation: onlinePulse 2s infinite;
+}
+
+@keyframes onlinePulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+/* Mobile responsive for online counter */
+@media (max-width: 480px) {
+    .online-counter {
+        top: 0.75rem;
+        right: 1rem;
+        font-size: 0.75rem;
+    }
+    
+    .online-dot {
+        width: 6px;
+        height: 6px;
+    }
+}

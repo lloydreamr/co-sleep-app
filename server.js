@@ -17,13 +17,25 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.static(path.join(__dirname)));
 
-// Queue management
+// Queue management and online users tracking
 let waitingQueue = [];
 let activeConnections = new Map();
+let onlineUsers = new Set();
+
+// Function to broadcast online user count
+function broadcastOnlineCount() {
+    const count = onlineUsers.size;
+    io.emit('online-count', { count });
+    console.log(`Online users: ${count}`);
+}
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
+    
+    // Add user to online users
+    onlineUsers.add(socket.id);
+    broadcastOnlineCount();
 
     // Join the waiting queue
     socket.on('join-queue', () => {
@@ -72,6 +84,10 @@ io.on('connection', (socket) => {
     // Handle disconnection
     socket.on('disconnect', () => {
         console.log(`User disconnected: ${socket.id}`);
+        
+        // Remove from online users
+        onlineUsers.delete(socket.id);
+        broadcastOnlineCount();
         
         // Remove from waiting queue
         waitingQueue = waitingQueue.filter(id => id !== socket.id);
@@ -154,6 +170,7 @@ function checkForMatches() {
 app.get('/health', (req, res) => {
     res.json({
         status: 'healthy',
+        onlineUsers: onlineUsers.size,
         queueLength: waitingQueue.length,
         activeConnections: activeConnections.size / 2,
         timestamp: new Date().toISOString()
@@ -169,8 +186,8 @@ const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
 server.listen(PORT, HOST, () => {
-    console.log(`Hence server running on port ${PORT}`);
+    console.log(`Co-Sleep server running on port ${PORT}`);
     console.log(`Local: http://localhost:${PORT}`);
     console.log(`Network: http://${HOST === '0.0.0.0' ? '10.0.0.31' : HOST}:${PORT}`);
     console.log(`Mobile: Open the Network URL on your phone (make sure you're on the same WiFi)`);
-}); 
+});

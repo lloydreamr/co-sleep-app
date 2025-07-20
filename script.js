@@ -30,6 +30,7 @@ class CoSleepApp {
         this.endCallBtn = document.getElementById('end-call-btn');
         
         this.statusText = document.querySelector('.status-indicator span');
+        this.onlineCount = document.getElementById('online-count');
     }
 
     bindEvents() {
@@ -91,6 +92,13 @@ class CoSleepApp {
         this.socket.on('call-ended', () => {
             console.log('Call ended by partner');
             this.handlePartnerDisconnection();
+        });
+        
+        this.socket.on('online-count', (data) => {
+            console.log(`Online users: ${data.count}`);
+            if (this.onlineCount) {
+                this.onlineCount.textContent = data.count;
+            }
         });
         
         this.socket.on('return-to-queue', () => {
