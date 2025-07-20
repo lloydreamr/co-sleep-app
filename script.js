@@ -269,21 +269,28 @@ class CoSleepApp {
         this.syncMuteState();
         
         // Update status to show connecting
-        this.statusText.textContent = 'Setting up connection...';
+        this.updateStatusText('Setting up connection...');
         
         try {
             if (this.isInitiator) {
                 console.log('🎯 Creating offer as initiator...');
-                this.statusText.textContent = 'Creating connection...';
+                this.updateStatusText('Creating connection...');
                 await this.setupPeerConnection();
             } else {
                 console.log('⏳ Waiting for offer as responder...');
-                this.statusText.textContent = 'Waiting for partner...';
+                this.updateStatusText('Waiting for partner...');
                 // Don't create peer connection yet - wait for offer
             }
         } catch (error) {
             console.error('❌ Error setting up connection:', error);
             this.handleConnectionFailure();
+        }
+    }
+
+    updateStatusText(text) {
+        if (this.statusText && this.isInCall) {
+            console.log('📊 Updating status text to:', text);
+            this.statusText.textContent = text;
         }
     }
 
@@ -367,15 +374,24 @@ class CoSleepApp {
         this.peerConnection.oniceconnectionstatechange = () => {
             console.log('🧊 ICE connection state:', this.peerConnection.iceConnectionState);
             
+            // Only update status if we're still in call
+            if (!this.isInCall) {
+                return;
+            }
+            
             if (this.peerConnection.iceConnectionState === 'connected') {
                 console.log('✅ ICE connection established!');
+                this.updateStatusText('Connected');
             } else if (this.peerConnection.iceConnectionState === 'failed') {
                 console.log('❌ ICE connection failed');
+                this.updateStatusText('Connection failed');
                 this.handleConnectionFailure();
             } else if (this.peerConnection.iceConnectionState === 'checking') {
                 console.log('🔍 ICE connection checking...');
+                this.updateStatusText('Connecting...');
             } else if (this.peerConnection.iceConnectionState === 'disconnected') {
                 console.log('🔌 ICE connection disconnected');
+                this.updateStatusText('Disconnected');
                 this.handleConnectionFailure();
             }
         };
@@ -393,9 +409,7 @@ class CoSleepApp {
             
             if (this.peerConnection.connectionState === 'connected') {
                 console.log('✅ WebRTC connection established!');
-                if (this.statusText) {
-                    this.statusText.textContent = 'Connected';
-                }
+                this.updateStatusText('Connected');
                 this.playConnectionSound();
                 
                 // Clear connection timeout
@@ -405,26 +419,18 @@ class CoSleepApp {
                 }
             } else if (this.peerConnection.connectionState === 'failed') {
                 console.log('❌ WebRTC connection failed');
-                if (this.statusText) {
-                    this.statusText.textContent = 'Connection failed';
-                }
+                this.updateStatusText('Connection failed');
                 this.handleConnectionFailure();
             } else if (this.peerConnection.connectionState === 'disconnected') {
                 console.log('🔌 WebRTC connection disconnected');
-                if (this.statusText) {
-                    this.statusText.textContent = 'Disconnected';
-                }
+                this.updateStatusText('Disconnected');
                 this.handleConnectionFailure();
             } else if (this.peerConnection.connectionState === 'connecting') {
                 console.log('🔄 WebRTC connecting...');
-                if (this.statusText) {
-                    this.statusText.textContent = 'Connecting...';
-                }
+                this.updateStatusText('Connecting...');
             } else if (this.peerConnection.connectionState === 'new') {
                 console.log('🆕 WebRTC connection new');
-                if (this.statusText) {
-                    this.statusText.textContent = 'Setting up...';
-                }
+                this.updateStatusText('Setting up...');
             }
         };
 
