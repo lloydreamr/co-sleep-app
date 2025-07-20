@@ -67,11 +67,13 @@ class CoSleepApp {
             // Set a timeout for connection establishment
             this.connectionTimeout = setTimeout(() => {
                 if (this.isInCall && this.peerConnection?.connectionState !== 'connected') {
-                    console.log('Connection timeout triggered');
-                    console.log('Connection timeout, retrying...');
+                    console.log('⏰ Connection timeout triggered');
+                    console.log('Current connection state:', this.peerConnection?.connectionState);
+                    console.log('Current ICE connection state:', this.peerConnection?.iceConnectionState);
+                    console.log('Current signaling state:', this.peerConnection?.signalingState);
                     this.handleConnectionFailure();
                 }
-            }, 15000); // 15 second timeout
+            }, 30000); // 30 second timeout (increased from 15)
         });
         
         // Handle WebRTC signaling
@@ -123,6 +125,9 @@ class CoSleepApp {
 
     async initializeWebRTC() {
         try {
+            // Test network connectivity first
+            await this.testNetworkConnectivity();
+            
             this.localStream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     echoCancellation: true,
@@ -149,6 +154,43 @@ class CoSleepApp {
         } catch (error) {
             console.error('Error accessing microphone:', error);
             this.showError('Please allow microphone access to use Co-Sleep.');
+        }
+    }
+
+    async testNetworkConnectivity() {
+        console.log('🌐 Testing network connectivity...');
+        
+        try {
+            // Test basic internet connectivity
+            const response = await fetch('https://httpbin.org/get', { 
+                method: 'GET',
+                mode: 'no-cors'
+            });
+            console.log('✅ Basic internet connectivity: OK');
+        } catch (error) {
+            console.warn('⚠️ Basic internet connectivity test failed:', error);
+        }
+        
+        try {
+            // Test WebRTC support
+            if (!window.RTCPeerConnection) {
+                throw new Error('WebRTC not supported');
+            }
+            console.log('✅ WebRTC support: OK');
+        } catch (error) {
+            console.error('❌ WebRTC not supported:', error);
+            this.showError('WebRTC is not supported in this browser.');
+        }
+        
+        try {
+            // Test getUserMedia support
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('getUserMedia not supported');
+            }
+            console.log('✅ getUserMedia support: OK');
+        } catch (error) {
+            console.error('❌ getUserMedia not supported:', error);
+            this.showError('Microphone access is not supported in this browser.');
         }
     }
 
@@ -245,11 +287,28 @@ class CoSleepApp {
         
         this.peerConnection = new RTCPeerConnection({
             iceServers: [
+                // STUN servers for NAT traversal
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
                 { urls: 'stun:stun2.l.google.com:19302' },
                 { urls: 'stun:stun3.l.google.com:19302' },
-                { urls: 'stun:stun4.l.google.com:19302' }
+                { urls: 'stun:stun4.l.google.com:19302' },
+                // TURN servers for relay when direct connection fails
+                { 
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                { 
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                { 
+                    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                }
             ],
             iceCandidatePoolSize: 10,
             iceTransportPolicy: 'all',
@@ -283,7 +342,7 @@ class CoSleepApp {
         // Handle ICE candidates
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
-                console.log('🧊 ICE candidate generated:', event.candidate.type);
+                console.log('🧊 ICE candidate generated:', event.candidate.type, event.candidate.protocol);
                 this.socket.emit('ice-candidate', {
                     candidate: event.candidate,
                     target: this.partnerId
@@ -301,6 +360,11 @@ class CoSleepApp {
                 console.log('✅ ICE connection established!');
             } else if (this.peerConnection.iceConnectionState === 'failed') {
                 console.log('❌ ICE connection failed');
+                this.handleConnectionFailure();
+            } else if (this.peerConnection.iceConnectionState === 'checking') {
+                console.log('🔍 ICE connection checking...');
+            } else if (this.peerConnection.iceConnectionState === 'disconnected') {
+                console.log('🔌 ICE connection disconnected');
                 this.handleConnectionFailure();
             }
         };
@@ -327,6 +391,8 @@ class CoSleepApp {
             } else if (this.peerConnection.connectionState === 'disconnected') {
                 console.log('🔌 WebRTC connection disconnected');
                 this.handleConnectionFailure();
+            } else if (this.peerConnection.connectionState === 'connecting') {
+                console.log('🔄 WebRTC connecting...');
             }
         };
 
