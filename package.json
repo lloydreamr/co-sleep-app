@@ -6,9 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "start:https": "node server-https.js",
-    "dev:https": "nodemon server-https.js",
-    "qr": "node -e \"console.log('\\n📱 Mobile Access QR Code:'); console.log('\\n🔗 https://10.0.0.31:3000'); console.log('\\n📋 Or manually enter this URL on your mobile device'); console.log('\\n⚠️  Make sure your phone is on the same WiFi network as this computer'); console.log('\\n🔒 HTTPS is required for mobile microphone access\\n');\""
+    "start:https": "echo "HTTPS is handled by Railway automatically"",
+    "dev:https": "echo "Use npm run dev for local development"",
+    "qr": "echo \"Your app is live at: https://co-sleep-app-production.up.railway.app\""
   },
   "keywords": ["co-sleep", "sleep", "presence", "voice", "webrtc"],
   "author": "Co-Sleep Team",
