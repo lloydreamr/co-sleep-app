@@ -1,0 +1,201 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String?  @unique
+  name          String?
+  avatar        String?
+  timezone      String   @default("UTC")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Premium & Subscription
+  isPremium     Boolean  @default(false)
+  premiumUntil  DateTime?
+  subscriptionId String?
+  
+  // Sleep Preferences
+  sleepTime     String?  // e.g., "22:00"
+  wakeTime      String?  // e.g., "07:00"
+  backgroundSounds String[] @default([])
+  autoDisconnect Boolean @default(true)
+  disconnectTime Int?    // minutes, e.g., 480 for 8 hours
+  
+  // Privacy Settings
+  allowAnalytics Boolean @default(true)
+  showOnline     Boolean @default(true)
+  
+  // Relationships
+  sleepSessions    SleepSession[] @relation("UserSessions")
+  partnerSessions  SleepSession[] @relation("PartnerSessions")
+  blocks           Block[]        @relation("UserBlocks")
+  blockedBy        Block[]        @relation("BlockedByUser")
+  favorites        Favorite[]     @relation("UserFavorites")
+  favoritedBy      Favorite[]     @relation("FavoritedByUser")
+  reports          Report[]       @relation("UserReports")
+  reportedBy       Report[]       @relation("ReportedByUser")
+  ratings          Rating[]       @relation("UserRatings")
+  ratedBy          Rating[]       @relation("RatedByUser")
+  
+  @@map("users")
+}
+
+// Sleep Sessions
+model SleepSession {
+  id          String   @id @default(cuid())
+  userId      String
+  partnerId   String?
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?     // in minutes
+  quality     Int?     // 1-5 rating
+  notes       String?
+  createdAt   DateTime @default(now())
+  
+  // Connection Details
+  connectionQuality String? // "excellent", "good", "fair", "poor"
+  iceServersUsed   String[]
+  connectionType   String? // "direct", "relay", "host"
+  
+  // User Relationships
+  user        User     @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade)
+  partner     User?    @relation("PartnerSessions", fields: [partnerId], references: [id], onDelete: SetNull)
+  
+  @@map("sleep_sessions")
+}
+
+// User Blocks
+model Block {
+  id          String   @id @default(cuid())
+  userId      String
+  blockedUserId String
+  reason      String?
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  user        User     @relation("UserBlocks", fields: [userId], references: [id], onDelete: Cascade)
+  blockedUser User     @relation("BlockedByUser", fields: [blockedUserId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, blockedUserId])
+  @@map("blocks")
+}
+
+// User Favorites
+model Favorite {
+  id          String   @id @default(cuid())
+  userId      String
+  favoriteUserId String
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  user        User     @relation("UserFavorites", fields: [userId], references: [id], onDelete: Cascade)
+  favoriteUser User    @relation("FavoritedByUser", fields: [favoriteUserId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, favoriteUserId])
+  @@map("favorites")
+}
+
+// User Reports
+model Report {
+  id          String   @id @default(cuid())
+  userId      String
+  reportedUserId String
+  reason      String
+  description String?
+  status      String   @default("pending") // "pending", "reviewed", "resolved"
+  createdAt   DateTime @default(now())
+  resolvedAt  DateTime?
+  
+  // Relationships
+  user        User     @relation("UserReports", fields: [userId], references: [id], onDelete: Cascade)
+  reportedUser User    @relation("ReportedByUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  
+  @@map("reports")
+}
+
+// User Ratings
+model Rating {
+  id          String   @id @default(cuid())
+  userId      String
+  ratedUserId String
+  rating      Int      // 1-5 stars
+  comment     String?
+  isAnonymous Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  user        User     @relation("UserRatings", fields: [userId], references: [id], onDelete: Cascade)
+  ratedUser   User     @relation("RatedByUser", fields: [ratedUserId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, ratedUserId])
+  @@map("ratings")
+}
+
+// Premium Subscriptions
+model Subscription {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  stripeCustomerId String @unique
+  stripeSubscriptionId String @unique
+  plan        String   // "premium", "pro"
+  status      String   // "active", "canceled", "past_due"
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("subscriptions")
+}
+
+// Sleep Analytics
+model SleepAnalytics {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  totalSessions Int    @default(0)
+  totalDuration Int    @default(0) // in minutes
+  averageQuality Float @default(0)
+  averageDuration Float @default(0)
+  lastSession DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("sleep_analytics")
+}
+
+// Background Sounds (Premium Feature)
+model BackgroundSound {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   // "nature", "ambient", "white-noise", "custom"
+  fileUrl     String
+  duration    Int?     // in seconds, null for loop
+  isPremium   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  @@map("background_sounds")
+}
+
+// User Custom Sounds
+model UserSound {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  fileUrl     String
+  duration    Int?
+  createdAt   DateTime @default(now())
+  
+  @@map("user_sounds")
+}

@@ -10,10 +10,15 @@ class CoSleepApp {
         this.partnerId = null;
         this.muteSyncInterval = null;
         
+        // User authentication
+        this.currentUser = null;
+        this.authToken = null;
+        
         this.initializeElements();
         this.bindEvents();
         this.initializeWebRTC();
         this.initializeSocket();
+        this.initializeAuth();
         
         // Start periodic mute state sync
         this.startMuteSync();
@@ -32,6 +37,12 @@ class CoSleepApp {
         
         this.statusText = document.querySelector('.status-indicator span');
         this.onlineCount = document.getElementById('online-count');
+        
+        // Auth elements
+        this.userMenu = document.getElementById('user-menu');
+        this.userName = document.getElementById('user-name');
+        this.userDropdown = document.getElementById('user-dropdown');
+        this.loginBtn = document.getElementById('login-btn');
     }
 
     bindEvents() {
@@ -943,15 +954,142 @@ class CoSleepApp {
             this.leaveQueue();
         }
     }
+
+    // Authentication methods
+    initializeAuth() {
+        // Check for existing auth
+        const token = localStorage.getItem('token');
+        const user = localStorage.getItem('user');
+        
+        if (token && user) {
+            this.authToken = token;
+            this.currentUser = JSON.parse(user);
+            this.updateAuthUI();
+        }
+    }
+
+    updateAuthUI() {
+        if (this.currentUser) {
+            // Show user menu, hide login button
+            this.userMenu.style.display = 'flex';
+            this.loginBtn.style.display = 'none';
+            this.userName.textContent = this.currentUser.name || this.currentUser.username || 'User';
+        } else {
+            // Show login button, hide user menu
+            this.userMenu.style.display = 'none';
+            this.loginBtn.style.display = 'flex';
+        }
+    }
+
+    async fetchWithAuth(url, options = {}) {
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers
+        };
+
+        if (this.authToken) {
+            headers['Authorization'] = `Bearer ${this.authToken}`;
+        }
+
+        return fetch(url, {
+            ...options,
+            headers
+        });
+    }
+
+    async getUserProfile() {
+        try {
+            const response = await this.fetchWithAuth('/api/auth/profile');
+            if (response.ok) {
+                const data = await response.json();
+                this.currentUser = data.user;
+                this.updateAuthUI();
+                return data.user;
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+        return null;
+    }
+
+    async getUserAnalytics() {
+        try {
+            const response = await this.fetchWithAuth('/api/auth/analytics');
+            if (response.ok) {
+                const data = await response.json();
+                return data.analytics;
+            }
+        } catch (error) {
+            console.error('Error fetching analytics:', error);
+        }
+        return null;
+    }
+
+    logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        this.authToken = null;
+        this.currentUser = null;
+        this.updateAuthUI();
+        window.location.reload();
+    }
 }
+
+// Global functions for HTML onclick handlers
+function toggleUserMenu() {
+    const dropdown = document.getElementById('user-dropdown');
+    dropdown.classList.toggle('show');
+}
+
+function goToLogin() {
+    window.location.href = 'auth.html';
+}
+
+function showProfile() {
+    if (window.coSleepApp && window.coSleepApp.currentUser) {
+        alert(`Profile: ${window.coSleepApp.currentUser.name || 'No name'}\nEmail: ${window.coSleepApp.currentUser.email}\nPremium: ${window.coSleepApp.currentUser.isPremium ? 'Yes' : 'No'}`);
+    }
+}
+
+function showAnalytics() {
+    if (window.coSleepApp) {
+        window.coSleepApp.getUserAnalytics().then(analytics => {
+            if (analytics) {
+                alert(`Sleep Analytics:\nTotal Sessions: ${analytics.totalSessions}\nTotal Duration: ${Math.round(analytics.totalDuration / 60)} hours\nAverage Quality: ${analytics.averageQuality.toFixed(1)}/5\nAverage Duration: ${Math.round(analytics.averageDuration)} minutes`);
+            } else {
+                alert('No analytics data available');
+            }
+        });
+    }
+}
+
+function upgradePremium() {
+    alert('Premium upgrade coming soon! This will include:\n• Advanced background sounds\n• Sleep analytics\n• Custom sleep schedules\n• Priority matching\n• Unlimited sessions');
+}
+
+function logout() {
+    if (window.coSleepApp) {
+        window.coSleepApp.logout();
+    }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const userMenu = document.getElementById('user-menu');
+    const dropdown = document.getElementById('user-dropdown');
+    
+    if (userMenu && !userMenu.contains(e.target)) {
+        dropdown.classList.remove('show');
+    }
+});
 
 // Initialize the app when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    const app = new CoSleepApp();
+    window.coSleepApp = new CoSleepApp();
     
     // Handle page unload
     window.addEventListener('beforeunload', () => {
-        app.handlePageUnload();
+        window.coSleepApp.handlePageUnload();
     });
 });
 

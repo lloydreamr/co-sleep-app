@@ -1,21 +1,40 @@
 {
   "name": "co-sleep-app",
   "version": "1.0.0",
-  "description": "A voice-based co-sleeping app for peaceful sleep presence",
+  "description": "A WebRTC-based co-sleeping app for finding quiet presence",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "setup": "node setup.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "node prisma/seed.js"
   },
-  "keywords": ["co-sleep", "sleep", "presence", "voice", "webrtc"],
+  "keywords": [
+    "webrtc",
+    "sleep",
+    "audio",
+    "realtime",
+    "socket.io"
+  ],
   "author": "Co-Sleep Team",
   "license": "MIT",
   "dependencies": {
+    "@prisma/client": "^5.7.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
     "express": "^4.18.2",
-    "socket.io": "^4.7.2",
-    "cors": "^2.8.5"
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^5.7.1",
+    "socket.io": "^4.7.4"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

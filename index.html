@@ -12,9 +12,27 @@
     <header class="header">
         <div class="header-content">
             <div class="logo">Co-Sleep</div>
-            <div class="online-counter">
-                <div class="online-dot"></div>
-                <span id="online-count">0</span> online
+            <div class="header-right">
+                <div class="online-counter">
+                    <div class="online-dot"></div>
+                    <span id="online-count">0</span> online
+                </div>
+                <div class="user-menu" id="user-menu" style="display: none;">
+                    <button class="user-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="user-name">User</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <a href="#" onclick="showProfile()"><i class="fas fa-user"></i> Profile</a>
+                        <a href="#" onclick="showAnalytics()"><i class="fas fa-chart-line"></i> Analytics</a>
+                        <a href="#" onclick="upgradePremium()"><i class="fas fa-crown"></i> Upgrade</a>
+                        <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+                <button class="login-btn" id="login-btn" onclick="goToLogin()">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
             </div>
         </div>
     </header>

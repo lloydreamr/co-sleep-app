@@ -3,6 +3,11 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const path = require('path');
+const prisma = require('./lib/prisma');
+const { authenticateUser } = require('./lib/auth');
+
+// Import routes
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +20,11 @@ const io = socketIo(server, {
 
 // Middleware
 app.use(cors());
+app.use(express.json());
 app.use(express.static(path.join(__dirname)));
+
+// Routes
+app.use('/api/auth', authRoutes);
 
 // Queue management and online users tracking
 let waitingQueue = [];
@@ -38,7 +47,7 @@ io.on('connection', (socket) => {
     broadcastOnlineCount();
 
     // Join the waiting queue
-    socket.on('join-queue', () => {
+    socket.on('join-queue', async (data) => {
         console.log(`User ${socket.id} joined queue`);
         
         // Add to waiting queue
@@ -220,4 +229,11 @@ server.listen(PORT, HOST, () => {
     console.log(`Local: http://localhost:${PORT}`);
     console.log(`Network: http://${HOST === '0.0.0.0' ? '10.0.0.31' : HOST}:${PORT}`);
     console.log(`Mobile: Open the Network URL on your phone (make sure you're on the same WiFi)`);
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+    console.log('Shutting down gracefully...');
+    await prisma.$disconnect();
+    process.exit(0);
 });
