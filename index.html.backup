@@ -14,40 +14,18 @@
         <div class="content">
             <h1 class="title">Co-Sleep</h1>
             <p class="subtitle">A quiet space for human presence</p>
-            <p class="value-prop">No pressure to perform. Just peaceful presence.</p>
             
             <div id="main-interface" class="main-interface">
-                <div class="trust-indicators">
-                    <div class="trust-item">
-                        <span class="trust-icon">🔒</span>
-                        <span>Anonymous & Safe</span>
-                    </div>
-                    <div class="trust-item">
-                        <span class="trust-icon">🎤</span>
-                        <span>Voice Only</span>
-                    </div>
-                    <div class="trust-item">
-                        <span class="trust-icon">🌙</span>
-                        <span>Sleep-Optimized</span>
-                    </div>
-                </div>
-                
                 <button id="connect-btn" class="connect-button">
                     <span class="button-text">Find quiet presence</span>
                     <div class="button-glow"></div>
                 </button>
-                
-                <p class="intention-note">For those who seek calm, not conversation</p>
             </div>
 
             <div id="waiting-interface" class="waiting-interface hidden">
                 <div class="waiting-content">
                     <div class="pulse-circle"></div>
                     <p class="waiting-text">Finding someone...</p>
-                    <p class="trust-note">Safe, anonymous, voice-only connection</p>
-                    <div class="matching-info">
-                        <p>Looking for someone who values quiet presence</p>
-                    </div>
                     <button id="cancel-btn" class="cancel-button">Cancel</button>
                 </div>
             </div>
@@ -57,7 +35,6 @@
                     <div class="call-status">
                         <div class="connection-indicator"></div>
                         <p class="status-text">Connected</p>
-                        <p class="presence-note">You're not alone</p>
                     </div>
                     
                     <div class="call-controls">
@@ -82,4 +59,4 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>
-</html>
+</html> 

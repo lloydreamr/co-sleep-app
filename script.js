@@ -1,4 +1,4 @@
-class HenceApp {
+class CoSleepApp {
     constructor() {
         this.isInQueue = false;
         this.isInCall = false;
@@ -128,7 +128,7 @@ class HenceApp {
             
         } catch (error) {
             console.error('Error accessing microphone:', error);
-            this.showError('Please allow microphone access to use Hence.');
+            this.showError('Please allow microphone access to use Co-Sleep.');
         }
     }
 
@@ -203,7 +203,7 @@ class HenceApp {
         this.syncMuteState();
         
         // Update status to show connecting
-        this.statusText.textContent = 'Connecting...';
+        this.statusText.textContent = 'Creating peaceful connection...';
         
         try {
             if (this.isInitiator) {
@@ -212,7 +212,7 @@ class HenceApp {
                 await this.setupPeerConnection();
             } else {
                 console.log('⏳ Waiting for offer as responder...');
-                this.statusText.textContent = 'Waiting for connection...';
+                this.statusText.textContent = 'Waiting for peaceful presence...';
             }
         } catch (error) {
             console.error('❌ Error setting up connection:', error);
@@ -262,7 +262,7 @@ class HenceApp {
         this.peerConnection.onconnectionstatechange = () => {
             console.log('Connection state:', this.peerConnection.connectionState);
             if (this.peerConnection.connectionState === 'connected') {
-                this.statusText.textContent = 'Connected';
+                this.statusText.textContent = 'Peaceful presence found';
                 this.playConnectionSound();
                 console.log('✅ WebRTC connection established successfully!');
                 
@@ -275,7 +275,7 @@ class HenceApp {
                 console.log('❌ Connection failed, trying to reconnect...');
                 this.handleConnectionFailure();
             } else if (this.peerConnection.connectionState === 'connecting') {
-                this.statusText.textContent = 'Connecting...';
+                this.statusText.textContent = 'Creating peaceful connection...';
             }
         };
 
@@ -344,7 +344,7 @@ class HenceApp {
         this.peerConnection.onconnectionstatechange = () => {
             console.log('Connection state:', this.peerConnection.connectionState);
             if (this.peerConnection.connectionState === 'connected') {
-                this.statusText.textContent = 'Connected';
+                this.statusText.textContent = 'Peaceful presence found';
                 this.playConnectionSound();
                 console.log('✅ WebRTC connection established successfully!');
                 
@@ -357,7 +357,7 @@ class HenceApp {
                 console.log('❌ Connection failed, trying to reconnect...');
                 this.handleConnectionFailure();
             } else if (this.peerConnection.connectionState === 'connecting') {
-                this.statusText.textContent = 'Connecting...';
+                this.statusText.textContent = 'Creating peaceful connection...';
             }
         };
 

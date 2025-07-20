@@ -301,3 +301,93 @@ body {
         height: 20px;
     }
 } 
+/* Value Proposition Enhancements */
+.value-prop {
+    font-size: 0.9rem;
+    color: #a0aec0;
+    margin-bottom: 2rem;
+    font-style: italic;
+    font-weight: 300;
+}
+
+.trust-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.trust-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #718096;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 0.8rem;
+    border-radius: 20px;
+    border: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+.trust-icon {
+    font-size: 1rem;
+}
+
+.intention-note {
+    font-size: 0.8rem;
+    color: #a0aec0;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
+.trust-note {
+    font-size: 0.8rem;
+    color: #48bb78;
+    margin-top: 0.5rem;
+    font-weight: 400;
+}
+
+.matching-info {
+    background: rgba(102, 126, 234, 0.1);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    margin: 1rem 0;
+}
+
+.matching-info p {
+    font-size: 0.9rem;
+    color: #4a5568;
+    margin: 0;
+}
+
+.presence-note {
+    font-size: 0.9rem;
+    color: #48bb78;
+    font-weight: 400;
+    margin-top: 0.5rem;
+}
+
+/* Mobile Responsive for New Elements */
+@media (max-width: 480px) {
+    .trust-indicators {
+        gap: 1rem;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .trust-item {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+    }
+    
+    .value-prop {
+        font-size: 0.8rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .intention-note {
+        font-size: 0.75rem;
+    }
+}
