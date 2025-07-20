@@ -3,109 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Co-Sleep - Quiet Presence</title>
+    <title>Co-Sleep - Find Quiet Presence</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Header -->
-        <header class="header">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Co-Sleep</div>
             <div class="online-counter">
-                <span class="online-dot"></span>
+                <div class="online-dot"></div>
                 <span id="online-count">0</span> online
             </div>
-            <h1 class="app-title">Co-Sleep</h1>
-            <p class="app-subtitle">Quiet presence</p>
-        </header>
+        </div>
+    </header>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Main Interface -->
-            <div id="main-interface" class="interface-section">
-                <div class="hero-section">
-                    <div class="hero-text">
-                        <h2 class="hero-title">Find peaceful presence</h2>
-                        <p class="hero-description">Connect with someone who values quiet, not conversation</p>
-                    </div>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Main Interface -->
+        <div id="main-interface" class="interface fade-in">
+            <div class="status-indicator">
+                <span>Find Quiet Presence</span>
+            </div>
+            
+            <button id="connect-btn" class="main-action">
+                <i class="fas fa-play"></i>
+                Start
+            </button>
+        </div>
+
+        <!-- Waiting Interface -->
+        <div id="waiting-interface" class="interface hidden">
+            <div class="status-indicator">
+                <span>Finding someone...</span>
+            </div>
+            
+            <div class="loading">
+                <div class="loading"></div>
+            </div>
+            
+            <button id="cancel-btn" class="main-action">
+                <i class="fas fa-times"></i>
+                Cancel
+            </button>
+        </div>
+
+        <!-- Call Interface -->
+        <div id="call-interface" class="interface hidden">
+            <div class="status-indicator">
+                <span id="status-text">Connecting...</span>
+            </div>
+            
+            <div class="button-group">
+                <div class="button-row">
+                    <button id="mute-btn" class="btn btn-success" title="Mute/Unmute">
+                        <i class="fas fa-microphone"></i>
+                    </button>
                     
-                    <div class="trust-badges">
-                        <span class="badge">Anonymous</span>
-                        <span class="badge">Voice Only</span>
-                        <span class="badge">Safe</span>
-                    </div>
-                </div>
-
-                <div class="action-section">
-                    <button id="connect-btn" class="primary-button">
-                        <i class="fas fa-play"></i>
-                        <span class="button-text">Start</span>
-                        <div class="button-ripple"></div>
+                    <button id="skip-btn" class="btn btn-warning" title="Skip Partner">
+                        <i class="fas fa-forward"></i>
+                    </button>
+                    
+                    <button id="end-call-btn" class="btn btn-danger" title="End Call">
+                        <i class="fas fa-phone-slash"></i>
                     </button>
                 </div>
             </div>
-
-            <!-- Waiting Interface -->
-            <div id="waiting-interface" class="interface-section hidden">
-                <div class="waiting-content">
-                    <div class="loading-animation">
-                        <div class="pulse-dots">
-                            <div class="dot"></div>
-                            <div class="dot"></div>
-                            <div class="dot"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="waiting-text">
-                        <h3>Finding someone...</h3>
-                        <p>Looking for peaceful presence</p>
-                    </div>
-                    
-                    <button id="cancel-btn" class="secondary-button">
-                        <i class="fas fa-times"></i>
-                        <span>Cancel</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Call Interface -->
-            <div id="call-interface" class="interface-section hidden">
-                <div class="call-content">
-                    <div class="call-status">
-                        <div class="status-indicator">
-                            <div class="status-dot"></div>
-                            <span>Connected</span>
-                        </div>
-                        <p class="status-message">You're not alone</p>
-                    </div>
-                    
-                    <div class="call-controls">
-                        <button id="mute-btn" class="control-button">
-                            <i class="fas fa-microphone"></i>
-                        </button>
-                        
-                        <button id="skip-btn" class="control-button skip">
-                            <i class="fas fa-forward"></i>
-                        </button>
-                        
-                        <button id="end-call-btn" class="control-button end-call">
-                            <i class="fas fa-phone-slash"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <p class="footer-text">No pressure to perform. Just peaceful presence.</p>
-        </footer>
+        </div>
     </div>
 
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Find quiet presence with strangers • <a href="#" target="_blank">Privacy</a></p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

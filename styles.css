@@ -1,4 +1,4 @@
-/* Reset and Base Styles */
+/* Modern Dark Theme - Instagram/WhatsApp Inspired */
 * {
     margin: 0;
     padding: 0;
@@ -6,334 +6,324 @@
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #1a202c;
-    line-height: 1.6;
-    overflow: hidden;
-    height: 100vh;
-}
-
-/* App Container */
-.app-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    max-width: 100%;
-    margin: 0 auto;
-    position: relative;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+    color: #ffffff;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
 /* Header */
 .header {
-    padding: 2rem 1.5rem 1rem;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
 }
 
-.app-title {
-    font-size: 2rem;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 0.25rem;
-    letter-spacing: -0.02em;
-    animation: fadeInUp 0.6s ease-out;
-}
-
-.app-subtitle {
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.8);
-    font-weight: 400;
-    animation: fadeInUp 0.6s ease-out 0.1s both;
-}
-
-/* Main Content */
-.main-content {
-    flex: 1;
+.header-content {
+    max-width: 400px;
+    margin: 0 auto;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 2rem 1.5rem;
-    position: relative;
+    justify-content: space-between;
+    padding: 0 1.5rem;
 }
 
-.interface-section {
-    width: 100%;
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.online-counter {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: #a0a0a0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.online-dot {
+    width: 8px;
+    height: 8px;
+    background: #00ff88;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+/* Main Container */
+.container {
     max-width: 400px;
+    margin: 0 auto;
+    padding: 6rem 1.5rem 2rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Interface Styles */
+.interface {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
     text-align: center;
-    animation: fadeIn 0.5s ease-out;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Hero Section */
-.hero-section {
-    margin-bottom: 3rem;
+.interface:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
 }
 
-.hero-text {
+.hidden {
+    display: none;
+}
+
+/* Status Indicator */
+.status-indicator {
     margin-bottom: 2rem;
 }
 
-.hero-title {
-    font-size: 2.5rem;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 1rem;
-    line-height: 1.2;
-    animation: fadeInUp 0.6s ease-out 0.2s both;
-}
-
-.hero-description {
-    font-size: 1.1rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 400;
-    animation: fadeInUp 0.6s ease-out 0.3s both;
-}
-
-/* Trust Badges */
-.trust-badges {
-    display: flex;
-    justify-content: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    animation: fadeInUp 0.6s ease-out 0.4s both;
-}
-
-.badge {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
+.status-indicator span {
+    font-size: 1.125rem;
     font-weight: 500;
+    color: #e0e0e0;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem 1.5rem;
+    border-radius: 20px;
+    display: inline-block;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
 }
 
-.badge:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
-}
-
-/* Action Section */
-.action-section {
-    animation: fadeInUp 0.6s ease-out 0.5s both;
-}
-
-/* Primary Button */
-.primary-button {
-    position: relative;
-    background: white;
-    color: #667eea;
-    border: none;
-    border-radius: 50px;
-    padding: 1.2rem 3rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    min-width: 200px;
-}
-
-.primary-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
-}
-
-.primary-button:active {
-    transform: translateY(0);
-}
-
-.button-ripple {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(102, 126, 234, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-}
-
-.primary-button:active .button-ripple {
-    width: 300px;
-    height: 300px;
-}
-
-/* Secondary Button */
-.secondary-button {
+/* Button Styles - Modern Icon Buttons */
+.btn {
     background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 25px;
-    padding: 0.8rem 2rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
     backdrop-filter: blur(10px);
-}
-
-.secondary-button:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-1px);
-}
-
-/* Waiting Interface */
-.waiting-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-}
-
-.loading-animation {
-    margin-bottom: 1rem;
-}
-
-.pulse-dots {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-}
-
-.dot {
-    width: 12px;
-    height: 12px;
-    background: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 50%;
-    animation: pulse 1.5s infinite ease-in-out;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
 }
 
-.dot:nth-child(2) {
-    animation-delay: 0.2s;
+.btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
-.dot:nth-child(3) {
-    animation-delay: 0.4s;
+.btn:active {
+    transform: translateY(0) scale(0.95);
 }
 
-.waiting-text h3 {
+.btn i {
     font-size: 1.5rem;
-    color: white;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
+    color: #ffffff;
+    transition: all 0.3s ease;
 }
 
-.waiting-text p {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 1rem;
+/* Button Variants */
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
 
-/* Call Interface */
-.call-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3rem;
+.btn-primary:hover {
+    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.6);
 }
 
-.call-status {
-    text-align: center;
+.btn-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    border: none;
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
 }
 
-.status-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+.btn-danger:hover {
+    box-shadow: 0 12px 30px rgba(255, 107, 107, 0.6);
 }
 
-.status-dot {
-    width: 8px;
-    height: 8px;
-    background: #48bb78;
-    border-radius: 50%;
-    animation: statusPulse 2s infinite;
+.btn-warning {
+    background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+    border: none;
+    box-shadow: 0 8px 20px rgba(254, 202, 87, 0.4);
 }
 
-.status-indicator span {
-    color: white;
-    font-weight: 600;
-    font-size: 1.1rem;
+.btn-warning:hover {
+    box-shadow: 0 12px 30px rgba(254, 202, 87, 0.6);
 }
 
-.status-message {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 1rem;
+.btn-success {
+    background: linear-gradient(135deg, #48dbfb 0%, #0abde3 100%);
+    border: none;
+    box-shadow: 0 8px 20px rgba(72, 219, 251, 0.4);
 }
 
-.call-controls {
+.btn-success:hover {
+    box-shadow: 0 12px 30px rgba(72, 219, 251, 0.6);
+}
+
+/* Muted State */
+.btn.muted {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+}
+
+.btn.muted:hover {
+    box-shadow: 0 12px 30px rgba(255, 107, 107, 0.6);
+}
+
+/* Button Groups */
+.button-group {
     display: flex;
     gap: 1rem;
     justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 2rem;
 }
 
-.control-button {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 25px;
-    padding: 0.8rem 1.5rem;
-    font-size: 0.9rem;
-    font-weight: 500;
+.button-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Main Action Button */
+.main-action {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 50px;
+    padding: 1rem 2.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #ffffff;
     cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    min-width: 80px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0 auto;
 }
 
-.control-button:hover {
-    background: rgba(255, 255, 255, 0.2);
+.main-action:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+}
+
+.main-action:active {
     transform: translateY(-1px);
 }
 
-.control-button.end-call {
-    background: rgba(245, 101, 101, 0.2);
-    border-color: rgba(245, 101, 101, 0.5);
+.main-action i {
+    font-size: 1.25rem;
 }
 
-.control-button.end-call:hover {
-    background: rgba(245, 101, 101, 0.3);
+/* Loading Animation */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #ffffff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /* Footer */
 .footer {
-    padding: 1.5rem;
     text-align: center;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem 0;
+    color: #a0a0a0;
+    font-size: 0.875rem;
 }
 
-.footer-text {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.8rem;
-    font-style: italic;
+.footer a {
+    color: #667eea;
+    text-decoration: none;
+    transition: color 0.3s ease;
 }
 
-/* Utility Classes */
-.hidden {
-    display: none !important;
+.footer a:hover {
+    color: #764ba2;
 }
 
-/* Animations */
+/* Responsive Design */
+@media (max-width: 480px) {
+    .container {
+        padding: 5rem 1rem 1rem;
+    }
+    
+    .interface {
+        padding: 2rem 1.5rem;
+        border-radius: 20px;
+    }
+    
+    .btn {
+        width: 55px;
+        height: 55px;
+    }
+    
+    .btn i {
+        font-size: 1.25rem;
+    }
+    
+    .main-action {
+        padding: 0.875rem 2rem;
+        font-size: 1rem;
+    }
+    
+    .button-group {
+        gap: 0.75rem;
+    }
+    
+    .button-row {
+        gap: 0.75rem;
+    }
+}
+
+/* Smooth Animations */
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes fadeInUp {
     from {
         opacity: 0;
         transform: translateY(20px);
@@ -344,190 +334,41 @@ body {
     }
 }
 
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.2);
-        opacity: 0.7;
-    }
-}
-
-@keyframes statusPulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.7;
-        transform: scale(1.1);
-    }
-}
-
-/* Mobile Responsive */
-@media (max-width: 480px) {
-    .header {
-        padding: 1.5rem 1rem 0.5rem;
-    }
-    
-    .app-title {
-        font-size: 1.75rem;
-    }
-    
-    .main-content {
-        padding: 1.5rem 1rem;
-    }
-    
-    .hero-title {
-        font-size: 2rem;
-    }
-    
-    .hero-description {
-        font-size: 1rem;
-    }
-    
-    .trust-badges {
-        gap: 0.5rem;
-    }
-    
-    .badge {
-        font-size: 0.75rem;
-        padding: 0.4rem 0.8rem;
-    }
-    
-    .primary-button {
-        padding: 1rem 2.5rem;
-        font-size: 1rem;
-        min-width: 180px;
-    }
-    
-    .call-controls {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    
-    .control-button {
-        width: 100%;
-        max-width: 200px;
-    }
-}
-
-/* Online Counter */
-.online-counter {
+/* Ripple Effect */
+.btn::before {
+    content: '';
     position: absolute;
-    top: 1rem;
-    right: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.8rem;
-    font-weight: 500;
-    animation: fadeIn 0.6s ease-out 0.2s both;
-}
-
-.online-dot {
-    width: 8px;
-    height: 8px;
-    background: #48bb78;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
     border-radius: 50%;
-    animation: onlinePulse 2s infinite;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
 }
 
-@keyframes onlinePulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.7;
-        transform: scale(1.1);
-    }
+.btn:active::before {
+    width: 100px;
+    height: 100px;
 }
 
-/* Mobile responsive for online counter */
-@media (max-width: 480px) {
-    .online-counter {
-        top: 0.75rem;
-        right: 1rem;
-        font-size: 0.75rem;
-    }
-    
-    .online-dot {
-        width: 6px;
-        height: 6px;
-    }
+/* Glassmorphism Effects */
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Icon Buttons */
-.primary-button i {
-    margin-right: 0.5rem;
-    font-size: 0.9rem;
+/* Subtle Shadows */
+.shadow-soft {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.secondary-button i {
-    margin-right: 0.5rem;
-    font-size: 0.9rem;
+.shadow-medium {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
-.control-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    font-size: 1.2rem;
-    transition: all 0.3s ease;
-}
-
-.control-button i {
-    font-size: 1.1rem;
-}
-
-.control-button.skip {
-    background: rgba(255, 193, 7, 0.2);
-    border-color: rgba(255, 193, 7, 0.5);
-    color: #ffc107;
-}
-
-.control-button.skip:hover {
-    background: rgba(255, 193, 7, 0.3);
-    transform: translateY(-2px);
-}
-
-.control-button.skip:active {
-    transform: translateY(0);
-}
-
-/* Enhanced call controls layout */
-.call-controls {
-    display: flex;
-    gap: 1.5rem;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Mobile responsive for icon buttons */
-@media (max-width: 480px) {
-    .control-button {
-        width: 50px;
-        height: 50px;
-        font-size: 1rem;
-    }
-    
-    .control-button i {
-        font-size: 1rem;
-    }
-    
-    .call-controls {
-        gap: 1rem;
-    }
-    
-    .primary-button i,
-    .secondary-button i {
-        font-size: 0.8rem;
-    }
+.shadow-strong {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
