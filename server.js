@@ -12,6 +12,15 @@ const io = socketIo(server, {
         methods: ["GET", "POST"]
     }
 });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 
 // Middleware
 app.use(cors());
@@ -26,6 +35,15 @@ let onlineUsers = new Set();
 function broadcastOnlineCount() {
     const count = onlineUsers.size;
     io.emit('online-count', { count });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
     console.log(`Online users: ${count}`);
 }
 
@@ -49,37 +67,112 @@ io.on('connection', (socket) => {
         // Check if we can make a match
         checkForMatches();
     });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 
     // Leave the waiting queue
     socket.on('leave-queue', () => {
         console.log(`User ${socket.id} left queue`);
         waitingQueue = waitingQueue.filter(id => id !== socket.id);
     });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 
     // WebRTC signaling
     socket.on('offer', (data) => {
         console.log(`Offer from ${socket.id} to ${data.target}`);
-        socket.to(data.target).emit('offer', {
+        if (io.sockets.sockets.has(data.target)) {
+            socket.to(data.target).emit('offer', {
             offer: data.offer,
             from: socket.id
         });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
     });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 
     socket.on('answer', (data) => {
         console.log(`Answer from ${socket.id} to ${data.target}`);
-        socket.to(data.target).emit('answer', {
+        if (io.sockets.sockets.has(data.target)) {
+            socket.to(data.target).emit('answer', {
             answer: data.answer,
             from: socket.id
         });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
     });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 
     socket.on('ice-candidate', (data) => {
         console.log(`ICE candidate from ${socket.id} to ${data.target}`);
-        socket.to(data.target).emit('ice-candidate', {
+        if (io.sockets.sockets.has(data.target)) {
+            socket.to(data.target).emit('ice-candidate', {
             candidate: data.candidate,
             from: socket.id
         });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
     });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 
     // Handle skip partner
     socket.on('skip-partner', () => {
@@ -106,6 +199,15 @@ io.on('connection', (socket) => {
             }
         }
     });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 
     // Handle disconnection
     socket.on('disconnect', () => {
@@ -135,6 +237,15 @@ io.on('connection', (socket) => {
             }
         }
     });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 
     // Handle call end
     socket.on('end-call', () => {
@@ -161,7 +272,25 @@ io.on('connection', (socket) => {
             }
         }
     });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 
 // Function to check for potential matches
 function checkForMatches() {
@@ -175,11 +304,47 @@ function checkForMatches() {
             
             // Create connection record
             activeConnections.set(user1, { partnerId: user2, isInitiator: true });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
             activeConnections.set(user2, { partnerId: user1, isInitiator: false });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
             
             // Notify both users with role information
             io.to(user1).emit('match-found', { partnerId: user2, isInitiator: true });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
             io.to(user2).emit('match-found', { partnerId: user1, isInitiator: false });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
         } else {
             // If one user disconnected, put the other back in queue
             if (io.sockets.sockets.has(user1)) {
@@ -201,12 +366,39 @@ app.get('/health', (req, res) => {
         activeConnections: activeConnections.size / 2,
         timestamp: new Date().toISOString()
     });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 
 // Serve the main page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -217,3 +409,12 @@ server.listen(PORT, HOST, () => {
     console.log(`Network: http://${HOST === '0.0.0.0' ? '10.0.0.31' : HOST}:${PORT}`);
     console.log(`Mobile: Open the Network URL on your phone (make sure you're on the same WiFi)`);
 });
+        } else {
+            console.log(`Target ${data.target} not found for ICE candidate`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for answer`);
+        }
+        } else {
+            console.log(`Target ${data.target} not found for offer`);
+        }

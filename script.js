@@ -51,7 +51,11 @@ class CoSleepApp {
 
     initializeSocket() {
         // Connect to the server
-        this.socket = io();
+        this.socket = io({
+            transports: ["websocket", "polling"],
+            upgrade: true,
+            rememberUpgrade: true
+        });
         
         // Handle match found
         this.socket.on('match-found', (data) => {
@@ -62,6 +66,7 @@ class CoSleepApp {
             
             // Set a timeout for connection establishment
             this.connectionTimeout = setTimeout(() => {
+                console.log("Connection timeout triggered");
                 if (this.isInCall && this.peerConnection?.connectionState !== 'connected') {
                     console.log('Connection timeout, retrying...');
                     this.handleConnectionFailure();
@@ -142,6 +147,7 @@ class CoSleepApp {
             this.syncMuteState();
             
         } catch (error) {
+            console.error("WebRTC setup error:", error);
             console.error('Error accessing microphone:', error);
             this.showError('Please allow microphone access to use Co-Sleep.');
         }
@@ -230,6 +236,7 @@ class CoSleepApp {
                 this.statusText.textContent = 'Waiting...';
             }
         } catch (error) {
+            console.error("WebRTC setup error:", error);
             console.error('❌ Error setting up connection:', error);
             this.handleConnectionFailure();
         }
@@ -237,6 +244,14 @@ class CoSleepApp {
 
     async setupPeerConnection() {
         this.peerConnection = new RTCPeerConnection({
+            iceServers: [
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:stun1.l.google.com:19302" },
+                { urls: "stun:stun2.l.google.com:19302" },
+                { urls: "stun:stun3.l.google.com:19302" },
+                { urls: "stun:stun4.l.google.com:19302" }
+            ],
+            iceCandidatePoolSize: 10,
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
@@ -265,6 +280,7 @@ class CoSleepApp {
 
         // Handle ICE candidates
         this.peerConnection.onicecandidate = (event) => {
+            console.log("ICE candidate event:", event.candidate ? "candidate" : "null");
             if (event.candidate) {
                 console.log('Sending ICE candidate');
                 this.socket.emit('ice-candidate', {
@@ -276,6 +292,9 @@ class CoSleepApp {
 
         // Handle connection state changes
         this.peerConnection.onconnectionstatechange = () => {
+            console.log("Connection state changed:", this.peerConnection.connectionState);
+            console.log("ICE connection state:", this.peerConnection.iceConnectionState);
+            console.log("Signaling state:", this.peerConnection.signalingState);
             console.log('Connection state:', this.peerConnection.connectionState);
             
             if (this.peerConnection.connectionState === 'connected') {
@@ -305,6 +324,7 @@ class CoSleepApp {
                 target: this.partnerId
             });
         } catch (error) {
+            console.error("WebRTC setup error:", error);
             console.error('Error creating offer:', error);
             this.handleConnectionFailure();
         }
@@ -329,6 +349,7 @@ class CoSleepApp {
                 target: from
             });
         } catch (error) {
+            console.error("WebRTC setup error:", error);
             console.error('Error handling offer:', error);
             this.handleConnectionFailure();
         }
@@ -339,6 +360,7 @@ class CoSleepApp {
         try {
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
         } catch (error) {
+            console.error("WebRTC setup error:", error);
             console.error('Error handling answer:', error);
         }
     }
@@ -348,6 +370,7 @@ class CoSleepApp {
         try {
             await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
         } catch (error) {
+            console.error("WebRTC setup error:", error);
             console.error('Error handling ICE candidate:', error);
         }
     }
