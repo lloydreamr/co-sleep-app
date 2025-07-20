@@ -7,76 +7,89 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="content">
-            <h1 class="title">Co-Sleep</h1>
-            <p class="subtitle">A quiet space for human presence</p>
-            <p class="value-prop">No pressure to perform. Just peaceful presence.</p>
-            
-            <div id="main-interface" class="main-interface">
-                <div class="trust-indicators">
-                    <div class="trust-item">
-                        <span class="trust-icon">🔒</span>
-                        <span>Anonymous & Safe</span>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="app-title">Co-Sleep</h1>
+            <p class="app-subtitle">Quiet presence</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Main Interface -->
+            <div id="main-interface" class="interface-section">
+                <div class="hero-section">
+                    <div class="hero-text">
+                        <h2 class="hero-title">Find peaceful presence</h2>
+                        <p class="hero-description">Connect with someone who values quiet, not conversation</p>
                     </div>
-                    <div class="trust-item">
-                        <span class="trust-icon">🎤</span>
-                        <span>Voice Only</span>
-                    </div>
-                    <div class="trust-item">
-                        <span class="trust-icon">🌙</span>
-                        <span>Sleep-Optimized</span>
+                    
+                    <div class="trust-badges">
+                        <span class="badge">Anonymous</span>
+                        <span class="badge">Voice Only</span>
+                        <span class="badge">Safe</span>
                     </div>
                 </div>
-                
-                <button id="connect-btn" class="connect-button">
-                    <span class="button-text">Find quiet presence</span>
-                    <div class="button-glow"></div>
-                </button>
-                
-                <p class="intention-note">For those who seek calm, not conversation</p>
+
+                <div class="action-section">
+                    <button id="connect-btn" class="primary-button">
+                        <span class="button-text">Start</span>
+                        <div class="button-ripple"></div>
+                    </button>
+                </div>
             </div>
 
-            <div id="waiting-interface" class="waiting-interface hidden">
+            <!-- Waiting Interface -->
+            <div id="waiting-interface" class="interface-section hidden">
                 <div class="waiting-content">
-                    <div class="pulse-circle"></div>
-                    <p class="waiting-text">Finding someone...</p>
-                    <p class="trust-note">Safe, anonymous, voice-only connection</p>
-                    <div class="matching-info">
-                        <p>Looking for someone who values quiet presence</p>
+                    <div class="loading-animation">
+                        <div class="pulse-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
                     </div>
-                    <button id="cancel-btn" class="cancel-button">Cancel</button>
+                    
+                    <div class="waiting-text">
+                        <h3>Finding someone...</h3>
+                        <p>Looking for peaceful presence</p>
+                    </div>
+                    
+                    <button id="cancel-btn" class="secondary-button">Cancel</button>
                 </div>
             </div>
 
-            <div id="call-interface" class="call-interface hidden">
+            <!-- Call Interface -->
+            <div id="call-interface" class="interface-section hidden">
                 <div class="call-content">
                     <div class="call-status">
-                        <div class="connection-indicator"></div>
-                        <p class="status-text">Connected</p>
-                        <p class="presence-note">You're not alone</p>
+                        <div class="status-indicator">
+                            <div class="status-dot"></div>
+                            <span>Connected</span>
+                        </div>
+                        <p class="status-message">You're not alone</p>
                     </div>
                     
                     <div class="call-controls">
                         <button id="mute-btn" class="control-button">
-                            <svg class="mic-icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                            </svg>
+                            <span class="control-text">Mute</span>
                         </button>
                         
                         <button id="end-call-btn" class="control-button end-call">
-                            <svg class="end-icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
-                            </svg>
+                            <span class="control-text">End</span>
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p class="footer-text">No pressure to perform. Just peaceful presence.</p>
+        </footer>
     </div>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>

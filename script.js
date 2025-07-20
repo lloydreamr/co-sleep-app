@@ -29,7 +29,7 @@ class CoSleepApp {
         this.muteBtn = document.getElementById('mute-btn');
         this.endCallBtn = document.getElementById('end-call-btn');
         
-        this.statusText = document.querySelector('.status-text');
+        this.statusText = document.querySelector('.status-indicator span');
     }
 
     bindEvents() {
@@ -203,7 +203,7 @@ class CoSleepApp {
         this.syncMuteState();
         
         // Update status to show connecting
-        this.statusText.textContent = 'Creating peaceful connection...';
+        this.statusText.textContent = 'Connecting...';
         
         try {
             if (this.isInitiator) {
@@ -212,7 +212,7 @@ class CoSleepApp {
                 await this.setupPeerConnection();
             } else {
                 console.log('⏳ Waiting for offer as responder...');
-                this.statusText.textContent = 'Waiting for peaceful presence...';
+                this.statusText.textContent = 'Waiting...';
             }
         } catch (error) {
             console.error('❌ Error setting up connection:', error);
@@ -262,7 +262,7 @@ class CoSleepApp {
         this.peerConnection.onconnectionstatechange = () => {
             console.log('Connection state:', this.peerConnection.connectionState);
             if (this.peerConnection.connectionState === 'connected') {
-                this.statusText.textContent = 'Peaceful presence found';
+                this.statusText.textContent = 'Connected';
                 this.playConnectionSound();
                 console.log('✅ WebRTC connection established successfully!');
                 
@@ -275,7 +275,7 @@ class CoSleepApp {
                 console.log('❌ Connection failed, trying to reconnect...');
                 this.handleConnectionFailure();
             } else if (this.peerConnection.connectionState === 'connecting') {
-                this.statusText.textContent = 'Creating peaceful connection...';
+                this.statusText.textContent = 'Connecting...';
             }
         };
 
@@ -344,7 +344,7 @@ class CoSleepApp {
         this.peerConnection.onconnectionstatechange = () => {
             console.log('Connection state:', this.peerConnection.connectionState);
             if (this.peerConnection.connectionState === 'connected') {
-                this.statusText.textContent = 'Peaceful presence found';
+                this.statusText.textContent = 'Connected';
                 this.playConnectionSound();
                 console.log('✅ WebRTC connection established successfully!');
                 
@@ -357,7 +357,7 @@ class CoSleepApp {
                 console.log('❌ Connection failed, trying to reconnect...');
                 this.handleConnectionFailure();
             } else if (this.peerConnection.connectionState === 'connecting') {
-                this.statusText.textContent = 'Creating peaceful connection...';
+                this.statusText.textContent = 'Connecting...';
             }
         };
 
@@ -564,8 +564,8 @@ class CoSleepApp {
         this.muteBtn.classList.toggle('muted', this.isMuted);
         
         // Update button icon
-        const micIcon = this.muteBtn.querySelector('.mic-icon');
-        if (!micIcon) return;
+        const controlText = this.muteBtn.querySelector('.control-text');
+        if (!controlText) return;
         
         if (this.isMuted) {
             micIcon.innerHTML = `
