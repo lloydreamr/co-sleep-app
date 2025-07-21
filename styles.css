@@ -1,4 +1,4 @@
-/* Modern Dark Theme - Instagram/WhatsApp Inspired */
+/* Moodist-Inspired Dark Theme */
 * {
     margin: 0;
     padding: 0;
@@ -7,24 +7,25 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+    background: #0a0a0a;
     color: #ffffff;
     height: 100vh;
     overflow-y: auto;
+    line-height: 1.5;
 }
 
 /* Header */
 .header {
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(10, 10, 10, 0.95);
     backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.75rem 0;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 100;
-    height: 70px;
+    height: 60px;
 }
 
 .header-content {
@@ -172,13 +173,13 @@ body {
     max-width: 400px;
     margin: 0 auto;
     padding: 0 1.5rem;
-    height: calc(100vh - 70px - 60px); /* Subtract header and footer heights */
+    height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     position: relative;
-    top: 70px; /* Offset for fixed header */
+    top: 60px; /* Offset for fixed header */
 }
 
 /* Interface Styles */
@@ -192,21 +193,253 @@ body {
     display: none;
 }
 
-/* Status Indicator */
-.status-indicator {
+/* Moodist-Style Header */
+.moodist-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.logo-container {
     margin-bottom: 2rem;
 }
 
-.status-indicator span {
-    font-size: 1.125rem;
-    font-weight: 500;
-    color: #e0e0e0;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 0.75rem 1.5rem;
-    border-radius: 20px;
-    display: inline-block;
-    backdrop-filter: blur(10px);
+.moodist-logo {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    color: #888888;
+    opacity: 0.8;
+}
+
+.main-title h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
+}
+
+.main-title h2 {
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: #888888;
+    margin-bottom: 1rem;
+    letter-spacing: -0.01em;
+}
+
+.subtitle {
+    margin-bottom: 2rem;
+}
+
+.subtitle span {
+    font-size: 0.875rem;
+    color: #666666;
+    font-weight: 400;
+}
+
+.sound-count-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 2rem;
+    color: #888888;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sound-count-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.sound-wave-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.main-play-btn {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.main-play-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.play-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Sound Panel */
+.sound-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 10, 10, 0.98);
+    backdrop-filter: blur(20px);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+    overflow-y: auto;
+}
+
+.sound-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sound-panel-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #888888;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.close-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Sound List */
+.sound-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sound-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.sound-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sound-item-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.sound-item-icon {
+    width: 20px;
+    height: 20px;
+    color: #888888;
+}
+
+.sound-item-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.sound-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sound-volume {
+    width: 80px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.sound-volume::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.sound-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #888888;
+}
+
+.sound-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.sound-toggle.playing {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.play-pause-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.sound-toggle.playing .play-pause-icon {
+    display: none;
+}
+
+.sound-toggle.playing::after {
+    content: "⏸";
+    font-size: 12px;
+    color: #ffffff;
 }
 
 /* Button Styles - Modern Icon Buttons */

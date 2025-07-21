@@ -1018,50 +1018,15 @@ class CoSleepApp {
 
     // Sound system methods
     initializeSoundSystem() {
-        if (this.soundManager) {
-            this.soundManager.init();
-            this.bindSoundEvents();
-            console.log('🎵 Sound system initialized');
+        // Initialize global sound manager instance
+        if (!window.soundManager) {
+            window.soundManager = new SoundManager();
         }
-    }
-
-    bindSoundEvents() {
-        // Bind sound button clicks
-        const soundButtons = document.querySelectorAll('.sound-btn');
-        soundButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const soundKey = btn.dataset.sound;
-                this.playBackgroundSound(soundKey);
-            });
-        });
-
-        // Bind volume slider
-        const volumeSlider = document.getElementById('sound-volume');
-        const volumeValue = document.querySelector('.volume-value');
         
-        if (volumeSlider && volumeValue) {
-            volumeSlider.addEventListener('input', (e) => {
-                const volume = e.target.value;
-                this.soundManager.setVolume(volume / 100);
-                volumeValue.textContent = `${volume}%`;
-            });
+        if (window.soundManager) {
+            window.soundManager.init();
+            console.log('🎵 Multi-sound system initialized');
         }
-    }
-
-    async playBackgroundSound(soundKey) {
-        if (!this.soundManager) return;
-
-        // Update UI to show active sound
-        const soundButtons = document.querySelectorAll('.sound-btn');
-        soundButtons.forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.sound === soundKey) {
-                btn.classList.add('active');
-            }
-        });
-
-        // Play the sound
-        await this.soundManager.playSound(soundKey);
     }
 
     // Analytics system methods
