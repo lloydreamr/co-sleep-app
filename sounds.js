@@ -2,10 +2,10 @@
 class SoundManager {
     constructor() {
                 this.sounds = {
-            // Free sounds - Real ambient audio files
+            // All sounds are now free - Real ambient audio files
             ocean: {
                 name: "Ocean Waves",
-                icon: "🌊",
+                icon: "waves",
                 url: "https://www.soundjay.com/nature/sounds/ocean-wave-1.mp3",
                 category: "nature",
                 premium: false,
@@ -13,7 +13,7 @@ class SoundManager {
             },
             rain: {
                 name: "Rain",
-                icon: "🌧️",
+                icon: "rain",
                 url: "https://www.soundjay.com/nature/sounds/rain-01.mp3",
                 category: "nature",
                 premium: false,
@@ -21,7 +21,7 @@ class SoundManager {
             },
             whiteNoise: {
                 name: "White Noise",
-                icon: "🤫",
+                icon: "noise",
                 url: "https://www.soundjay.com/mechanical/sounds/white-noise-1.mp3",
                 category: "ambient",
                 premium: false,
@@ -29,27 +29,26 @@ class SoundManager {
             },
             forest: {
                 name: "Forest Night",
-                icon: "🌲",
+                icon: "forest",
                 url: "https://www.soundjay.com/nature/sounds/forest-night-1.mp3",
                 category: "nature",
                 premium: false,
                 description: "Peaceful forest sounds at night"
             },
-            // Premium sounds
             fireplace: {
                 name: "Fireplace",
-                icon: "🔥",
+                icon: "fire",
                 url: "https://www.soundjay.com/mechanical/sounds/fireplace-1.mp3",
                 category: "ambient",
-                premium: true,
+                premium: false,
                 description: "Crackling fireplace for warmth"
             },
             cafe: {
                 name: "Cafe Ambience",
-                icon: "☕",
+                icon: "cafe",
                 url: "https://www.soundjay.com/mechanical/sounds/cafe-ambience-1.mp3",
                 category: "ambient",
-                premium: true,
+                premium: false,
                 description: "Soft cafe background sounds"
             }
         };
@@ -134,9 +133,17 @@ class SoundManager {
             // Set new sound
             this.currentSound = soundKey;
             
-            // Play real ambient sounds
+            // Play real ambient sounds with seamless looping
             this.audioElement.src = sound.url;
             this.audioElement.loop = true;
+            
+            // Ensure seamless looping by setting crossfade
+            this.audioElement.addEventListener('ended', () => {
+                if (this.isPlaying) {
+                    this.audioElement.currentTime = 0;
+                    this.audioElement.play();
+                }
+            });
             
             if (fadeIn) {
                 this.fadeIn();

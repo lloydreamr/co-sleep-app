@@ -1205,3 +1205,32 @@ window.addEventListener('online', () => {
 window.addEventListener('offline', () => {
     console.log('Connection lost');
 });
+
+// Background Sound Button Functionality
+function initBackgroundSoundButton() {
+    const soundToggle = document.getElementById('background-sound-toggle');
+    const soundSection = document.querySelector('.sound-section');
+    
+    if (soundToggle && soundSection) {
+        soundToggle.addEventListener('click', () => {
+            soundSection.classList.toggle('hidden');
+            soundToggle.classList.toggle('active');
+            
+            // Update button icon
+            const svg = soundToggle.querySelector('svg');
+            if (soundSection.classList.contains('hidden')) {
+                svg.innerHTML = '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>';
+            } else {
+                svg.innerHTML = '<path d="M12 2v20M2 10h20"/>';
+            }
+        });
+        
+        // Initially hide the sound section
+        soundSection.classList.add('hidden');
+    }
+}
+
+// Initialize background sound button when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    initBackgroundSoundButton();
+});
