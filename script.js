@@ -96,9 +96,7 @@ class CoSleepApp {
         // Bind retry button
         if (this.retryBtn) {
             this.retryBtn.addEventListener('click', () => {
-                if (this.errorInterface) {
-                    this.errorInterface.style.display = 'none';
-                }
+                this.showInterface('main'); // Hide error interface and show main
                 this.joinQueue();
             });
         }
@@ -397,9 +395,7 @@ class CoSleepApp {
         
         if (this.errorInterface && this.errorText) {
             this.errorText.textContent = message;
-            this.errorInterface.style.display = 'flex';
-            // Remove aria-hidden to ensure accessibility
-            this.errorInterface.removeAttribute('aria-hidden');
+            this.showInterface('error');
             
             // Add retry button if error is recoverable
             if (isRecoverable && this.retryBtn) {
@@ -1598,6 +1594,13 @@ class CoSleepApp {
                     if (callElement) {
                         callElement.style.display = 'flex';
                         callElement.removeAttribute('aria-hidden');
+                    }
+                    break;
+                case 'error':
+                    const errorElement = this.getCachedElement('errorInterface');
+                    if (errorElement) {
+                        errorElement.style.display = 'flex';
+                        errorElement.removeAttribute('aria-hidden');
                     }
                     break;
             }
