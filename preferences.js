@@ -117,12 +117,23 @@ class PreferencesManager {
     // Apply sound preferences
     applySoundPreferences() {
         if (window.soundManager) {
-            // Set volume
-            window.soundManager.setVolume(this.preferences.soundVolume);
+            // Set default volume for new sounds (the new system uses individual volume controls)
+            // We'll store the default volume but individual sounds can have their own volume
+            const defaultVolume = this.preferences.soundVolume;
             
             // Auto-play default sound if enabled
             if (this.preferences.autoPlaySound && this.preferences.defaultSound) {
-                window.soundManager.playSound(this.preferences.defaultSound, false);
+                // Check if the sound is already playing
+                if (!window.soundManager.activeSounds.has(this.preferences.defaultSound)) {
+                    window.soundManager.playSound(this.preferences.defaultSound);
+                    // Set the volume for this specific sound
+                    window.soundManager.setSoundVolume(this.preferences.defaultSound, defaultVolume);
+                }
+            }
+            
+            // Update volume for all currently playing sounds
+            for (const [soundKey, soundData] of window.soundManager.activeSounds) {
+                window.soundManager.setSoundVolume(soundKey, defaultVolume);
             }
         }
     }

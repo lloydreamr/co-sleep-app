@@ -293,7 +293,7 @@ class CoSleepApp {
         this.updateStatusText('Setting up connection...');
         
         // Continue playing background sound if active
-        if (this.soundManager && this.soundManager.currentSound) {
+        if (window.soundManager && window.soundManager.isAnySoundPlaying()) {
             console.log('🎵 Continuing background sound during call');
         }
         
@@ -698,7 +698,7 @@ class CoSleepApp {
         this.updateMuteUI();
         
         // Keep background sound playing if active
-        if (this.soundManager && this.soundManager.currentSound) {
+        if (window.soundManager && window.soundManager.isAnySoundPlaying()) {
             console.log('🎵 Keeping background sound active after disconnection');
         }
         
@@ -918,7 +918,7 @@ class CoSleepApp {
         this.updateMuteUI();
         
         // Keep background sound playing if active
-        if (this.soundManager && this.soundManager.currentSound) {
+        if (window.soundManager && window.soundManager.isAnySoundPlaying()) {
             console.log('🎵 Keeping background sound active after call');
         }
         
@@ -991,8 +991,8 @@ class CoSleepApp {
         this.stopMuteSync();
         
         // Clean up sound system
-        if (this.soundManager) {
-            this.soundManager.destroy();
+        if (window.soundManager) {
+            window.soundManager.destroy();
         }
         
         if (this.isInCall) {
