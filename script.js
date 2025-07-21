@@ -120,108 +120,119 @@ class CoSleepApp {
     }
 
     initializeSocket() {
-        // Check if Socket.IO is available
-        if (typeof io === 'undefined') {
-            console.error('❌ Socket.IO not available. Server may not be running.');
-            this.showError('Connection failed. Please make sure the server is running.');
-            return;
-        }
+        // Check if Socket.IO is available, with retry mechanism
+        const initializeSocketWithRetry = (retryCount = 0) => {
+            if (typeof io === 'undefined') {
+                if (retryCount < 10) { // Try up to 10 times
+                    console.log(`Socket.IO not available, retrying... (${retryCount + 1}/10)`);
+                    setTimeout(() => initializeSocketWithRetry(retryCount + 1), 500);
+                    return;
+                } else {
+                    console.error('❌ Socket.IO not available after retries. Server may not be running.');
+                    this.showError('Connection failed. Please make sure the server is running.');
+                    return;
+                }
+            }
 
-        try {
-            // Connect to the server
-            this.socket = io({
-                transports: ["websocket", "polling"],
-                upgrade: true,
-                rememberUpgrade: true,
-                timeout: 20000
-            });
-            
-            // Handle connection events
-            this.socket.on('connect', () => {
-                console.log('✅ Connected to server');
-            });
-            
-            this.socket.on('connect_error', (error) => {
-                console.error('❌ Connection error:', error);
-                this.showError('Unable to connect to server. Please check your internet connection.');
-            });
-            
-            this.socket.on('disconnect', (reason) => {
-                console.log('🔌 Disconnected from server:', reason);
-                if (this.isInCall) {
-                    this.handlePartnerDisconnection();
-                }
-            });
-            
-            // Handle match found
-            this.socket.on('match-found', (data) => {
-                console.log('Match found with:', data.partnerId, 'Initiator:', data.isInitiator);
-                this.partnerId = data.partnerId;
-                this.isInitiator = data.isInitiator;
-                this.connectToPeer();
+            try {
+                // Connect to the server
+                this.socket = io({
+                    transports: ["websocket", "polling"],
+                    upgrade: true,
+                    rememberUpgrade: true,
+                    timeout: 20000
+                });
                 
-                // Set a timeout for connection establishment
-                this.connectionTimeout = setTimeout(() => {
-                    if (this.isInCall && this.peerConnection?.connectionState !== 'connected') {
-                        console.log('⏰ Connection timeout triggered');
-                        console.log('Current connection state:', this.peerConnection?.connectionState);
-                        console.log('Current ICE connection state:', this.peerConnection?.iceConnectionState);
-                        console.log('Current signaling state:', this.peerConnection?.signalingState);
-                        this.handleConnectionFailure();
+                // Handle connection events
+                this.socket.on('connect', () => {
+                    console.log('✅ Connected to server');
+                });
+                
+                this.socket.on('connect_error', (error) => {
+                    console.error('❌ Connection error:', error);
+                    this.showError('Unable to connect to server. Please check your internet connection.');
+                });
+                
+                this.socket.on('disconnect', (reason) => {
+                    console.log('🔌 Disconnected from server:', reason);
+                    if (this.isInCall) {
+                        this.handlePartnerDisconnection();
                     }
-                }, 30000); // 30 second timeout (increased from 15)
-            });
-            
-            // Handle WebRTC signaling
-            this.socket.on('offer', async (data) => {
-                console.log('Received offer from:', data.from);
-                await this.handleOffer(data.offer, data.from);
-            });
-            
-            this.socket.on('answer', async (data) => {
-                console.log('Received answer from:', data.from);
-                await this.handleAnswer(data.answer);
-            });
-            
-            this.socket.on('ice-candidate', async (data) => {
-                console.log('Received ICE candidate from:', data.from);
-                await this.handleIceCandidate(data.candidate);
-            });
-            
-            // Handle partner disconnection
-            this.socket.on('partner-disconnected', () => {
-                console.log('Partner disconnected');
-                this.handlePartnerDisconnection();
-            });
-            
-            this.socket.on('call-ended', () => {
-                console.log('Call ended by partner');
-                this.handlePartnerDisconnection();
-            });
-            
-            this.socket.on('partner-skipped', () => {
-                console.log('Partner skipped');
-                this.handlePartnerDisconnection();
-            });
-            
-            this.socket.on('return-to-queue', () => {
-                console.log('Returning to queue');
-                this.isInCall = false;
-                this.showInterface('waiting');
-                this.partnerId = null;
-            });
-            
-            this.socket.on('online-count', (data) => {
-                console.log(`Online users: ${data.count}`);
-                if (this.onlineCount) {
-                    this.onlineCount.textContent = data.count;
-                }
-            });
-            
-        } catch (error) {
-            console.error('❌ Error initializing socket:', error);
-            this.showError('Failed to connect to server. Please refresh the page.');
-        }
+                });
+                
+                // Handle match found
+                this.socket.on('match-found', (data) => {
+                    console.log('Match found with:', data.partnerId, 'Initiator:', data.isInitiator);
+                    this.partnerId = data.partnerId;
+                    this.isInitiator = data.isInitiator;
+                    this.connectToPeer();
+                    
+                    // Set a timeout for connection establishment
+                    this.connectionTimeout = setTimeout(() => {
+                        if (this.isInCall && this.peerConnection?.connectionState !== 'connected') {
+                            console.log('⏰ Connection timeout triggered');
+                            console.log('Current connection state:', this.peerConnection?.connectionState);
+                            console.log('Current ICE connection state:', this.peerConnection?.iceConnectionState);
+                            console.log('Current signaling state:', this.peerConnection?.signalingState);
+                            this.handleConnectionFailure();
+                        }
+                    }, 30000); // 30 second timeout (increased from 15)
+                });
+                
+                // Handle WebRTC signaling
+                this.socket.on('offer', async (data) => {
+                    console.log('Received offer from:', data.from);
+                    await this.handleOffer(data.offer, data.from);
+                });
+                
+                this.socket.on('answer', async (data) => {
+                    console.log('Received answer from:', data.from);
+                    await this.handleAnswer(data.answer);
+                });
+                
+                this.socket.on('ice-candidate', async (data) => {
+                    console.log('Received ICE candidate from:', data.from);
+                    await this.handleIceCandidate(data.candidate);
+                });
+                
+                // Handle partner disconnection
+                this.socket.on('partner-disconnected', () => {
+                    console.log('Partner disconnected');
+                    this.handlePartnerDisconnection();
+                });
+                
+                this.socket.on('call-ended', () => {
+                    console.log('Call ended by partner');
+                    this.handlePartnerDisconnection();
+                });
+                
+                this.socket.on('partner-skipped', () => {
+                    console.log('Partner skipped');
+                    this.handlePartnerDisconnection();
+                });
+                
+                this.socket.on('return-to-queue', () => {
+                    console.log('Returning to queue');
+                    this.isInCall = false;
+                    this.showInterface('waiting');
+                    this.partnerId = null;
+                });
+                
+                this.socket.on('online-count', (data) => {
+                    console.log(`Online users: ${data.count}`);
+                    if (this.onlineCount) {
+                        this.onlineCount.textContent = data.count;
+                    }
+                });
+                
+            } catch (error) {
+                console.error('❌ Error initializing socket:', error);
+                this.showError('Failed to connect to server. Please refresh the page.');
+            }
+        };
+
+        // Start the initialization process
+        initializeSocketWithRetry();
     }
 
     async initializeWebRTC() {
