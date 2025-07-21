@@ -288,17 +288,6 @@ class CoSleepApp {
         
         const tests = [
             {
-                name: 'Basic Internet',
-                test: async () => {
-                    const response = await fetch('https://httpbin.org/get', { 
-                        method: 'GET',
-                        mode: 'no-cors',
-                        signal: AbortSignal.timeout(5000)
-                    });
-                    return true;
-                }
-            },
-            {
                 name: 'WebRTC Support',
                 test: async () => {
                     if (!window.RTCPeerConnection) {
