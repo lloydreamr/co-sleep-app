@@ -1,5 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma schema for Co-Sleep app
+// Models: User, SleepSession, Block, Favorite, Report, Rating, Subscription, SleepAnalytics, BackgroundSound, UserSound
+// All relations and fields are documented for clarity
 
 generator client {
   provider = "prisma-client-js"
@@ -10,193 +11,213 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// =====================
 // User Management
+// =====================
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  username      String?  @unique
-  name          String?
-  password      String?  // Add password field
-  avatar        String?
-  timezone      String   @default("UTC")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
+  id            String   @id @default(cuid()) // Unique user ID
+  email         String   @unique              // User email (unique)
+  username      String?  @unique              // Optional username (unique)
+  name          String?                       // Optional display name
+  password      String?                       // Hashed password
+  avatar        String?                       // Optional avatar URL
+  timezone      String   @default("UTC")      // User's timezone
+  createdAt     DateTime @default(now())      // Account creation timestamp
+  updatedAt     DateTime @updatedAt           // Last update timestamp
+
   // Premium & Subscription
-  isPremium     Boolean  @default(false)
-  premiumUntil  DateTime?
-  subscriptionId String?
-  
+  isPremium     Boolean  @default(false)      // Premium status
+  premiumUntil  DateTime?                     // Premium expiration
+  subscriptionId String?                      // Stripe subscription ID (if any)
+
   // Sleep Preferences
-  sleepTime     String?  // e.g., "22:00"
-  wakeTime      String?  // e.g., "07:00"
-  backgroundSounds String[] @default([])
-  autoDisconnect Boolean @default(true)
-  disconnectTime Int?    // minutes, e.g., 480 for 8 hours
-  
+  sleepTime     String?                       // Preferred sleep time (e.g., "22:00")
+  wakeTime      String?                       // Preferred wake time (e.g., "07:00")
+  backgroundSounds String[] @default([])      // List of enabled background sound IDs
+  autoDisconnect Boolean @default(true)       // Auto-disconnect after sleep
+  disconnectTime Int?                         // Minutes until auto-disconnect
+
   // Privacy Settings
-  allowAnalytics Boolean @default(true)
-  showOnline     Boolean @default(true)
-  
+  allowAnalytics Boolean @default(true)       // Allow analytics collection
+  showOnline     Boolean @default(true)       // Show online status
+
   // Relationships
-  sleepSessions    SleepSession[] @relation("UserSessions")
-  partnerSessions  SleepSession[] @relation("PartnerSessions")
-  blocks           Block[]        @relation("UserBlocks")
-  blockedBy        Block[]        @relation("BlockedByUser")
-  favorites        Favorite[]     @relation("UserFavorites")
-  favoritedBy      Favorite[]     @relation("FavoritedByUser")
-  reports          Report[]       @relation("UserReports")
-  reportedBy       Report[]       @relation("ReportedByUser")
-  ratings          Rating[]       @relation("UserRatings")
-  ratedBy          Rating[]       @relation("RatedByUser")
-  
+  sleepSessions    SleepSession[] @relation("UserSessions")      // Sessions as user
+  partnerSessions  SleepSession[] @relation("PartnerSessions")   // Sessions as partner
+  blocks           Block[]        @relation("UserBlocks")        // Users this user blocked
+  blockedBy        Block[]        @relation("BlockedByUser")     // Users who blocked this user
+  favorites        Favorite[]     @relation("UserFavorites")     // Users this user favorited
+  favoritedBy      Favorite[]     @relation("FavoritedByUser")   // Users who favorited this user
+  reports          Report[]       @relation("UserReports")       // Reports made by this user
+  reportedBy       Report[]       @relation("ReportedByUser")    // Reports against this user
+  ratings          Rating[]       @relation("UserRatings")       // Ratings given by this user
+  ratedBy          Rating[]       @relation("RatedByUser")       // Ratings received by this user
+
   @@map("users")
 }
 
-// Sleep Sessions
+// =====================
+// Sleep Sessions (voice call sessions between users)
+// =====================
 model SleepSession {
-  id          String   @id @default(cuid())
-  userId      String
-  partnerId   String?
-  startTime   DateTime
-  endTime     DateTime?
-  duration    Int?     // in minutes
-  quality     Int?     // 1-5 rating
-  notes       String?
-  createdAt   DateTime @default(now())
-  
+  id          String   @id @default(cuid()) // Unique session ID
+  userId      String                          // User who started session
+  partnerId   String?                         // Optional partner user ID
+  startTime   DateTime                        // Session start time
+  endTime     DateTime?                       // Session end time
+  duration    Int?     // in minutes          // Session duration
+  quality     Int?     // 1-5 rating          // User-reported quality
+  notes       String?                         // Optional session notes
+  createdAt   DateTime @default(now())        // Record creation timestamp
+
   // Connection Details
-  connectionQuality String? // "excellent", "good", "fair", "poor"
-  iceServersUsed   String[]
-  connectionType   String? // "direct", "relay", "host"
-  
+  connectionQuality String?                   // "excellent", "good", etc.
+  iceServersUsed   String[]                   // ICE servers used for connection
+  connectionType   String?                    // "direct", "relay", "host"
+
   // User Relationships
-  user        User     @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade)
-  partner     User?    @relation("PartnerSessions", fields: [partnerId], references: [id], onDelete: SetNull)
-  
+  user        User     @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade) // Session owner
+  partner     User?    @relation("PartnerSessions", fields: [partnerId], references: [id], onDelete: SetNull) // Session partner
+
   @@map("sleep_sessions")
 }
 
-// User Blocks
+// =====================
+// User Blocks (blocking other users)
+// =====================
 model Block {
-  id          String   @id @default(cuid())
-  userId      String
-  blockedUserId String
-  reason      String?
-  createdAt   DateTime @default(now())
-  
+  id          String   @id @default(cuid()) // Unique block ID
+  userId      String                          // User who blocks
+  blockedUserId String                        // User being blocked
+  reason      String?                         // Optional reason
+  createdAt   DateTime @default(now())        // Block creation timestamp
+
   // Relationships
   user        User     @relation("UserBlocks", fields: [userId], references: [id], onDelete: Cascade)
   blockedUser User     @relation("BlockedByUser", fields: [blockedUserId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, blockedUserId])
   @@map("blocks")
 }
 
-// User Favorites
+// =====================
+// User Favorites (favoriting other users)
+// =====================
 model Favorite {
-  id          String   @id @default(cuid())
-  userId      String
-  favoriteUserId String
-  createdAt   DateTime @default(now())
-  
+  id          String   @id @default(cuid()) // Unique favorite ID
+  userId      String                          // User who favorites
+  favoriteUserId String                       // User being favorited
+  createdAt   DateTime @default(now())        // Favorite creation timestamp
+
   // Relationships
   user        User     @relation("UserFavorites", fields: [userId], references: [id], onDelete: Cascade)
   favoriteUser User    @relation("FavoritedByUser", fields: [favoriteUserId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, favoriteUserId])
   @@map("favorites")
 }
 
-// User Reports
+// =====================
+// User Reports (reporting other users)
+// =====================
 model Report {
-  id          String   @id @default(cuid())
-  userId      String
-  reportedUserId String
-  reason      String
-  description String?
-  status      String   @default("pending") // "pending", "reviewed", "resolved"
-  createdAt   DateTime @default(now())
-  resolvedAt  DateTime?
-  
+  id          String   @id @default(cuid()) // Unique report ID
+  userId      String                          // User who reports
+  reportedUserId String                       // User being reported
+  reason      String                          // Reason for report
+  description String?                         // Optional description
+  status      String   @default("pending")    // "pending", "reviewed", "resolved"
+  createdAt   DateTime @default(now())        // Report creation timestamp
+  resolvedAt  DateTime?                       // When report was resolved
+
   // Relationships
   user        User     @relation("UserReports", fields: [userId], references: [id], onDelete: Cascade)
   reportedUser User    @relation("ReportedByUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
-  
+
   @@map("reports")
 }
 
-// User Ratings
+// =====================
+// User Ratings (rating other users)
+// =====================
 model Rating {
-  id          String   @id @default(cuid())
-  userId      String
-  ratedUserId String
-  rating      Int      // 1-5 stars
-  comment     String?
-  isAnonymous Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  
+  id          String   @id @default(cuid()) // Unique rating ID
+  userId      String                          // User who rates
+  ratedUserId String                          // User being rated
+  rating      Int      // 1-5 stars           // Star rating
+  comment     String?                         // Optional comment
+  isAnonymous Boolean  @default(true)         // Anonymous rating
+  createdAt   DateTime @default(now())        // Rating creation timestamp
+
   // Relationships
   user        User     @relation("UserRatings", fields: [userId], references: [id], onDelete: Cascade)
   ratedUser   User     @relation("RatedByUser", fields: [ratedUserId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, ratedUserId])
   @@map("ratings")
 }
 
-// Premium Subscriptions
+// =====================
+// Premium Subscriptions (Stripe integration)
+// =====================
 model Subscription {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  stripeCustomerId String @unique
-  stripeSubscriptionId String @unique
-  plan        String   // "premium", "pro"
-  status      String   // "active", "canceled", "past_due"
-  currentPeriodStart DateTime
-  currentPeriodEnd   DateTime
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id          String   @id @default(cuid()) // Unique subscription ID
+  userId      String   @unique                // User with subscription
+  stripeCustomerId String @unique             // Stripe customer ID
+  stripeSubscriptionId String @unique         // Stripe subscription ID
+  plan        String   // "premium", "pro"    // Subscription plan
+  status      String   // "active", etc.      // Subscription status
+  currentPeriodStart DateTime                 // Current period start
+  currentPeriodEnd   DateTime                 // Current period end
+  createdAt   DateTime @default(now())        // Subscription creation timestamp
+  updatedAt   DateTime @updatedAt             // Last update timestamp
+
   @@map("subscriptions")
 }
 
-// Sleep Analytics
+// =====================
+// Sleep Analytics (per-user stats)
+// =====================
 model SleepAnalytics {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  totalSessions Int    @default(0)
-  totalDuration Int    @default(0) // in minutes
-  averageQuality Float @default(0)
-  averageDuration Float @default(0)
-  lastSession DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id          String   @id @default(cuid()) // Unique analytics ID
+  userId      String   @unique                // User for analytics
+  totalSessions Int    @default(0)            // Total sessions
+  totalDuration Int    @default(0)            // Total duration (minutes)
+  averageQuality Float @default(0)            // Average quality (1-5)
+  averageDuration Float @default(0)           // Average session duration (minutes)
+  lastSession DateTime?                       // Last session timestamp
+  createdAt   DateTime @default(now())        // Analytics creation timestamp
+  updatedAt   DateTime @updatedAt             // Last update timestamp
+
   @@map("sleep_analytics")
 }
 
-// Background Sounds (Premium Feature)
+// =====================
+// Background Sounds (premium feature)
+// =====================
 model BackgroundSound {
-  id          String   @id @default(cuid())
-  name        String
-  category    String   // "nature", "ambient", "white-noise", "custom"
-  fileUrl     String
-  duration    Int?     // in seconds, null for loop
-  isPremium   Boolean  @default(false)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  
+  id          String   @id @default(cuid()) // Unique sound ID
+  name        String                          // Sound name
+  category    String   // "nature", etc.      // Sound category
+  fileUrl     String                          // File URL
+  duration    Int?     // in seconds          // Duration (null = loop)
+  isPremium   Boolean  @default(false)        // Premium-only sound
+  isActive    Boolean  @default(true)         // Is sound active
+  createdAt   DateTime @default(now())        // Sound creation timestamp
+
   @@map("background_sounds")
 }
 
+// =====================
 // User Custom Sounds
+// =====================
 model UserSound {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  fileUrl     String
-  duration    Int?
-  createdAt   DateTime @default(now())
-  
+  id          String   @id @default(cuid()) // Unique user sound ID
+  userId      String                          // Owner user ID
+  name        String                          // Sound name
+  fileUrl     String                          // File URL
+  duration    Int?                            // Duration (seconds)
+  createdAt   DateTime @default(now())        // Sound creation timestamp
+
   @@map("user_sounds")
 }

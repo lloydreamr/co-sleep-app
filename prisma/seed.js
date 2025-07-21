@@ -75,8 +75,10 @@ async function main() {
   // Create test user (for development)
   if (process.env.NODE_ENV === 'development') {
     console.log('👤 Creating test user...');
-    const testUser = await prisma.user.create({
-      data: {
+    const testUser = await prisma.user.upsert({
+      where: { email: 'test@example.com' },
+      update: {},
+      create: {
         email: 'test@example.com',
         username: 'testuser',
         name: 'Test User',
@@ -92,8 +94,10 @@ async function main() {
     });
 
     // Create analytics for test user
-    await prisma.sleepAnalytics.create({
-      data: {
+    await prisma.sleepAnalytics.upsert({
+      where: { userId: testUser.id },
+      update: {},
+      create: {
         userId: testUser.id,
         totalSessions: 5,
         totalDuration: 2400, // 40 hours
