@@ -21,6 +21,12 @@ class CoSleepApp {
         this.analyticsManager = window.analyticsManager;
         this.preferencesManager = window.preferencesManager;
         
+        // Performance optimizations
+        this.debounceTimers = new Map();
+        this.connectionPool = new Map();
+        this.audioContextPool = [];
+        this.maxAudioContexts = 3;
+        
         this.initializeElements();
         this.bindEvents();
         this.initializeWebRTC();
@@ -30,6 +36,11 @@ class CoSleepApp {
         this.initializeAnalytics();
         this.initializePreferences();
         this.initializePreferencesUI(); // Initialize preferences UI
+        
+        // Initialize UI performance optimizations
+        this.initializeUIPerformance();
+        this.setupEventDelegation();
+        this.startUIPerformanceMonitoring();
         
         // Start periodic mute state sync
         this.startMuteSync();
@@ -248,44 +259,139 @@ class CoSleepApp {
     async testNetworkConnectivity() {
         console.log('🌐 Testing network connectivity...');
         
-        try {
-            // Test basic internet connectivity
-            const response = await fetch('https://httpbin.org/get', { 
-                method: 'GET',
-                mode: 'no-cors'
-            });
-            console.log('✅ Basic internet connectivity: OK');
-        } catch (error) {
-            console.warn('⚠️ Basic internet connectivity test failed:', error);
+        const tests = [
+            {
+                name: 'Basic Internet',
+                test: async () => {
+                    const response = await fetch('https://httpbin.org/get', { 
+                        method: 'GET',
+                        mode: 'no-cors',
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    return true;
+                }
+            },
+            {
+                name: 'WebRTC Support',
+                test: async () => {
+                    if (!window.RTCPeerConnection) {
+                        throw new Error('WebRTC not supported');
+                    }
+                    return true;
+                }
+            },
+            {
+                name: 'Microphone Access',
+                test: async () => {
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        throw new Error('getUserMedia not supported');
+                    }
+                    return true;
+                }
+            },
+            {
+                name: 'Socket.IO Connection',
+                test: async () => {
+                    if (typeof io === 'undefined') {
+                        throw new Error('Socket.IO not available');
+                    }
+                    return true;
+                }
+            }
+        ];
+        
+        const results = [];
+        
+        for (const test of tests) {
+            try {
+                await test.test();
+                console.log(`✅ ${test.name}: OK`);
+                results.push({ name: test.name, status: 'success' });
+            } catch (error) {
+                console.error(`❌ ${test.name}: ${error.message}`);
+                results.push({ name: test.name, status: 'failed', error: error.message });
+            }
         }
         
-        try {
-            // Test WebRTC support
-            if (!window.RTCPeerConnection) {
-                throw new Error('WebRTC not supported');
-            }
-            console.log('✅ WebRTC support: OK');
-        } catch (error) {
-            console.error('❌ WebRTC not supported:', error);
-            this.showError('WebRTC is not supported in this browser.');
+        // Log overall connectivity status
+        const failedTests = results.filter(r => r.status === 'failed');
+        if (failedTests.length > 0) {
+            console.warn('⚠️ Some connectivity tests failed:', failedTests);
+        } else {
+            console.log('✅ All connectivity tests passed');
         }
         
-        try {
-            // Test getUserMedia support
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error('getUserMedia not supported');
-            }
-            console.log('✅ getUserMedia support: OK');
-        } catch (error) {
-            console.error('❌ getUserMedia not supported:', error);
-            this.showError('Microphone access is not supported in this browser.');
-        }
+        return results;
     }
 
-    showError(message) {
+    // Enhanced connection monitoring
+    startConnectionMonitoring() {
+        if (this.connectionMonitorInterval) {
+            clearInterval(this.connectionMonitorInterval);
+        }
+        
+        this.connectionMonitorInterval = setInterval(() => {
+            if (!this.isInCall || !this.peerConnection) {
+                return;
+            }
+            
+            const stats = {
+                connectionState: this.peerConnection.connectionState,
+                iceConnectionState: this.peerConnection.iceConnectionState,
+                signalingState: this.peerConnection.signalingState,
+                timestamp: Date.now()
+            };
+            
+            // Log significant state changes
+            if (this.lastConnectionStats) {
+                const last = this.lastConnectionStats;
+                if (last.connectionState !== stats.connectionState) {
+                    console.log(`🔗 Connection state changed: ${last.connectionState} → ${stats.connectionState}`);
+                }
+                if (last.iceConnectionState !== stats.iceConnectionState) {
+                    console.log(`🧊 ICE state changed: ${last.iceConnectionState} → ${stats.iceConnectionState}`);
+                }
+            }
+            
+            this.lastConnectionStats = stats;
+            
+            // Alert on connection issues
+            if (stats.connectionState === 'failed' || stats.iceConnectionState === 'failed') {
+                console.warn('⚠️ Connection issues detected:', stats);
+            }
+        }, 5000); // Check every 5 seconds
+    }
+    
+    stopConnectionMonitoring() {
+        if (this.connectionMonitorInterval) {
+            clearInterval(this.connectionMonitorInterval);
+            this.connectionMonitorInterval = null;
+        }
+        this.lastConnectionStats = null;
+    }
+
+    // Enhanced error handling with performance monitoring
+    showError(message, isRecoverable = true) {
+        console.error('❌ Error:', message);
+        
+        // Log performance metrics at error time
+        if (window.performance && window.performance.memory) {
+            console.error('Memory usage at error:', {
+                usedJSHeapSize: Math.round(window.performance.memory.usedJSHeapSize / 1024 / 1024 * 100) / 100 + 'MB',
+                totalJSHeapSize: Math.round(window.performance.memory.totalJSHeapSize / 1024 / 1024 * 100) / 100 + 'MB'
+            });
+        }
+        
         if (this.errorInterface && this.errorText) {
             this.errorText.textContent = message;
             this.errorInterface.style.display = 'flex';
+            
+            // Add retry button if error is recoverable
+            if (isRecoverable && this.retryBtn) {
+                this.retryBtn.style.display = 'block';
+            } else if (this.retryBtn) {
+                this.retryBtn.style.display = 'none';
+            }
         } else {
             // Fallback to toast notification
             const errorDiv = document.createElement('div');
@@ -301,6 +407,8 @@ class CoSleepApp {
                 font-size: 0.9rem;
                 z-index: 1000;
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                max-width: 90vw;
+                word-wrap: break-word;
             `;
             errorDiv.textContent = message;
             document.body.appendChild(errorDiv);
@@ -375,6 +483,9 @@ class CoSleepApp {
         
         // Update status to show connecting
         this.updateStatusText('Setting up connection...');
+        
+        // Start connection monitoring
+        this.startConnectionMonitoring();
         
         // Continue playing background sound if active
         if (window.soundManager && window.soundManager.isAnySoundPlaying()) {
@@ -743,6 +854,9 @@ class CoSleepApp {
         // Stop status check
         this.stopStatusCheck();
         
+        // Stop connection monitoring
+        this.stopConnectionMonitoring();
+        
         // Clear connection timeout
         if (this.connectionTimeout) {
             clearTimeout(this.connectionTimeout);
@@ -964,6 +1078,9 @@ class CoSleepApp {
         // Stop status check
         this.stopStatusCheck();
         
+        // Stop connection monitoring
+        this.stopConnectionMonitoring();
+        
         // Notify server about call end
         if (this.socket) {
             this.socket.emit('end-call');
@@ -1074,10 +1191,16 @@ class CoSleepApp {
         // Stop mute sync
         this.stopMuteSync();
         
+        // Stop connection monitoring
+        this.stopConnectionMonitoring();
+        
         // Clean up sound system
         if (window.soundManager) {
             window.soundManager.destroy();
         }
+        
+        // Use enhanced cleanup
+        this.cleanup();
         
         if (this.isInCall) {
             this.endCall();
@@ -1242,6 +1365,443 @@ class CoSleepApp {
         this.currentUser = null;
         this.updateAuthUI();
         window.location.reload();
+    }
+
+    // Performance optimization: Debounced event handler
+    debounce(func, wait) {
+        return (...args) => {
+            clearTimeout(this.debounceTimers.get(func));
+            this.debounceTimers.set(func, setTimeout(() => func.apply(this, args), wait));
+        };
+    }
+
+    // Performance optimization: Connection pooling
+    getConnectionFromPool() {
+        if (this.connectionPool.size > 0) {
+            const [key, connection] = this.connectionPool.entries().next().value;
+            this.connectionPool.delete(key);
+            return connection;
+        }
+        return null;
+    }
+
+    addConnectionToPool(connection) {
+        if (this.connectionPool.size < 5) { // Limit pool size
+            this.connectionPool.set(Date.now(), connection);
+        }
+    }
+
+    // Performance optimization: Audio context pooling
+    getAudioContext() {
+        if (this.audioContextPool.length > 0) {
+            return this.audioContextPool.pop();
+        }
+        return new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    returnAudioContext(context) {
+        if (this.audioContextPool.length < this.maxAudioContexts) {
+            try {
+                context.close();
+            } catch (e) {
+                // Context already closed
+            }
+            this.audioContextPool.push(context);
+        }
+    }
+
+    // Enhanced cleanup with performance optimizations
+    cleanup() {
+        // Clear all debounce timers
+        this.debounceTimers.forEach(timer => clearTimeout(timer));
+        this.debounceTimers.clear();
+        
+        // Clear connection pool
+        this.connectionPool.forEach(connection => {
+            if (connection && typeof connection.close === 'function') {
+                connection.close();
+            }
+        });
+        this.connectionPool.clear();
+        
+        // Clear audio context pool
+        this.audioContextPool.forEach(context => {
+            try {
+                context.close();
+            } catch (e) {
+                // Context already closed
+            }
+        });
+        this.audioContextPool = [];
+        
+        // Stop all intervals
+        this.stopMuteSync();
+        this.stopStatusCheck();
+        
+        // Clear timeouts
+        if (this.connectionTimeout) {
+            clearTimeout(this.connectionTimeout);
+            this.connectionTimeout = null;
+        }
+        
+        // Clean up WebRTC resources
+        if (this.peerConnection) {
+            this.peerConnection.close();
+            this.peerConnection = null;
+        }
+        
+        if (this.localStream) {
+            this.localStream.getTracks().forEach(track => track.stop());
+            this.localStream = null;
+        }
+        
+        // Clean up audio processing
+        if (this.audioContext) {
+            this.audioContext.close();
+            this.audioContext = null;
+            this.audioNodes = null;
+        }
+        
+        // Remove audio elements
+        const audioElements = document.querySelectorAll('audio');
+        audioElements.forEach(audio => audio.remove());
+    }
+
+    // UI Performance optimizations
+    initializeUIPerformance() {
+        // Debounced UI updates
+        this.uiUpdateQueue = new Set();
+        this.uiUpdateTimeout = null;
+        
+        // Intersection Observer for lazy loading
+        this.setupIntersectionObserver();
+        
+        // Optimized DOM queries
+        this.cachedElements = new Map();
+        
+        // Virtual scrolling setup
+        this.virtualScrollConfig = {
+            itemHeight: 60,
+            visibleItems: 10,
+            bufferSize: 5
+        };
+    }
+
+    // Debounced UI update system
+    queueUIUpdate(elementId, updateFunction) {
+        this.uiUpdateQueue.add({ elementId, updateFunction });
+        
+        if (this.uiUpdateTimeout) {
+            clearTimeout(this.uiUpdateTimeout);
+        }
+        
+        this.uiUpdateTimeout = setTimeout(() => {
+            this.processUIUpdates();
+        }, 16); // ~60fps
+    }
+
+    processUIUpdates() {
+        const updates = Array.from(this.uiUpdateQueue);
+        this.uiUpdateQueue.clear();
+        
+        // Batch DOM updates
+        const fragment = document.createDocumentFragment();
+        
+        updates.forEach(({ elementId, updateFunction }) => {
+            const element = this.getCachedElement(elementId);
+            if (element) {
+                updateFunction(element);
+            }
+        });
+        
+        // Single reflow/repaint
+        if (fragment.children.length > 0) {
+            document.body.appendChild(fragment);
+        }
+    }
+
+    // Cached element queries
+    getCachedElement(id) {
+        if (!this.cachedElements.has(id)) {
+            const element = document.getElementById(id);
+            if (element) {
+                this.cachedElements.set(id, element);
+            }
+        }
+        return this.cachedElements.get(id);
+    }
+
+    // Optimized showInterface with performance
+    showInterface(interfaceName) {
+        // Use requestAnimationFrame for smooth transitions
+        requestAnimationFrame(() => {
+            // Hide all interfaces first
+            const interfaces = ['callInterface', 'loadingInterface', 'errorInterface'];
+            interfaces.forEach(id => {
+                const element = this.getCachedElement(id);
+                if (element) {
+                    element.style.display = 'none';
+                    element.setAttribute('aria-hidden', 'true');
+                }
+            });
+            
+            switch (interfaceName) {
+                case 'main':
+                    // Main interface is always visible by default
+                    break;
+                case 'waiting':
+                    const loadingElement = this.getCachedElement('loadingInterface');
+                    if (loadingElement) {
+                        loadingElement.style.display = 'flex';
+                        loadingElement.setAttribute('aria-hidden', 'false');
+                        const loadingText = this.getCachedElement('loadingText');
+                        if (loadingText) {
+                            loadingText.textContent = 'Finding partner...';
+                        }
+                    }
+                    break;
+                case 'call':
+                    const callElement = this.getCachedElement('callInterface');
+                    if (callElement) {
+                        callElement.style.display = 'flex';
+                        callElement.setAttribute('aria-hidden', 'false');
+                    }
+                    break;
+            }
+        });
+    }
+
+    // Optimized status text updates
+    updateStatusText(text) {
+        this.queueUIUpdate('statusText', (element) => {
+            if (element && this.isInCall) {
+                console.log('📊 Updating status text to:', text);
+                element.textContent = text;
+                
+                // Update ARIA live region
+                element.setAttribute('aria-live', 'polite');
+            }
+        });
+    }
+
+    // Optimized mute UI updates
+    updateMuteUI() {
+        this.queueUIUpdate('muteBtn', (element) => {
+            if (!element) return;
+            
+            // Update button class
+            element.classList.toggle('muted', this.isMuted);
+            
+            // Update button icon with performance optimization
+            const muteIcon = element.querySelector('i');
+            if (!muteIcon) return;
+            
+            if (this.isMuted) {
+                muteIcon.className = 'fas fa-microphone-slash';
+                element.setAttribute('aria-label', 'Unmute microphone');
+            } else {
+                muteIcon.className = 'fas fa-microphone';
+                element.setAttribute('aria-label', 'Mute microphone');
+            }
+        });
+    }
+
+    // Optimized online count updates
+    updateOnlineCount(count) {
+        this.queueUIUpdate('onlineCount', (element) => {
+            if (element) {
+                const countText = element.querySelector('.count-text');
+                if (countText) {
+                    countText.textContent = `${count} online`;
+                }
+            }
+        });
+    }
+
+    // Intersection Observer for lazy loading
+    setupIntersectionObserver() {
+        if ('IntersectionObserver' in window) {
+            this.intersectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Load content when visible
+                        const element = entry.target;
+                        if (element.dataset.lazyLoad) {
+                            this.loadLazyContent(element);
+                        }
+                    }
+                });
+            }, {
+                rootMargin: '50px',
+                threshold: 0.1
+            });
+        }
+    }
+
+    // Lazy content loading
+    loadLazyContent(element) {
+        const contentType = element.dataset.lazyLoad;
+        
+        switch (contentType) {
+            case 'sound':
+                this.loadSoundContent(element);
+                break;
+            case 'preference':
+                this.loadPreferenceContent(element);
+                break;
+        }
+        
+        // Remove observer after loading
+        this.intersectionObserver.unobserve(element);
+        element.removeAttribute('data-lazy-load');
+    }
+
+    // Virtual scrolling for large lists
+    setupVirtualScroll(container, items, itemHeight = 60) {
+        const containerHeight = container.clientHeight;
+        const visibleItems = Math.ceil(containerHeight / itemHeight);
+        const bufferSize = Math.ceil(visibleItems / 2);
+        
+        let startIndex = 0;
+        let endIndex = Math.min(visibleItems + bufferSize, items.length);
+        
+        const renderItems = () => {
+            const fragment = document.createDocumentFragment();
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                const item = items[i];
+                const itemElement = this.createListItem(item, i);
+                fragment.appendChild(itemElement);
+            }
+            
+            container.innerHTML = '';
+            container.appendChild(fragment);
+        };
+        
+        container.addEventListener('scroll', () => {
+            const scrollTop = container.scrollTop;
+            const newStartIndex = Math.floor(scrollTop / itemHeight);
+            
+            if (newStartIndex !== startIndex) {
+                startIndex = newStartIndex;
+                endIndex = Math.min(startIndex + visibleItems + bufferSize, items.length);
+                renderItems();
+            }
+        });
+        
+        // Initial render
+        renderItems();
+    }
+
+    // Create list item with performance optimization
+    createListItem(item, index) {
+        const li = document.createElement('li');
+        li.style.height = '60px';
+        li.style.position = 'absolute';
+        li.style.top = `${index * 60}px`;
+        li.style.width = '100%';
+        
+        // Use DocumentFragment for better performance
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(li);
+        
+        return li;
+    }
+
+    // Optimized event delegation
+    setupEventDelegation() {
+        document.addEventListener('click', (e) => {
+            // Handle all button clicks through delegation
+            if (e.target.matches('[data-action]')) {
+                e.preventDefault();
+                const action = e.target.dataset.action;
+                this.handleDelegatedAction(action, e.target);
+            }
+        });
+        
+        // Handle form submissions
+        document.addEventListener('submit', (e) => {
+            if (e.target.matches('form')) {
+                e.preventDefault();
+                this.handleFormSubmission(e.target);
+            }
+        });
+    }
+
+    // Handle delegated actions
+    handleDelegatedAction(action, element) {
+        switch (action) {
+            case 'toggle-mute':
+                this.toggleMute();
+                break;
+            case 'end-call':
+                this.endCall();
+                break;
+            case 'retry':
+                this.retryConnection();
+                break;
+            case 'open-preferences':
+                this.openPreferences();
+                break;
+            case 'close-preferences':
+                this.closePreferences();
+                break;
+            case 'toggle-sound':
+                const soundName = element.dataset.sound;
+                if (soundName) {
+                    this.toggleSound(soundName);
+                }
+                break;
+        }
+    }
+
+    // Optimized form handling
+    handleFormSubmission(form) {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+        
+        // Validate and submit
+        if (this.validateFormData(data)) {
+            this.submitFormData(data);
+        }
+    }
+
+    // Form validation
+    validateFormData(data) {
+        // Add validation logic here
+        return true;
+    }
+
+    // Form submission
+    submitFormData(data) {
+        // Add submission logic here
+        console.log('Form data:', data);
+    }
+
+    // Performance monitoring for UI
+    startUIPerformanceMonitoring() {
+        if ('PerformanceObserver' in window) {
+            const observer = new PerformanceObserver((list) => {
+                for (const entry of list.getEntries()) {
+                    if (entry.entryType === 'measure') {
+                        console.log(`UI Performance: ${entry.name} took ${entry.duration}ms`);
+                    }
+                }
+            });
+            
+            observer.observe({ entryTypes: ['measure'] });
+        }
+    }
+
+    // Measure UI performance
+    measureUIPerformance(name, callback) {
+        const startName = `${name}-start`;
+        const endName = `${name}-end`;
+        
+        performance.mark(startName);
+        callback();
+        performance.mark(endName);
+        performance.measure(name, startName, endName);
     }
 }
 

@@ -4,9 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Co-Sleep - Find Quiet Presence</title>
+    
+    <!-- Performance optimizations -->
+    <meta name="description" content="Find quiet presence with Co-Sleep - A WebRTC-based co-sleeping app">
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="preconnect" href="https://httpbin.org">
+    <link rel="dns-prefetch" href="https://httpbin.org">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="styles.css" as="style">
+    <link rel="preload" href="script.js" as="script">
+    <link rel="preload" href="/socket.io/socket.io.js" as="script">
+    
+    <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js" defer></script>
 </head>
 <body>
     <!-- Main Interface -->
@@ -15,11 +30,11 @@
         <header class="moodist-header">
             <div class="header-top">
                 <div class="online-count" id="onlineCount">
-                    <span class="count-icon">👥</span>
+                    <span class="count-icon" aria-hidden="true">👥</span>
                     <span class="count-text">0 online</span>
                 </div>
-                <button class="login-btn" id="loginBtn">
-                    <span class="login-icon">👤</span>
+                <button class="login-btn" id="loginBtn" aria-label="Login">
+                    <span class="login-icon" aria-hidden="true">👤</span>
                     <span class="login-text">Login</span>
                 </button>
             </div>
@@ -31,150 +46,150 @@
         <main class="main-content">
             <!-- Core MVP Interface -->
             <div class="core-interface">
-                <div class="main-play-button" id="mainPlayBtn">
-                    <span class="play-icon">▶</span>
+                <button class="main-play-button" id="mainPlayBtn" aria-label="Find Quiet Presence">
+                    <span class="play-icon" aria-hidden="true">▶</span>
                     <span class="button-text">Find Quiet Presence</span>
-                </div>
+                </button>
             </div>
         </main>
 
         <!-- Preferences Button (Bottom Right) -->
-        <button class="preferences-btn" id="preferencesBtn">
-            <span class="preferences-icon">⚙</span>
+        <button class="preferences-btn" id="preferencesBtn" aria-label="Preferences">
+            <span class="preferences-icon" aria-hidden="true">⚙</span>
         </button>
     </div>
 
     <!-- Preferences Overlay -->
-    <div class="preferences-overlay" id="preferencesOverlay">
+    <div class="preferences-overlay" id="preferencesOverlay" role="dialog" aria-labelledby="preferences-title" aria-hidden="true">
         <div class="preferences-panel">
             <div class="preferences-header">
-                <h2>Preferences</h2>
-                <button class="close-btn" id="closePreferencesBtn">×</button>
+                <h2 id="preferences-title">Preferences</h2>
+                <button class="close-btn" id="closePreferencesBtn" aria-label="Close preferences">×</button>
             </div>
             
             <div class="preferences-content">
                 <!-- Background Sounds Section -->
-                <div class="preferences-section">
+                <section class="preferences-section">
                     <h3>Background Sounds</h3>
                     <div class="sound-controls">
-                        <div class="sound-count-btn" id="soundCountBtn">
-                            <span class="sound-icon">🎵</span>
+                        <button class="sound-count-btn" id="soundCountBtn" aria-label="Open sound panel">
+                            <span class="sound-icon" aria-hidden="true">🎵</span>
                             <span class="count-text">6 Sounds</span>
-                        </div>
+                        </button>
                     </div>
-                </div>
+                </section>
 
                 <!-- Future Features Placeholder -->
-                <div class="preferences-section">
+                <section class="preferences-section">
                     <h3>Features</h3>
                     <div class="feature-list">
-                        <div class="feature-item">
-                            <span class="feature-icon">⏰</span>
+                        <button class="feature-item" aria-label="Sleep Timer">
+                            <span class="feature-icon" aria-hidden="true">⏰</span>
                             <span class="feature-text">Sleep Timer</span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon">📝</span>
+                        </button>
+                        <button class="feature-item" aria-label="Notepad">
+                            <span class="feature-icon" aria-hidden="true">📝</span>
                             <span class="feature-text">Notepad</span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon">✅</span>
+                        </button>
+                        <button class="feature-item" aria-label="Todo Checklist">
+                            <span class="feature-icon" aria-hidden="true">✅</span>
                             <span class="feature-text">Todo Checklist</span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon">🫁</span>
+                        </button>
+                        <button class="feature-item" aria-label="Breathing Exercise">
+                            <span class="feature-icon" aria-hidden="true">🫁</span>
                             <span class="feature-text">Breathing Exercise</span>
-                        </div>
+                        </button>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     </div>
 
     <!-- Sound Panel (Hidden by default) -->
-    <div class="sound-panel" id="soundPanel">
+    <div class="sound-panel" id="soundPanel" role="dialog" aria-labelledby="sound-panel-title" aria-hidden="true">
         <div class="sound-panel-header">
-            <h3>Background Sounds</h3>
-            <button class="close-btn" id="closeSoundBtn">×</button>
+            <h3 id="sound-panel-title">Background Sounds</h3>
+            <button class="close-btn" id="closeSoundBtn" aria-label="Close sound panel">×</button>
         </div>
         
         <div class="sound-list">
             <div class="sound-item" data-sound="rain">
-                <button class="sound-toggle" data-sound="rain">
-                    <span class="play-icon">▶</span>
+                <button class="sound-toggle" data-sound="rain" aria-label="Play rain sound">
+                    <span class="play-icon" aria-hidden="true">▶</span>
                 </button>
                 <span class="sound-label">Rain</span>
-                <input type="range" class="volume-slider" data-sound="rain" min="0" max="100" value="30">
+                <input type="range" class="volume-slider" data-sound="rain" min="0" max="100" value="30" aria-label="Rain volume">
             </div>
             
             <div class="sound-item" data-sound="ocean">
-                <button class="sound-toggle" data-sound="ocean">
-                    <span class="play-icon">▶</span>
+                <button class="sound-toggle" data-sound="ocean" aria-label="Play ocean sound">
+                    <span class="play-icon" aria-hidden="true">▶</span>
                 </button>
                 <span class="sound-label">Ocean</span>
-                <input type="range" class="volume-slider" data-sound="ocean" min="0" max="100" value="30">
+                <input type="range" class="volume-slider" data-sound="ocean" min="0" max="100" value="30" aria-label="Ocean volume">
             </div>
             
             <div class="sound-item" data-sound="forest">
-                <button class="sound-toggle" data-sound="forest">
-                    <span class="play-icon">▶</span>
+                <button class="sound-toggle" data-sound="forest" aria-label="Play forest sound">
+                    <span class="play-icon" aria-hidden="true">▶</span>
                 </button>
                 <span class="sound-label">Forest</span>
-                <input type="range" class="volume-slider" data-sound="forest" min="0" max="100" value="30">
+                <input type="range" class="volume-slider" data-sound="forest" min="0" max="100" value="30" aria-label="Forest volume">
             </div>
             
             <div class="sound-item" data-sound="fire">
-                <button class="sound-toggle" data-sound="fire">
-                    <span class="play-icon">▶</span>
+                <button class="sound-toggle" data-sound="fire" aria-label="Play fire sound">
+                    <span class="play-icon" aria-hidden="true">▶</span>
                 </button>
                 <span class="sound-label">Fire</span>
-                <input type="range" class="volume-slider" data-sound="fire" min="0" max="100" value="30">
+                <input type="range" class="volume-slider" data-sound="fire" min="0" max="100" value="30" aria-label="Fire volume">
             </div>
             
             <div class="sound-item" data-sound="whitenoise">
-                <button class="sound-toggle" data-sound="whitenoise">
-                    <span class="play-icon">▶</span>
+                <button class="sound-toggle" data-sound="whitenoise" aria-label="Play white noise">
+                    <span class="play-icon" aria-hidden="true">▶</span>
                 </button>
                 <span class="sound-label">White Noise</span>
-                <input type="range" class="volume-slider" data-sound="whitenoise" min="0" max="100" value="30">
+                <input type="range" class="volume-slider" data-sound="whitenoise" min="0" max="100" value="30" aria-label="White noise volume">
             </div>
             
             <div class="sound-item" data-sound="cafe">
-                <button class="sound-toggle" data-sound="cafe">
-                    <span class="play-icon">▶</span>
+                <button class="sound-toggle" data-sound="cafe" aria-label="Play cafe sound">
+                    <span class="play-icon" aria-hidden="true">▶</span>
                 </button>
                 <span class="sound-label">Cafe</span>
-                <input type="range" class="volume-slider" data-sound="cafe" min="0" max="100" value="30">
+                <input type="range" class="volume-slider" data-sound="cafe" min="0" max="100" value="30" aria-label="Cafe volume">
             </div>
         </div>
     </div>
 
     <!-- Call Interface (Hidden by default) -->
-    <div class="call-interface" id="callInterface" style="display: none;">
+    <div class="call-interface" id="callInterface" role="dialog" aria-labelledby="call-status" aria-hidden="true">
         <div class="call-header">
             <h2>Connected</h2>
             <p id="statusText">Connected</p>
         </div>
         
         <div class="call-controls">
-            <button class="mute-btn" id="muteBtn">
-                <span class="mute-icon">🎤</span>
+            <button class="mute-btn" id="muteBtn" aria-label="Toggle mute">
+                <span class="mute-icon" aria-hidden="true">🎤</span>
             </button>
-            <button class="end-call-btn" id="endCallBtn">
-                <span class="end-icon">📞</span>
+            <button class="end-call-btn" id="endCallBtn" aria-label="End call">
+                <span class="end-icon" aria-hidden="true">📞</span>
             </button>
         </div>
     </div>
 
     <!-- Loading Interface -->
-    <div class="loading-interface" id="loadingInterface" style="display: none;">
+    <div class="loading-interface" id="loadingInterface" role="status" aria-live="polite" aria-hidden="true">
         <div class="loading-content">
-            <div class="loading-spinner"></div>
+            <div class="loading-spinner" aria-hidden="true"></div>
             <p id="loadingText">Finding partner...</p>
         </div>
     </div>
 
     <!-- Error Interface -->
-    <div class="error-interface" id="errorInterface" style="display: none;">
+    <div class="error-interface" id="errorInterface" role="alert" aria-live="assertive" aria-hidden="true">
         <div class="error-content">
             <h2>Connection Error</h2>
             <p id="errorText">Unable to connect. Please try again.</p>
@@ -182,8 +197,9 @@
         </div>
     </div>
 
-    <script src="sounds.js"></script>
-    <script src="preferences.js"></script>
-    <script src="script.js"></script>
+    <!-- Scripts with performance optimizations -->
+    <script src="sounds.js" defer></script>
+    <script src="preferences.js" defer></script>
+    <script src="script.js" defer></script>
 </body>
 </html>

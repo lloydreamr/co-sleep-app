@@ -12,6 +12,10 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
+    /* Performance optimizations */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 /* Main Interface */
@@ -20,6 +24,8 @@ body {
     display: flex;
     flex-direction: column;
     position: relative;
+    /* Performance optimization */
+    will-change: transform;
 }
 
 /* Moodist Header */
@@ -29,6 +35,9 @@ body {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    /* Performance optimization */
+    will-change: backdrop-filter;
+    transform: translateZ(0);
 }
 
 .moodist-header h1 {
@@ -37,6 +46,8 @@ body {
     margin-bottom: 8px;
     color: #ffffff;
     letter-spacing: -0.5px;
+    /* Performance optimization */
+    will-change: transform;
 }
 
 .moodist-header p {
@@ -66,6 +77,9 @@ body {
     color: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Performance optimization */
+    will-change: backdrop-filter;
+    transform: translateZ(0);
 }
 
 .count-icon {
@@ -89,18 +103,21 @@ body {
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(10px);
+    /* Performance optimization */
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
 }
 
 .login-btn:hover {
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
+    transform: translateY(-1px) translateZ(0);
 }
 
 .login-btn:active {
-    transform: translateY(0);
+    transform: translateY(0) translateZ(0);
 }
 
 .login-icon {
@@ -137,7 +154,7 @@ body {
     font-size: 1.2rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -145,15 +162,18 @@ body {
     box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
     margin: 0 auto;
     min-width: 280px;
+    /* Performance optimization */
+    will-change: transform, box-shadow;
+    transform: translateZ(0);
 }
 
 .main-play-button:hover {
-    transform: translateY(-2px);
+    transform: translateY(-2px) translateZ(0);
     box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
 }
 
 .main-play-button:active {
-    transform: translateY(0);
+    transform: translateY(0) translateZ(0);
 }
 
 .play-icon {
@@ -177,21 +197,24 @@ body {
     color: white;
     font-size: 1.5rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 100;
+    /* Performance optimization */
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
 }
 
 .preferences-btn:hover {
     background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
+    transform: scale(1.05) translateZ(0);
 }
 
 .preferences-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.95) translateZ(0);
 }
 
 .preferences-icon {
@@ -207,26 +230,36 @@ body {
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(5px);
-    z-index: 1000;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Performance optimization */
+    will-change: opacity, visibility, backdrop-filter;
+    transform: translateZ(0);
 }
 
 .preferences-overlay.active {
-    display: flex;
+    opacity: 1;
+    visibility: visible;
 }
 
 .preferences-panel {
-    background: rgba(45, 45, 45, 0.95);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     padding: 30px;
-    max-width: 400px;
+    max-width: 500px;
     width: 90%;
     max-height: 80vh;
     overflow-y: auto;
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* Performance optimization */
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
 }
 
 .preferences-header {
@@ -234,8 +267,6 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .preferences-header h2 {
@@ -248,24 +279,27 @@ body {
     background: none;
     border: none;
     color: rgba(255, 255, 255, 0.7);
-    font-size: 1.8rem;
+    font-size: 2rem;
     cursor: pointer;
-    padding: 5px;
-    border-radius: 50%;
-    transition: all 0.3s ease;
+    padding: 0;
     width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Performance optimization */
+    will-change: transform, background-color;
+    transform: translateZ(0);
 }
 
 .close-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     color: white;
+    transform: scale(1.1) translateZ(0);
 }
 
-/* Preferences Content */
 .preferences-content {
     display: flex;
     flex-direction: column;
@@ -281,33 +315,38 @@ body {
 .preferences-section h3 {
     font-size: 1.2rem;
     font-weight: 500;
-    color: white;
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 10px;
 }
 
-/* Sound Controls */
 .sound-controls {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .sound-count-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 25px;
-    padding: 12px 24px;
-    color: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(10px);
+    /* Performance optimization */
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
 }
 
 .sound-count-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px) translateZ(0);
 }
 
 .sound-icon {
@@ -315,42 +354,44 @@ body {
 }
 
 .count-text {
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 400;
 }
 
-/* Feature List */
 .feature-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
 }
 
 .feature-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 16px;
+    padding: 15px 20px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Performance optimization */
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .feature-item:hover {
     background: rgba(255, 255, 255, 0.1);
-    transform: translateX(5px);
+    transform: translateX(5px) translateZ(0);
 }
 
 .feature-icon {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     opacity: 0.8;
 }
 
 .feature-text {
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.9);
     font-weight: 400;
 }
 
@@ -361,23 +402,33 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(10px);
-    z-index: 2000;
-    display: none;
-    flex-direction: column;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Performance optimization */
+    will-change: opacity, visibility, backdrop-filter;
+    transform: translateZ(0);
 }
 
 .sound-panel.active {
-    display: flex;
+    opacity: 1;
+    visibility: visible;
 }
 
 .sound-panel-header {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 30px 20px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .sound-panel-header h3 {
@@ -387,42 +438,58 @@ body {
 }
 
 .sound-list {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 20px;
+    max-width: 400px;
+    width: 90%;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* Performance optimization */
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
 }
 
 .sound-item {
     display: flex;
     align-items: center;
     gap: 15px;
-    padding: 15px;
+    padding: 15px 20px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    color: rgba(255, 255, 255, 0.9);
+    /* Performance optimization */
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .sound-toggle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: white;
-    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Performance optimization */
+    will-change: transform, background-color;
+    transform: translateZ(0);
 }
 
 .sound-toggle:hover {
     background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
+    transform: scale(1.05) translateZ(0);
 }
 
 .sound-toggle.playing {
@@ -433,36 +500,39 @@ body {
 .sound-label {
     flex: 1;
     font-size: 1rem;
-    color: white;
-    font-weight: 400;
+    font-weight: 500;
 }
 
 .volume-slider {
     width: 100px;
-    height: 4px;
+    height: 6px;
+    border-radius: 3px;
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
     outline: none;
     cursor: pointer;
-    -webkit-appearance: none;
+    /* Performance optimization */
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    background: white;
+    appearance: none;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
+    background: white;
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .volume-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    background: white;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
+    background: white;
     cursor: pointer;
     border: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 /* Call Interface */
@@ -473,11 +543,14 @@ body {
     width: 100%;
     height: 100%;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-    z-index: 1500;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    z-index: 2000;
+    /* Performance optimization */
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .call-header {
@@ -487,6 +560,7 @@ body {
 
 .call-header h2 {
     font-size: 2rem;
+    font-weight: 300;
     margin-bottom: 10px;
     color: white;
 }
@@ -498,40 +572,45 @@ body {
 
 .call-controls {
     display: flex;
-    gap: 20px;
+    gap: 30px;
     align-items: center;
 }
 
 .mute-btn, .end-call-btn {
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     border: none;
+    font-size: 1.8rem;
     cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Performance optimization */
+    will-change: transform, background-color;
+    transform: translateZ(0);
 }
 
 .mute-btn {
     background: rgba(255, 255, 255, 0.1);
     color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .mute-btn.muted {
-    background: rgba(255, 59, 48, 0.3);
-    color: #ff3b30;
+    background: rgba(220, 53, 69, 0.3);
+    border-color: rgba(220, 53, 69, 0.5);
 }
 
 .end-call-btn {
-    background: rgba(255, 59, 48, 0.3);
-    color: #ff3b30;
+    background: rgba(220, 53, 69, 0.3);
+    color: white;
+    border: 2px solid rgba(220, 53, 69, 0.5);
 }
 
 .mute-btn:hover, .end-call-btn:hover {
-    transform: scale(1.05);
+    transform: scale(1.05) translateZ(0);
 }
 
 /* Loading Interface */
@@ -542,10 +621,13 @@ body {
     width: 100%;
     height: 100%;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-    z-index: 1500;
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 2000;
+    /* Performance optimization */
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .loading-content {
@@ -553,18 +635,21 @@ body {
 }
 
 .loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-top: 3px solid white;
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top: 4px solid white;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 20px;
+    /* Performance optimization */
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% { transform: rotate(0deg) translateZ(0); }
+    100% { transform: rotate(360deg) translateZ(0); }
 }
 
 .loading-content p {
@@ -580,10 +665,13 @@ body {
     width: 100%;
     height: 100%;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-    z-index: 1500;
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 2000;
+    /* Performance optimization */
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .error-content {
@@ -594,6 +682,7 @@ body {
 
 .error-content h2 {
     font-size: 1.8rem;
+    font-weight: 500;
     margin-bottom: 15px;
     color: white;
 }
@@ -602,22 +691,28 @@ body {
     font-size: 1rem;
     color: rgba(255, 255, 255, 0.7);
     margin-bottom: 30px;
+    line-height: 1.5;
 }
 
 .retry-btn {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
     border-radius: 25px;
-    padding: 12px 30px;
+    padding: 15px 30px;
     color: white;
     font-size: 1rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    /* Performance optimization */
+    will-change: transform, box-shadow;
+    transform: translateZ(0);
 }
 
 .retry-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    transform: translateY(-2px) translateZ(0);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 /* Responsive Design */
@@ -625,50 +720,47 @@ body {
     .moodist-header {
         padding: 40px 20px 30px;
     }
-    
+
     .moodist-header h1 {
         font-size: 2rem;
     }
-    
+
     .main-play-button {
         min-width: 250px;
         padding: 18px 35px;
-        font-size: 1.1rem;
     }
-    
+
     .preferences-btn {
-        bottom: 20px;
-        right: 20px;
         width: 55px;
         height: 55px;
+        bottom: 25px;
+        right: 25px;
     }
-    
+
     .preferences-panel {
         margin: 20px;
         padding: 25px;
     }
-    
+
     .sound-list {
+        max-width: 350px;
         padding: 15px;
     }
-    
+
     .sound-item {
-        padding: 12px;
+        padding: 12px 15px;
     }
 
-    /* Header elements on mobile */
     .header-top {
-        margin-bottom: 15px;
-        padding: 0 5px;
+        flex-direction: column;
+        gap: 15px;
     }
-    
+
     .online-count {
-        padding: 6px 10px;
         font-size: 0.8rem;
     }
-    
+
     .login-btn {
-        padding: 6px 12px;
         font-size: 0.8rem;
     }
 }
@@ -677,21 +769,21 @@ body {
     .moodist-header h1 {
         font-size: 1.8rem;
     }
-    
+
     .main-play-button {
         min-width: 220px;
-        padding: 16px 30px;
+        padding: 15px 30px;
         font-size: 1rem;
     }
-    
+
     .preferences-btn {
-        bottom: 15px;
-        right: 15px;
         width: 50px;
         height: 50px;
+        bottom: 20px;
+        right: 20px;
     }
-    
+
     .preferences-icon {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
     }
 }

@@ -11,6 +11,21 @@ const { initSocketService } = require('./services/socket');
 const app = express();
 const server = http.createServer(app);
 
+// Performance optimizations
+const rateLimit = require('express-rate-limit');
+
+// Rate limiting for API endpoints
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Apply rate limiting to API routes
+app.use('/api/', apiLimiter);
+
 // Middleware
 app.use(helmet({
     contentSecurityPolicy: {
@@ -28,8 +43,12 @@ app.use(helmet({
     }
 }));
 app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+app.use(express.json({ limit: '10mb' })); // Limit JSON payload size
+app.use(express.static(path.join(__dirname), {
+    maxAge: '1h', // Cache static files for 1 hour
+    etag: true,
+    lastModified: true
+}));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -37,14 +56,47 @@ app.use('/api/auth', authRoutes);
 // Initialize Socket.IO and matchmaking
 const socketService = initSocketService(server);
 
-// Health check endpoint
+// Enhanced health check endpoint with performance metrics
 app.get('/health', (req, res) => {
+    const memUsage = process.memoryUsage();
+    const uptime = process.uptime();
+    
     res.json({
         status: 'healthy',
         onlineUsers: socketService.getOnlineUserCount(),
         queueLength: socketService.getQueueLength(),
         activeConnections: socketService.getActiveConnections(),
+        performance: {
+            uptime: Math.floor(uptime),
+            memory: {
+                rss: memUsage.rss,
+                heapUsed: memUsage.heapUsed,
+                heapTotal: memUsage.heapTotal,
+                external: memUsage.external
+            },
+            cpu: process.cpuUsage()
+        },
         timestamp: new Date().toISOString()
+    });
+});
+
+// Performance monitoring endpoint
+app.get('/api/performance', (req, res) => {
+    const memUsage = process.memoryUsage();
+    const cpuUsage = process.cpuUsage();
+    
+    res.json({
+        memory: {
+            used: Math.round(memUsage.heapUsed / 1024 / 1024 * 100) / 100,
+            total: Math.round(memUsage.heapTotal / 1024 / 1024 * 100) / 100,
+            external: Math.round(memUsage.external / 1024 / 1024 * 100) / 100
+        },
+        cpu: {
+            user: cpuUsage.user,
+            system: cpuUsage.system
+        },
+        uptime: process.uptime(),
+        connections: socketService.getActiveConnections()
     });
 });
 
@@ -53,10 +105,30 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Centralized error handler
+// Enhanced error handling with performance logging
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    
+    // Log performance impact
+    const memUsage = process.memoryUsage();
+    console.error('Memory usage at error:', {
+        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024 * 100) / 100 + 'MB',
+        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024 * 100) / 100 + 'MB'
+    });
+    
+    res.status(500).json({ 
+        error: 'Internal server error',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({ 
+        error: 'Not found',
+        path: req.path,
+        timestamp: new Date().toISOString()
+    });
 });
 
 const PORT = process.env.PORT || 3000;
@@ -67,11 +139,49 @@ server.listen(PORT, HOST, () => {
     console.log(`Local: http://localhost:${PORT}`);
     console.log(`Network: http://${HOST === '0.0.0.0' ? '10.0.0.31' : HOST}:${PORT}`);
     console.log(`Mobile: Open the Network URL on your phone (make sure you're on the same WiFi)`);
+    
+    // Log initial performance metrics
+    const memUsage = process.memoryUsage();
+    console.log('Initial memory usage:', {
+        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024 * 100) / 100 + 'MB',
+        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024 * 100) / 100 + 'MB'
+    });
 });
 
-// Graceful shutdown
+// Enhanced graceful shutdown with cleanup
 process.on('SIGINT', async () => {
     console.log('Shutting down gracefully...');
+    
+    // Log final performance metrics
+    const memUsage = process.memoryUsage();
+    console.log('Final memory usage:', {
+        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024 * 100) / 100 + 'MB',
+        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024 * 100) / 100 + 'MB'
+    });
+    
+    // Close database connection
     await prisma.$disconnect();
-    process.exit(0);
+    
+    // Close server
+    server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+    });
+    
+    // Force exit after 10 seconds
+    setTimeout(() => {
+        console.error('Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+    }, 10000);
 });
+
+// Memory leak detection
+setInterval(() => {
+    const memUsage = process.memoryUsage();
+    const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024 * 100) / 100;
+    
+    // Warn if memory usage is high
+    if (heapUsedMB > 100) {
+        console.warn(`High memory usage: ${heapUsedMB}MB`);
+    }
+}, 60000); // Check every minute
