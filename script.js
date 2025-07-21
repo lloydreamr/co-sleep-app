@@ -59,6 +59,10 @@ class CoSleepApp {
         this.soundCountBtn = document.getElementById('soundCountBtn');
         this.soundPanel = document.getElementById('soundPanel');
         this.closeSoundBtn = document.getElementById('closeSoundBtn');
+
+        // Header elements
+        this.onlineCount = document.getElementById('onlineCount');
+        this.loginBtn = document.getElementById('loginBtn');
     }
 
     bindEvents() {
@@ -92,6 +96,14 @@ class CoSleepApp {
                 this.endCall();
             }
         });
+
+        // Bind login button
+        if (this.loginBtn) {
+            this.loginBtn.addEventListener('click', () => {
+                // For now, just show a placeholder message
+                alert('Login functionality coming soon!');
+            });
+        }
     }
 
     initializeSocket() {

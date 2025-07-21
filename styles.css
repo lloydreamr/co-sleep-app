@@ -45,6 +45,72 @@ body {
     font-weight: 300;
 }
 
+/* Header Top Section */
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
+
+/* Online Count */
+.online-count {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.count-icon {
+    font-size: 1rem;
+}
+
+.count-text {
+    font-weight: 400;
+}
+
+/* Login Button */
+.login-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.login-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.login-btn:active {
+    transform: translateY(0);
+}
+
+.login-icon {
+    font-size: 1rem;
+}
+
+.login-text {
+    font-weight: 500;
+}
+
 /* Main Content */
 .main-content {
     flex: 1;
@@ -588,6 +654,22 @@ body {
     
     .sound-item {
         padding: 12px;
+    }
+
+    /* Header elements on mobile */
+    .header-top {
+        margin-bottom: 15px;
+        padding: 0 5px;
+    }
+    
+    .online-count {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+    
+    .login-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
     }
 }
 
