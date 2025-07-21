@@ -36,24 +36,21 @@ class CoSleepApp {
     }
 
     initializeElements() {
-        this.mainInterface = document.getElementById('main-interface');
-        this.waitingInterface = document.getElementById('waiting-interface');
-        this.callInterface = document.getElementById('call-interface');
+        // Main interface elements
+        this.mainPlayBtn = document.getElementById('mainPlayBtn');
+        this.callInterface = document.getElementById('callInterface');
+        this.loadingInterface = document.getElementById('loadingInterface');
+        this.errorInterface = document.getElementById('errorInterface');
         
-        this.connectBtn = document.getElementById('connect-btn');
-        this.cancelBtn = document.getElementById('cancel-btn');
-        this.muteBtn = document.getElementById('mute-btn');
-        this.skipBtn = document.getElementById('skip-btn');
-        this.endCallBtn = document.getElementById('end-call-btn');
+        // Call interface elements
+        this.muteBtn = document.getElementById('muteBtn');
+        this.endCallBtn = document.getElementById('endCallBtn');
+        this.statusText = document.getElementById('statusText');
         
-        this.statusText = document.querySelector('.status-indicator span');
-        this.onlineCount = document.getElementById('online-count');
-        
-        // Auth elements
-        this.userMenu = document.getElementById('user-menu');
-        this.userName = document.getElementById('user-name');
-        this.userDropdown = document.getElementById('user-dropdown');
-        this.loginBtn = document.getElementById('login-btn');
+        // Loading and error elements
+        this.loadingText = document.getElementById('loadingText');
+        this.errorText = document.getElementById('errorText');
+        this.retryBtn = document.getElementById('retryBtn');
 
         // Preferences elements
         this.preferencesBtn = document.getElementById('preferencesBtn');
@@ -65,11 +62,29 @@ class CoSleepApp {
     }
 
     bindEvents() {
-        this.connectBtn.addEventListener('click', () => this.joinQueue());
-        this.cancelBtn.addEventListener('click', () => this.leaveQueue());
-        this.muteBtn.addEventListener('click', () => this.toggleMute());
-        this.skipBtn.addEventListener('click', () => this.skipPartner());
-        this.endCallBtn.addEventListener('click', () => this.endCall());
+        // Bind main play button (Find Quiet Presence)
+        if (this.mainPlayBtn) {
+            this.mainPlayBtn.addEventListener('click', () => this.joinQueue());
+        }
+        
+        // Bind call interface buttons
+        if (this.muteBtn) {
+            this.muteBtn.addEventListener('click', () => this.toggleMute());
+        }
+        
+        if (this.endCallBtn) {
+            this.endCallBtn.addEventListener('click', () => this.endCall());
+        }
+        
+        // Bind retry button
+        if (this.retryBtn) {
+            this.retryBtn.addEventListener('click', () => {
+                if (this.errorInterface) {
+                    this.errorInterface.style.display = 'none';
+                }
+                this.joinQueue();
+            });
+        }
         
         // Handle page visibility changes
         document.addEventListener('visibilitychange', () => {
@@ -225,46 +240,56 @@ class CoSleepApp {
     }
 
     showError(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #fed7d7;
-            color: #e53e3e;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        `;
-        errorDiv.textContent = message;
-        document.body.appendChild(errorDiv);
-        
-        setTimeout(() => {
-            errorDiv.remove();
-        }, 5000);
+        if (this.errorInterface && this.errorText) {
+            this.errorText.textContent = message;
+            this.errorInterface.style.display = 'flex';
+        } else {
+            // Fallback to toast notification
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #fed7d7;
+                color: #e53e3e;
+                padding: 1rem 2rem;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                z-index: 1000;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            `;
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
     }
 
     showInterface(interfaceName) {
-        this.mainInterface.classList.add('hidden');
-        this.waitingInterface.classList.add('hidden');
-        this.callInterface.classList.add('hidden');
+        // Hide all interfaces first
+        if (this.callInterface) this.callInterface.style.display = 'none';
+        if (this.loadingInterface) this.loadingInterface.style.display = 'none';
+        if (this.errorInterface) this.errorInterface.style.display = 'none';
         
         switch (interfaceName) {
             case 'main':
-                this.mainInterface.classList.remove('hidden');
-                // Reset status text when returning to main
-                if (this.statusText) {
-                    this.statusText.textContent = 'Find Quiet Presence';
-                }
+                // Main interface is always visible by default
                 break;
             case 'waiting':
-                this.waitingInterface.classList.remove('hidden');
+                if (this.loadingInterface) {
+                    this.loadingInterface.style.display = 'flex';
+                    if (this.loadingText) {
+                        this.loadingText.textContent = 'Finding partner...';
+                    }
+                }
                 break;
             case 'call':
-                this.callInterface.classList.remove('hidden');
+                if (this.callInterface) {
+                    this.callInterface.style.display = 'flex';
+                }
                 break;
         }
     }
