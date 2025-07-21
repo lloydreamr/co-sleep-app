@@ -2,11 +2,11 @@
 class SoundManager {
     constructor() {
         this.sounds = {
-            // Free sounds - Using generated tones (guaranteed to work)
+            // Free sounds - Using sophisticated Web Audio API
             ocean: {
                 name: "Ocean Waves",
                 icon: "🌊",
-                url: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT",
+                url: null, // Generated with Web Audio API
                 category: "nature",
                 premium: false,
                 description: "Gentle ocean waves for peaceful sleep"
@@ -14,7 +14,7 @@ class SoundManager {
             rain: {
                 name: "Rain",
                 icon: "🌧️",
-                url: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT",
+                url: null, // Generated with Web Audio API
                 category: "nature",
                 premium: false,
                 description: "Soft rain sounds for relaxation"
@@ -22,7 +22,7 @@ class SoundManager {
             whiteNoise: {
                 name: "White Noise",
                 icon: "🤫",
-                url: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT",
+                url: null, // Generated with Web Audio API
                 category: "ambient",
                 premium: false,
                 description: "Consistent white noise for focus"
@@ -30,16 +30,16 @@ class SoundManager {
             forest: {
                 name: "Forest Night",
                 icon: "🌲",
-                url: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT",
+                url: null, // Generated with Web Audio API
                 category: "nature",
                 premium: false,
                 description: "Peaceful forest sounds at night"
             },
-            // Premium sounds (placeholder URLs)
+            // Premium sounds
             fireplace: {
                 name: "Fireplace",
                 icon: "🔥",
-                url: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT",
+                url: null, // Generated with Web Audio API
                 category: "ambient",
                 premium: true,
                 description: "Crackling fireplace for warmth"
@@ -47,7 +47,7 @@ class SoundManager {
             cafe: {
                 name: "Cafe Ambience",
                 icon: "☕",
-                url: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT",
+                url: null, // Generated with Web Audio API
                 category: "ambient",
                 premium: true,
                 description: "Soft cafe background sounds"
@@ -132,7 +132,7 @@ class SoundManager {
             // Set new sound
             this.currentSound = soundKey;
             
-            // Use Web Audio API to generate tones directly
+            // Use sophisticated Web Audio API for realistic ambient sounds
             this.playGeneratedTone(soundKey, fadeIn);
 
             this.updateSoundUI(soundKey);
@@ -143,79 +143,327 @@ class SoundManager {
         }
     }
 
-    // Generate a tone as fallback
+    // Generate realistic ambient sounds using Web Audio API
     playGeneratedTone(soundKey, fadeIn = true) {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const gainNode = audioContext.createGain();
+        const masterGain = audioContext.createGain();
+        const nodes = [];
         
-        // Create multiple oscillators for richer sounds
-        const oscillators = [];
+        // Set volume based on user preference
+        const targetVolume = (this.volume / 100) * 0.2;
         
-        // Set frequencies and types based on sound type
-        let frequencies = [200];
-        let types = ['sine'];
+        if (fadeIn) {
+            masterGain.gain.setValueAtTime(0, audioContext.currentTime);
+            masterGain.gain.linearRampToValueAtTime(targetVolume, audioContext.currentTime + 3);
+        } else {
+            masterGain.gain.setValueAtTime(targetVolume, audioContext.currentTime);
+        }
+        
+        masterGain.connect(audioContext.destination);
         
         switch(soundKey) {
             case 'ocean':
-                frequencies = [150, 180, 220];
-                types = ['sine', 'sine', 'triangle'];
+                this.createOceanWaves(audioContext, masterGain, nodes);
                 break;
             case 'rain':
-                frequencies = [300, 350, 400];
-                types = ['sine', 'triangle', 'sine'];
+                this.createRain(audioContext, masterGain, nodes);
                 break;
             case 'whiteNoise':
-                frequencies = [100, 200, 300, 400, 500];
-                types = ['sawtooth', 'sawtooth', 'sawtooth', 'sawtooth', 'sawtooth'];
+                this.createWhiteNoise(audioContext, masterGain, nodes);
                 break;
             case 'forest':
-                frequencies = [250, 300, 350];
-                types = ['sine', 'triangle', 'sine'];
+                this.createForest(audioContext, masterGain, nodes);
                 break;
             case 'fireplace':
-                frequencies = [180, 220, 260];
-                types = ['sine', 'sine', 'triangle'];
+                this.createFireplace(audioContext, masterGain, nodes);
                 break;
             case 'cafe':
-                frequencies = [400, 450, 500];
-                types = ['sine', 'triangle', 'sine'];
+                this.createCafe(audioContext, masterGain, nodes);
                 break;
         }
         
-        // Create oscillators
-        frequencies.forEach((freq, index) => {
-            const oscillator = audioContext.createOscillator();
-            oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
-            oscillator.type = types[index];
+        this.isPlaying = true;
+        this.generatedAudio = { audioContext, nodes, masterGain };
+    }
+    
+    // Create ocean waves sound
+    createOceanWaves(audioContext, masterGain, nodes) {
+        // Main wave sound (low frequency oscillator)
+        const waveOsc = audioContext.createOscillator();
+        const waveGain = audioContext.createGain();
+        const waveFilter = audioContext.createBiquadFilter();
+        
+        waveOsc.frequency.setValueAtTime(0.5, audioContext.currentTime); // Very slow wave
+        waveOsc.type = 'sine';
+        
+        waveFilter.type = 'lowpass';
+        waveFilter.frequency.setValueAtTime(800, audioContext.currentTime);
+        waveFilter.Q.setValueAtTime(0.5, audioContext.currentTime);
+        
+        waveGain.gain.setValueAtTime(0.3, audioContext.currentTime);
+        
+        waveOsc.connect(waveFilter);
+        waveFilter.connect(waveGain);
+        waveGain.connect(masterGain);
+        
+        // Secondary wave (higher frequency)
+        const wave2Osc = audioContext.createOscillator();
+        const wave2Gain = audioContext.createGain();
+        const wave2Filter = audioContext.createBiquadFilter();
+        
+        wave2Osc.frequency.setValueAtTime(1.2, audioContext.currentTime);
+        wave2Osc.type = 'sine';
+        
+        wave2Filter.type = 'lowpass';
+        wave2Filter.frequency.setValueAtTime(600, audioContext.currentTime);
+        wave2Filter.Q.setValueAtTime(0.3, audioContext.currentTime);
+        
+        wave2Gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+        
+        wave2Osc.connect(wave2Filter);
+        wave2Filter.connect(wave2Gain);
+        wave2Gain.connect(masterGain);
+        
+        // Add frequency modulation for wave movement
+        const waveMod = audioContext.createOscillator();
+        waveMod.frequency.setValueAtTime(0.1, audioContext.currentTime);
+        waveMod.connect(waveOsc.frequency);
+        waveMod.connect(wave2Osc.frequency);
+        
+        waveOsc.start();
+        wave2Osc.start();
+        waveMod.start();
+        
+        nodes.push(waveOsc, wave2Osc, waveMod, waveGain, wave2Gain, waveFilter, wave2Filter);
+    }
+    
+    // Create rain sound
+    createRain(audioContext, masterGain, nodes) {
+        // Create multiple rain drops with different frequencies
+        for (let i = 0; i < 8; i++) {
+            const dropOsc = audioContext.createOscillator();
+            const dropGain = audioContext.createGain();
+            const dropFilter = audioContext.createBiquadFilter();
             
-            // Add slight frequency modulation for more natural sound
-            if (soundKey !== 'whiteNoise') {
-                oscillator.frequency.setValueAtTime(freq * 0.98, audioContext.currentTime + 0.5);
-                oscillator.frequency.setValueAtTime(freq * 1.02, audioContext.currentTime + 1.0);
-            }
+            // Random frequency for each drop
+            const freq = 200 + Math.random() * 800;
+            dropOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
+            dropOsc.type = 'triangle';
             
-            oscillator.connect(gainNode);
-            oscillators.push(oscillator);
-        });
-        
-        gainNode.connect(audioContext.destination);
-        
-        // Set volume based on user preference
-        const targetVolume = (this.volume / 100) * 0.15; // Reduce overall volume
-        
-        if (fadeIn) {
-            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            gainNode.gain.linearRampToValueAtTime(targetVolume, audioContext.currentTime + 2);
-        } else {
-            gainNode.gain.setValueAtTime(targetVolume, audioContext.currentTime);
+            dropFilter.type = 'lowpass';
+            dropFilter.frequency.setValueAtTime(1000, audioContext.currentTime);
+            dropFilter.Q.setValueAtTime(0.5, audioContext.currentTime);
+            
+            // Random volume and timing
+            const volume = 0.1 + Math.random() * 0.2;
+            dropGain.gain.setValueAtTime(0, audioContext.currentTime);
+            dropGain.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.1);
+            dropGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+            
+            dropOsc.connect(dropFilter);
+            dropFilter.connect(dropGain);
+            dropGain.connect(masterGain);
+            
+            // Start with random delay
+            const delay = Math.random() * 2;
+            dropOsc.start(audioContext.currentTime + delay);
+            dropOsc.stop(audioContext.currentTime + delay + 0.3);
+            
+            nodes.push(dropOsc, dropGain, dropFilter);
         }
         
-        // Start all oscillators
-        oscillators.forEach(osc => osc.start());
-        this.isPlaying = true;
+        // Background rain noise
+        const rainNoise = audioContext.createOscillator();
+        const rainNoiseGain = audioContext.createGain();
+        const rainNoiseFilter = audioContext.createBiquadFilter();
         
-        // Store for cleanup
-        this.generatedAudio = { audioContext, oscillators, gainNode };
+        rainNoise.frequency.setValueAtTime(100, audioContext.currentTime);
+        rainNoise.type = 'sawtooth';
+        
+        rainNoiseFilter.type = 'lowpass';
+        rainNoiseFilter.frequency.setValueAtTime(500, audioContext.currentTime);
+        
+        rainNoiseGain.gain.setValueAtTime(0.05, audioContext.currentTime);
+        
+        rainNoise.connect(rainNoiseFilter);
+        rainNoiseFilter.connect(rainNoiseGain);
+        rainNoiseGain.connect(masterGain);
+        
+        rainNoise.start();
+        nodes.push(rainNoise, rainNoiseGain, rainNoiseFilter);
+    }
+    
+    // Create white noise
+    createWhiteNoise(audioContext, masterGain, nodes) {
+        // Create multiple noise generators
+        for (let i = 0; i < 3; i++) {
+            const noiseOsc = audioContext.createOscillator();
+            const noiseGain = audioContext.createGain();
+            const noiseFilter = audioContext.createBiquadFilter();
+            
+            noiseOsc.frequency.setValueAtTime(50 + i * 100, audioContext.currentTime);
+            noiseOsc.type = 'sawtooth';
+            
+            noiseFilter.type = 'lowpass';
+            noiseFilter.frequency.setValueAtTime(2000 + i * 500, audioContext.currentTime);
+            noiseFilter.Q.setValueAtTime(0.3, audioContext.currentTime);
+            
+            noiseGain.gain.setValueAtTime(0.1, audioContext.currentTime);
+            
+            noiseOsc.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(masterGain);
+            
+            noiseOsc.start();
+            nodes.push(noiseOsc, noiseGain, noiseFilter);
+        }
+    }
+    
+    // Create forest night sounds
+    createForest(audioContext, masterGain, nodes) {
+        // Cricket sounds
+        for (let i = 0; i < 4; i++) {
+            const cricketOsc = audioContext.createOscillator();
+            const cricketGain = audioContext.createGain();
+            const cricketFilter = audioContext.createBiquadFilter();
+            
+            cricketOsc.frequency.setValueAtTime(2000 + Math.random() * 1000, audioContext.currentTime);
+            cricketOsc.type = 'sine';
+            
+            cricketFilter.type = 'bandpass';
+            cricketFilter.frequency.setValueAtTime(2500, audioContext.currentTime);
+            cricketFilter.Q.setValueAtTime(2, audioContext.currentTime);
+            
+            cricketGain.gain.setValueAtTime(0.05, audioContext.currentTime);
+            
+            cricketOsc.connect(cricketFilter);
+            cricketFilter.connect(cricketGain);
+            cricketGain.connect(masterGain);
+            
+            cricketOsc.start();
+            nodes.push(cricketOsc, cricketGain, cricketFilter);
+        }
+        
+        // Wind through trees
+        const windOsc = audioContext.createOscillator();
+        const windGain = audioContext.createGain();
+        const windFilter = audioContext.createBiquadFilter();
+        
+        windOsc.frequency.setValueAtTime(0.5, audioContext.currentTime);
+        windOsc.type = 'sine';
+        
+        windFilter.type = 'lowpass';
+        windFilter.frequency.setValueAtTime(300, audioContext.currentTime);
+        
+        windGain.gain.setValueAtTime(0.1, audioContext.currentTime);
+        
+        windOsc.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterGain);
+        
+        windOsc.start();
+        nodes.push(windOsc, windGain, windFilter);
+    }
+    
+    // Create fireplace sound
+    createFireplace(audioContext, masterGain, nodes) {
+        // Crackling fire
+        for (let i = 0; i < 6; i++) {
+            const crackleOsc = audioContext.createOscillator();
+            const crackleGain = audioContext.createGain();
+            const crackleFilter = audioContext.createBiquadFilter();
+            
+            crackleOsc.frequency.setValueAtTime(100 + Math.random() * 200, audioContext.currentTime);
+            crackleOsc.type = 'triangle';
+            
+            crackleFilter.type = 'highpass';
+            crackleFilter.frequency.setValueAtTime(800, audioContext.currentTime);
+            
+            crackleGain.gain.setValueAtTime(0, audioContext.currentTime);
+            crackleGain.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.05);
+            crackleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+            
+            crackleOsc.connect(crackleFilter);
+            crackleFilter.connect(crackleGain);
+            crackleGain.connect(masterGain);
+            
+            const delay = Math.random() * 3;
+            crackleOsc.start(audioContext.currentTime + delay);
+            crackleOsc.stop(audioContext.currentTime + delay + 0.2);
+            
+            nodes.push(crackleOsc, crackleGain, crackleFilter);
+        }
+        
+        // Fire base sound
+        const fireOsc = audioContext.createOscillator();
+        const fireGain = audioContext.createGain();
+        const fireFilter = audioContext.createBiquadFilter();
+        
+        fireOsc.frequency.setValueAtTime(80, audioContext.currentTime);
+        fireOsc.type = 'sawtooth';
+        
+        fireFilter.type = 'lowpass';
+        fireFilter.frequency.setValueAtTime(400, audioContext.currentTime);
+        
+        fireGain.gain.setValueAtTime(0.2, audioContext.currentTime);
+        
+        fireOsc.connect(fireFilter);
+        fireFilter.connect(fireGain);
+        fireGain.connect(masterGain);
+        
+        fireOsc.start();
+        nodes.push(fireOsc, fireGain, fireFilter);
+    }
+    
+    // Create cafe ambience
+    createCafe(audioContext, masterGain, nodes) {
+        // Background chatter (low frequency noise)
+        const chatterOsc = audioContext.createOscillator();
+        const chatterGain = audioContext.createGain();
+        const chatterFilter = audioContext.createBiquadFilter();
+        
+        chatterOsc.frequency.setValueAtTime(150, audioContext.currentTime);
+        chatterOsc.type = 'sawtooth';
+        
+        chatterFilter.type = 'lowpass';
+        chatterFilter.frequency.setValueAtTime(800, audioContext.currentTime);
+        
+        chatterGain.gain.setValueAtTime(0.1, audioContext.currentTime);
+        
+        chatterOsc.connect(chatterFilter);
+        chatterFilter.connect(chatterGain);
+        chatterGain.connect(masterGain);
+        
+        chatterOsc.start();
+        nodes.push(chatterOsc, chatterGain, chatterFilter);
+        
+        // Coffee machine sounds
+        for (let i = 0; i < 3; i++) {
+            const coffeeOsc = audioContext.createOscillator();
+            const coffeeGain = audioContext.createGain();
+            const coffeeFilter = audioContext.createBiquadFilter();
+            
+            coffeeOsc.frequency.setValueAtTime(300 + Math.random() * 200, audioContext.currentTime);
+            coffeeOsc.type = 'square';
+            
+            coffeeFilter.type = 'bandpass';
+            coffeeFilter.frequency.setValueAtTime(400, audioContext.currentTime);
+            coffeeFilter.Q.setValueAtTime(1, audioContext.currentTime);
+            
+            coffeeGain.gain.setValueAtTime(0, audioContext.currentTime);
+            coffeeGain.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + 0.1);
+            coffeeGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+            
+            coffeeOsc.connect(coffeeFilter);
+            coffeeFilter.connect(coffeeGain);
+            coffeeGain.connect(masterGain);
+            
+            const delay = Math.random() * 4;
+            coffeeOsc.start(audioContext.currentTime + delay);
+            coffeeOsc.stop(audioContext.currentTime + delay + 0.5);
+            
+            nodes.push(coffeeOsc, coffeeGain, coffeeFilter);
+        }
     }
 
     // Stop current sound
@@ -225,14 +473,18 @@ class SoundManager {
         // Stop generated audio if playing
         if (this.generatedAudio) {
             if (fadeOut) {
-                this.generatedAudio.gainNode.gain.linearRampToValueAtTime(0, this.generatedAudio.audioContext.currentTime + 2);
+                this.generatedAudio.masterGain.gain.linearRampToValueAtTime(0, this.generatedAudio.audioContext.currentTime + 2);
                 setTimeout(() => {
-                    this.generatedAudio.oscillators.forEach(osc => osc.stop());
+                    this.generatedAudio.nodes.forEach(node => {
+                        if (node.stop) node.stop();
+                    });
                     this.generatedAudio.audioContext.close();
                     this.generatedAudio = null;
                 }, 2000);
             } else {
-                this.generatedAudio.oscillators.forEach(osc => osc.stop());
+                this.generatedAudio.nodes.forEach(node => {
+                    if (node.stop) node.stop();
+                });
                 this.generatedAudio.audioContext.close();
                 this.generatedAudio = null;
             }
@@ -378,7 +630,9 @@ class SoundManager {
             this.audioElement.remove();
         }
         if (this.generatedAudio) {
-            this.generatedAudio.oscillators.forEach(osc => osc.stop());
+            this.generatedAudio.nodes.forEach(node => {
+                if (node.stop) node.stop();
+            });
             this.generatedAudio.audioContext.close();
             this.generatedAudio = null;
         }
