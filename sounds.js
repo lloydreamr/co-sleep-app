@@ -2,11 +2,11 @@
 class SoundManager {
     constructor() {
         this.sounds = {
-            // Free sounds - Using sophisticated Web Audio API
+            // Free sounds - Using simple tones
             ocean: {
                 name: "Ocean Waves",
                 icon: "🌊",
-                url: null, // Generated with Web Audio API
+                url: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT",
                 category: "nature",
                 premium: false,
                 description: "Gentle ocean waves for peaceful sleep"
@@ -14,7 +14,7 @@ class SoundManager {
             rain: {
                 name: "Rain",
                 icon: "🌧️",
-                url: null, // Generated with Web Audio API
+                url: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT",
                 category: "nature",
                 premium: false,
                 description: "Soft rain sounds for relaxation"
@@ -22,7 +22,7 @@ class SoundManager {
             whiteNoise: {
                 name: "White Noise",
                 icon: "🤫",
-                url: null, // Generated with Web Audio API
+                url: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT",
                 category: "ambient",
                 premium: false,
                 description: "Consistent white noise for focus"
@@ -30,7 +30,7 @@ class SoundManager {
             forest: {
                 name: "Forest Night",
                 icon: "🌲",
-                url: null, // Generated with Web Audio API
+                url: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT",
                 category: "nature",
                 premium: false,
                 description: "Peaceful forest sounds at night"
@@ -39,7 +39,7 @@ class SoundManager {
             fireplace: {
                 name: "Fireplace",
                 icon: "🔥",
-                url: null, // Generated with Web Audio API
+                url: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT",
                 category: "ambient",
                 premium: true,
                 description: "Crackling fireplace for warmth"
@@ -47,7 +47,7 @@ class SoundManager {
             cafe: {
                 name: "Cafe Ambience",
                 icon: "☕",
-                url: null, // Generated with Web Audio API
+                url: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT",
                 category: "ambient",
                 premium: true,
                 description: "Soft cafe background sounds"
@@ -132,8 +132,17 @@ class SoundManager {
             // Set new sound
             this.currentSound = soundKey;
             
-            // Use sophisticated Web Audio API for realistic ambient sounds
-            this.playGeneratedTone(soundKey, fadeIn);
+            // Use audio element with data URL
+            this.audioElement.src = sound.url;
+            this.audioElement.loop = true;
+            
+            if (fadeIn) {
+                this.fadeIn();
+            } else {
+                this.audioElement.volume = this.volume;
+                this.audioElement.play();
+                this.isPlaying = true;
+            }
 
             this.updateSoundUI(soundKey);
             console.log(`🎵 Playing: ${sound.name}`);
@@ -464,6 +473,63 @@ class SoundManager {
             
             nodes.push(coffeeOsc, coffeeGain, coffeeFilter);
         }
+    }
+
+    // Simple tone fallback for when Web Audio API fails
+    playSimpleTone(soundKey, fadeIn = true) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        // Set frequency and type based on sound
+        let frequency = 200;
+        let type = 'sine';
+        
+        switch(soundKey) {
+            case 'ocean':
+                frequency = 150;
+                type = 'sine';
+                break;
+            case 'rain':
+                frequency = 300;
+                type = 'triangle';
+                break;
+            case 'whiteNoise':
+                frequency = 100;
+                type = 'sawtooth';
+                break;
+            case 'forest':
+                frequency = 250;
+                type = 'sine';
+                break;
+            case 'fireplace':
+                frequency = 180;
+                type = 'triangle';
+                break;
+            case 'cafe':
+                frequency = 400;
+                type = 'square';
+                break;
+        }
+        
+        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+        oscillator.type = type;
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        const targetVolume = (this.volume / 100) * 0.1;
+        
+        if (fadeIn) {
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(targetVolume, audioContext.currentTime + 2);
+        } else {
+            gainNode.gain.setValueAtTime(targetVolume, audioContext.currentTime);
+        }
+        
+        oscillator.start();
+        this.isPlaying = true;
+        this.generatedAudio = { audioContext, nodes: [oscillator], masterGain: gainNode };
     }
 
     // Stop current sound
