@@ -27,9 +27,11 @@ class CoSleepApp {
         this.audioContextPool = [];
         this.maxAudioContexts = 3;
         
+        // WebRTC initialization flag
+        this.webrtcInitialized = false;
+        
         this.initializeElements();
         this.bindEvents();
-        this.initializeWebRTC();
         this.initializeSocket();
         this.initializeAuth();
         this.initializeSoundSystem();
@@ -385,6 +387,8 @@ class CoSleepApp {
         if (this.errorInterface && this.errorText) {
             this.errorText.textContent = message;
             this.errorInterface.style.display = 'flex';
+            // Remove aria-hidden to ensure accessibility
+            this.errorInterface.removeAttribute('aria-hidden');
             
             // Add retry button if error is recoverable
             if (isRecoverable && this.retryBtn) {
@@ -446,13 +450,25 @@ class CoSleepApp {
     }
 
     async joinQueue() {
+        // Initialize WebRTC on first user interaction
+        if (!this.webrtcInitialized) {
+            try {
+                await this.initializeWebRTC();
+                this.webrtcInitialized = true;
+            } catch (error) {
+                console.error('❌ Failed to initialize WebRTC:', error);
+                this.showError('Microphone access required. Please refresh and allow access.', true);
+                return;
+            }
+        }
+
         if (!this.localStream) {
-            this.showError('Microphone access required. Please refresh and allow access.');
+            this.showError('Microphone access required. Please refresh and allow access.', true);
             return;
         }
 
         if (!this.socket) {
-            this.showError('Not connected to server. Please refresh the page.');
+            this.showError('Not connected to server. Please refresh the page.', true);
             return;
         }
 
@@ -906,8 +922,8 @@ class CoSleepApp {
             console.log('📊 Analytics session ended due to disconnection');
         }
         
-        // Reinitialize microphone access
-        this.initializeWebRTC();
+        // Don't reinitialize WebRTC here - let user trigger it
+        this.webrtcInitialized = false;
     }
 
     playRemoteAudio() {
@@ -1068,8 +1084,8 @@ class CoSleepApp {
         // Show waiting interface for new match
         this.showInterface('waiting');
         
-        // Reinitialize microphone access
-        this.initializeWebRTC();
+        // Don't reinitialize WebRTC here - let user trigger it
+        this.webrtcInitialized = false;
     }
 
     endCall() {
@@ -1129,8 +1145,8 @@ class CoSleepApp {
             console.log('📊 Analytics session ended');
         }
         
-        // Reinitialize microphone access
-        this.initializeWebRTC();
+        // Don't reinitialize WebRTC here - let user trigger it
+        this.webrtcInitialized = false;
     }
 
     startStatusCheck() {
@@ -1541,7 +1557,13 @@ class CoSleepApp {
                 const element = this.getCachedElement(id);
                 if (element) {
                     element.style.display = 'none';
-                    element.setAttribute('aria-hidden', 'true');
+                    // Only set aria-hidden if no focusable elements are present
+                    const focusableElements = element.querySelectorAll('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                    if (focusableElements.length === 0) {
+                        element.setAttribute('aria-hidden', 'true');
+                    } else {
+                        element.removeAttribute('aria-hidden');
+                    }
                 }
             });
             
@@ -1553,7 +1575,7 @@ class CoSleepApp {
                     const loadingElement = this.getCachedElement('loadingInterface');
                     if (loadingElement) {
                         loadingElement.style.display = 'flex';
-                        loadingElement.setAttribute('aria-hidden', 'false');
+                        loadingElement.removeAttribute('aria-hidden');
                         const loadingText = this.getCachedElement('loadingText');
                         if (loadingText) {
                             loadingText.textContent = 'Finding partner...';
@@ -1564,7 +1586,7 @@ class CoSleepApp {
                     const callElement = this.getCachedElement('callInterface');
                     if (callElement) {
                         callElement.style.display = 'flex';
-                        callElement.setAttribute('aria-hidden', 'false');
+                        callElement.removeAttribute('aria-hidden');
                     }
                     break;
             }
