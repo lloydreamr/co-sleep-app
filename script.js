@@ -32,6 +32,10 @@ class CoSleepApp {
         
         this.initializeElements();
         this.bindEvents();
+        
+        // Ensure error interface is hidden during initialization
+        this.showInterface('main');
+        
         this.initializeSocket();
         this.initializeAuth();
         this.initializeSoundSystem();
@@ -118,19 +122,29 @@ class CoSleepApp {
     }
 
     initializeSocket() {
+        console.log('🔌 Initializing Socket.IO connection...');
+        console.log('Socket.IO available:', typeof io !== 'undefined');
+        
         // Check if Socket.IO is available, with retry mechanism
         const initializeSocketWithRetry = (retryCount = 0) => {
+            console.log(`🔍 Checking Socket.IO availability (attempt ${retryCount + 1})...`);
+            
             if (typeof io === 'undefined') {
-                if (retryCount < 10) { // Try up to 10 times
-                    console.log(`Socket.IO not available, retrying... (${retryCount + 1}/10)`);
+                if (retryCount < 20) { // Try up to 20 times (10 seconds total)
+                    console.log(`Socket.IO not available, retrying... (${retryCount + 1}/20)`);
                     setTimeout(() => initializeSocketWithRetry(retryCount + 1), 500);
                     return;
                 } else {
                     console.error('❌ Socket.IO not available after retries. Server may not be running.');
-                    this.showError('Connection failed. Please make sure the server is running.');
+                    // Add a small delay before showing error to ensure UI is ready
+                    setTimeout(() => {
+                        this.showError('Connection failed. Please make sure the server is running.');
+                    }, 100);
                     return;
                 }
             }
+
+            console.log('✅ Socket.IO is available, attempting connection...');
 
             try {
                 // Connect to the server
@@ -144,6 +158,8 @@ class CoSleepApp {
                 // Handle connection events
                 this.socket.on('connect', () => {
                     console.log('✅ Connected to server');
+                    // Ensure error interface is hidden on successful connection
+                    this.showInterface('main');
                 });
                 
                 this.socket.on('connect_error', (error) => {
@@ -360,7 +376,7 @@ class CoSleepApp {
                     console.log(`🔗 Connection state changed: ${last.connectionState} → ${stats.connectionState}`);
                 }
                 if (last.iceConnectionState !== stats.iceConnectionState) {
-                    console.log(`🧊 ICE state changed: ${last.iceConnectionState} → ${stats.iceConnectionState}`);
+                    console.log(`�� ICE state changed: ${last.iceConnectionState} → ${stats.iceConnectionState}`);
                 }
             }
             
