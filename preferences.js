@@ -32,7 +32,7 @@ class PreferencesManager {
             compactMode: false
         };
         
-        this.loadPreferences();
+        this.loadFromStorage();
     }
 
     // Initialize preferences

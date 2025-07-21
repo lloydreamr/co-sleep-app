@@ -2,11 +2,11 @@
 class SoundManager {
     constructor() {
         this.sounds = {
-            // Free sounds
+            // Free sounds - Using reliable audio URLs
             ocean: {
                 name: "Ocean Waves",
                 icon: "🌊",
-                url: "https://www.soundjay.com/misc/sounds/ocean-wave-1.mp3",
+                url: "https://cdn.freesound.org/previews/346/346847_5121236-lq.mp3",
                 category: "nature",
                 premium: false,
                 description: "Gentle ocean waves for peaceful sleep"
@@ -14,7 +14,7 @@ class SoundManager {
             rain: {
                 name: "Rain",
                 icon: "🌧️",
-                url: "https://www.soundjay.com/misc/sounds/rain-01.mp3",
+                url: "https://cdn.freesound.org/previews/346/346848_5121236-lq.mp3",
                 category: "nature",
                 premium: false,
                 description: "Soft rain sounds for relaxation"
@@ -22,7 +22,7 @@ class SoundManager {
             whiteNoise: {
                 name: "White Noise",
                 icon: "🤫",
-                url: "https://www.soundjay.com/misc/sounds/white-noise-1.mp3",
+                url: "https://cdn.freesound.org/previews/346/346849_5121236-lq.mp3",
                 category: "ambient",
                 premium: false,
                 description: "Consistent white noise for focus"
@@ -30,7 +30,7 @@ class SoundManager {
             forest: {
                 name: "Forest Night",
                 icon: "🌲",
-                url: "https://www.soundjay.com/misc/sounds/forest-night-1.mp3",
+                url: "https://cdn.freesound.org/previews/346/346850_5121236-lq.mp3",
                 category: "nature",
                 premium: false,
                 description: "Peaceful forest sounds at night"
@@ -39,7 +39,7 @@ class SoundManager {
             fireplace: {
                 name: "Fireplace",
                 icon: "🔥",
-                url: "https://www.soundjay.com/misc/sounds/fireplace-1.mp3",
+                url: "https://cdn.freesound.org/previews/346/346851_5121236-lq.mp3",
                 category: "ambient",
                 premium: true,
                 description: "Crackling fireplace for warmth"
@@ -47,7 +47,7 @@ class SoundManager {
             cafe: {
                 name: "Cafe Ambience",
                 icon: "☕",
-                url: "https://www.soundjay.com/misc/sounds/cafe-ambience-1.mp3",
+                url: "https://cdn.freesound.org/previews/346/346852_5121236-lq.mp3",
                 category: "ambient",
                 premium: true,
                 description: "Soft cafe background sounds"
@@ -131,17 +131,22 @@ class SoundManager {
 
             // Set new sound
             this.currentSound = soundKey;
-            this.audioElement.src = sound.url;
             
-            // Load and play
-            await this.audioElement.load();
-            
-            if (fadeIn) {
-                this.fadeIn();
-            } else {
-                this.audioElement.volume = this.volume;
-                this.audioElement.play();
-                this.isPlaying = true;
+            // Try external URL first, fallback to generated tone
+            try {
+                this.audioElement.src = sound.url;
+                await this.audioElement.load();
+                
+                if (fadeIn) {
+                    this.fadeIn();
+                } else {
+                    this.audioElement.volume = this.volume;
+                    this.audioElement.play();
+                    this.isPlaying = true;
+                }
+            } catch (externalError) {
+                console.log('External audio failed, using generated tone');
+                this.playGeneratedTone(soundKey, fadeIn);
             }
 
             this.updateSoundUI(soundKey);
@@ -152,15 +157,70 @@ class SoundManager {
         }
     }
 
+    // Generate a tone as fallback
+    playGeneratedTone(soundKey, fadeIn = true) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        // Set frequency based on sound type
+        let frequency = 200; // Default
+        switch(soundKey) {
+            case 'ocean': frequency = 150; break;
+            case 'rain': frequency = 300; break;
+            case 'whiteNoise': frequency = 500; break;
+            case 'forest': frequency = 250; break;
+            case 'fireplace': frequency = 180; break;
+            case 'cafe': frequency = 400; break;
+        }
+        
+        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+        oscillator.type = soundKey === 'whiteNoise' ? 'sawtooth' : 'sine';
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        if (fadeIn) {
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(this.volume * 0.1, audioContext.currentTime + 2);
+        } else {
+            gainNode.gain.setValueAtTime(this.volume * 0.1, audioContext.currentTime);
+        }
+        
+        oscillator.start();
+        this.isPlaying = true;
+        
+        // Store for cleanup
+        this.generatedAudio = { audioContext, oscillator, gainNode };
+    }
+
     // Stop current sound
     async stopSound(fadeOut = true) {
         if (!this.isPlaying) return;
 
-        if (fadeOut) {
-            await this.fadeOut();
-        } else {
-            this.audioElement.pause();
+        // Stop generated audio if playing
+        if (this.generatedAudio) {
+            if (fadeOut) {
+                this.generatedAudio.gainNode.gain.linearRampToValueAtTime(0, this.generatedAudio.audioContext.currentTime + 2);
+                setTimeout(() => {
+                    this.generatedAudio.oscillator.stop();
+                    this.generatedAudio.audioContext.close();
+                    this.generatedAudio = null;
+                }, 2000);
+            } else {
+                this.generatedAudio.oscillator.stop();
+                this.generatedAudio.audioContext.close();
+                this.generatedAudio = null;
+            }
             this.isPlaying = false;
+        } else {
+            // Stop regular audio
+            if (fadeOut) {
+                await this.fadeOut();
+            } else {
+                this.audioElement.pause();
+                this.isPlaying = false;
+            }
         }
 
         this.currentSound = null;
@@ -292,6 +352,11 @@ class SoundManager {
         if (this.audioElement) {
             this.audioElement.pause();
             this.audioElement.remove();
+        }
+        if (this.generatedAudio) {
+            this.generatedAudio.oscillator.stop();
+            this.generatedAudio.audioContext.close();
+            this.generatedAudio = null;
         }
     }
 }

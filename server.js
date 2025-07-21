@@ -22,7 +22,7 @@ app.use(helmet({
             imgSrc: ["'self'", "data:", "https:"],
             fontSrc: ["'self'", "https:", "data:"],
             objectSrc: ["'none'"],
-            mediaSrc: ["'self'"],
+            mediaSrc: ["'self'", "https://www.soundjay.com", "https:"],
             frameSrc: ["'none'"]
         }
     }
