@@ -6,6 +6,7 @@
     <title>Co-Sleep - Find Quiet Presence</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="sounds.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -43,6 +44,54 @@
         <div id="main-interface" class="interface fade-in">
             <div class="status-indicator">
                 <span>Find Quiet Presence</span>
+            </div>
+            
+            <!-- Sound Selection -->
+            <div class="sound-section">
+                <div class="sound-header">
+                    <h3>Background Sounds</h3>
+                    <div class="current-sound">
+                        <span id="current-sound-icon" class="sound-icon">🔇</span>
+                        <span id="current-sound-name">No sound</span>
+                    </div>
+                </div>
+                
+                <div class="sound-grid">
+                    <button class="sound-btn" data-sound="ocean" title="Ocean Waves">
+                        <span class="sound-icon">🌊</span>
+                        <span class="sound-name">Ocean</span>
+                    </button>
+                    <button class="sound-btn" data-sound="rain" title="Rain">
+                        <span class="sound-icon">🌧️</span>
+                        <span class="sound-name">Rain</span>
+                    </button>
+                    <button class="sound-btn" data-sound="whiteNoise" title="White Noise">
+                        <span class="sound-icon">🤫</span>
+                        <span class="sound-name">White Noise</span>
+                    </button>
+                    <button class="sound-btn" data-sound="forest" title="Forest Night">
+                        <span class="sound-icon">🌲</span>
+                        <span class="sound-name">Forest</span>
+                    </button>
+                    <button class="sound-btn premium" data-sound="fireplace" title="Fireplace (Premium)">
+                        <span class="sound-icon">🔥</span>
+                        <span class="sound-name">Fireplace</span>
+                        <span class="premium-badge">⭐</span>
+                    </button>
+                    <button class="sound-btn premium" data-sound="cafe" title="Cafe Ambience (Premium)">
+                        <span class="sound-icon">☕</span>
+                        <span class="sound-name">Cafe</span>
+                        <span class="premium-badge">⭐</span>
+                    </button>
+                </div>
+                
+                <div class="volume-control">
+                    <label for="sound-volume">
+                        <i class="fas fa-volume-up"></i> Volume
+                    </label>
+                    <input type="range" id="sound-volume" min="0" max="100" value="30" class="volume-slider">
+                    <span class="volume-value">30%</span>
+                </div>
             </div>
             
             <button id="connect-btn" class="main-action">

@@ -14,11 +14,15 @@ class CoSleepApp {
         this.currentUser = null;
         this.authToken = null;
         
+        // Sound system integration
+        this.soundManager = window.soundManager;
+        
         this.initializeElements();
         this.bindEvents();
         this.initializeWebRTC();
         this.initializeSocket();
         this.initializeAuth();
+        this.initializeSoundSystem();
         
         // Start periodic mute state sync
         this.startMuteSync();
@@ -281,6 +285,11 @@ class CoSleepApp {
         
         // Update status to show connecting
         this.updateStatusText('Setting up connection...');
+        
+        // Continue playing background sound if active
+        if (this.soundManager && this.soundManager.currentSound) {
+            console.log('🎵 Continuing background sound during call');
+        }
         
         try {
             if (this.isInitiator) {
@@ -676,6 +685,11 @@ class CoSleepApp {
         this.isMuted = false;
         this.updateMuteUI();
         
+        // Keep background sound playing if active
+        if (this.soundManager && this.soundManager.currentSound) {
+            console.log('🎵 Keeping background sound active after disconnection');
+        }
+        
         // Reinitialize microphone access
         this.initializeWebRTC();
     }
@@ -885,6 +899,11 @@ class CoSleepApp {
         this.isMuted = false;
         this.updateMuteUI();
         
+        // Keep background sound playing if active
+        if (this.soundManager && this.soundManager.currentSound) {
+            console.log('🎵 Keeping background sound active after call');
+        }
+        
         // Reinitialize microphone access
         this.initializeWebRTC();
     }
@@ -947,6 +966,11 @@ class CoSleepApp {
         // Stop mute sync
         this.stopMuteSync();
         
+        // Clean up sound system
+        if (this.soundManager) {
+            this.soundManager.destroy();
+        }
+        
         if (this.isInCall) {
             this.endCall();
         }
@@ -966,6 +990,54 @@ class CoSleepApp {
             this.currentUser = JSON.parse(user);
             this.updateAuthUI();
         }
+    }
+
+    // Sound system methods
+    initializeSoundSystem() {
+        if (this.soundManager) {
+            this.soundManager.init();
+            this.bindSoundEvents();
+            console.log('🎵 Sound system initialized');
+        }
+    }
+
+    bindSoundEvents() {
+        // Bind sound button clicks
+        const soundButtons = document.querySelectorAll('.sound-btn');
+        soundButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const soundKey = btn.dataset.sound;
+                this.playBackgroundSound(soundKey);
+            });
+        });
+
+        // Bind volume slider
+        const volumeSlider = document.getElementById('sound-volume');
+        const volumeValue = document.querySelector('.volume-value');
+        
+        if (volumeSlider && volumeValue) {
+            volumeSlider.addEventListener('input', (e) => {
+                const volume = e.target.value;
+                this.soundManager.setVolume(volume / 100);
+                volumeValue.textContent = `${volume}%`;
+            });
+        }
+    }
+
+    async playBackgroundSound(soundKey) {
+        if (!this.soundManager) return;
+
+        // Update UI to show active sound
+        const soundButtons = document.querySelectorAll('.sound-btn');
+        soundButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.sound === soundKey) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Play the sound
+        await this.soundManager.playSound(soundKey);
     }
 
     updateAuthUI() {
