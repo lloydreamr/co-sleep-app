@@ -29,6 +29,7 @@ class CoSleepApp {
         this.initializeSoundSystem();
         this.initializeAnalytics();
         this.initializePreferences();
+        this.initializePreferencesUI(); // Initialize preferences UI
         
         // Start periodic mute state sync
         this.startMuteSync();
@@ -53,6 +54,14 @@ class CoSleepApp {
         this.userName = document.getElementById('user-name');
         this.userDropdown = document.getElementById('user-dropdown');
         this.loginBtn = document.getElementById('login-btn');
+
+        // Preferences elements
+        this.preferencesBtn = document.getElementById('preferencesBtn');
+        this.preferencesOverlay = document.getElementById('preferencesOverlay');
+        this.closePreferencesBtn = document.getElementById('closePreferencesBtn');
+        this.soundCountBtn = document.getElementById('soundCountBtn');
+        this.soundPanel = document.getElementById('soundPanel');
+        this.closeSoundBtn = document.getElementById('closeSoundBtn');
     }
 
     bindEvents() {
@@ -1018,15 +1027,10 @@ class CoSleepApp {
 
     // Sound system methods
     initializeSoundSystem() {
-        // Initialize global sound manager instance
-        if (!window.soundManager) {
-            window.soundManager = new SoundManager();
-        }
-        
-        if (window.soundManager) {
-            window.soundManager.init();
-            console.log('🎵 Multi-sound system initialized');
-        }
+        // Initialize the global sound manager
+        window.soundManager = new SoundManager();
+        window.soundManager.init();
+        console.log('🎵 Sound system initialized');
     }
 
     // Analytics system methods
@@ -1039,10 +1043,64 @@ class CoSleepApp {
 
     // Preferences system methods
     initializePreferences() {
-        if (this.preferencesManager) {
-            this.preferencesManager.init();
-            console.log('⚙️ Preferences system initialized');
-        }
+        this.preferencesManager = new PreferencesManager();
+        this.preferencesManager.init();
+        console.log('⚙️ Preferences initialized');
+    }
+
+    // Initialize preferences button and overlay
+    initializePreferencesUI() {
+        const preferencesBtn = document.getElementById('preferencesBtn');
+        const preferencesOverlay = document.getElementById('preferencesOverlay');
+        const closePreferencesBtn = document.getElementById('closePreferencesBtn');
+        const soundCountBtn = document.getElementById('soundCountBtn');
+        const soundPanel = document.getElementById('soundPanel');
+        const closeSoundBtn = document.getElementById('closeSoundBtn');
+
+        // Open preferences overlay
+        preferencesBtn.addEventListener('click', () => {
+            preferencesOverlay.classList.add('active');
+        });
+
+        // Close preferences overlay
+        closePreferencesBtn.addEventListener('click', () => {
+            preferencesOverlay.classList.remove('active');
+        });
+
+        // Close preferences on overlay click
+        preferencesOverlay.addEventListener('click', (e) => {
+            if (e.target === preferencesOverlay) {
+                preferencesOverlay.classList.remove('active');
+            }
+        });
+
+        // Open sound panel from preferences
+        soundCountBtn.addEventListener('click', () => {
+            soundPanel.classList.add('active');
+            preferencesOverlay.classList.remove('active');
+        });
+
+        // Close sound panel
+        closeSoundBtn.addEventListener('click', () => {
+            soundPanel.classList.remove('active');
+        });
+
+        // Close sound panel on overlay click
+        soundPanel.addEventListener('click', (e) => {
+            if (e.target === soundPanel) {
+                soundPanel.classList.remove('active');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                preferencesOverlay.classList.remove('active');
+                soundPanel.classList.remove('active');
+            }
+        });
+
+        console.log('⚙️ Preferences UI initialized');
     }
 
     updateAuthUI() {
