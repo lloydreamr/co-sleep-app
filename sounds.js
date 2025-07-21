@@ -1,12 +1,12 @@
 // Background Sounds System for Co-Sleep App
 class SoundManager {
     constructor() {
-        this.sounds = {
-            // Free sounds - Will be generated dynamically
+                this.sounds = {
+            // Free sounds - Using reliable external sources
             ocean: {
                 name: "Ocean Waves",
                 icon: "🌊",
-                url: null, // Generated dynamically
+                url: "https://www.soundjay.com/mechanical/sounds/ocean-wave-1.mp3",
                 category: "nature",
                 premium: false,
                 description: "Gentle ocean waves for peaceful sleep"
@@ -14,7 +14,7 @@ class SoundManager {
             rain: {
                 name: "Rain",
                 icon: "🌧️",
-                url: null, // Generated dynamically
+                url: "https://www.soundjay.com/mechanical/sounds/rain-01.mp3",
                 category: "nature",
                 premium: false,
                 description: "Soft rain sounds for relaxation"
@@ -22,7 +22,7 @@ class SoundManager {
             whiteNoise: {
                 name: "White Noise",
                 icon: "🤫",
-                url: null, // Generated dynamically
+                url: "https://www.soundjay.com/mechanical/sounds/white-noise-1.mp3",
                 category: "ambient",
                 premium: false,
                 description: "Consistent white noise for focus"
@@ -30,7 +30,7 @@ class SoundManager {
             forest: {
                 name: "Forest Night",
                 icon: "🌲",
-                url: null, // Generated dynamically
+                url: "https://www.soundjay.com/mechanical/sounds/forest-night-1.mp3",
                 category: "nature",
                 premium: false,
                 description: "Peaceful forest sounds at night"
@@ -39,7 +39,7 @@ class SoundManager {
             fireplace: {
                 name: "Fireplace",
                 icon: "🔥",
-                url: null, // Generated dynamically
+                url: "https://www.soundjay.com/mechanical/sounds/fireplace-1.mp3",
                 category: "ambient",
                 premium: true,
                 description: "Crackling fireplace for warmth"
@@ -47,16 +47,12 @@ class SoundManager {
             cafe: {
                 name: "Cafe Ambience",
                 icon: "☕",
-                url: null, // Generated dynamically
+                url: "https://www.soundjay.com/mechanical/sounds/cafe-ambience-1.mp3",
                 category: "ambient",
                 premium: true,
                 description: "Soft cafe background sounds"
             }
         };
-
-                // Initialize tone generator
-        this.toneGenerator = new ToneGenerator();
-        this.generateAllSounds();
 
         this.currentSound = null;
         this.audioElement = null;
@@ -65,20 +61,7 @@ class SoundManager {
         this.fadeInterval = null;
     }
 
-    // Generate all sound URLs
-    generateAllSounds() {
-        try {
-            this.sounds.ocean.url = this.toneGenerator.generateOceanWaves();
-            this.sounds.rain.url = this.toneGenerator.generateRain();
-            this.sounds.whiteNoise.url = this.toneGenerator.generateWhiteNoise();
-            this.sounds.forest.url = this.toneGenerator.generateForest();
-            this.sounds.fireplace.url = this.toneGenerator.generateFireplace();
-            this.sounds.cafe.url = this.toneGenerator.generateCafe();
-            console.log('🎵 All sounds generated successfully');
-        } catch (error) {
-            console.error('Error generating sounds:', error);
-        }
-    }
+
 
     // Initialize sound manager
     init() {

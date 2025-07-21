@@ -356,14 +356,15 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* Sound Section */
+/* Sound Section - Moodist Inspired */
 .sound-section {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
-    padding: 1.5rem;
-    margin: 2rem 0;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border-radius: 28px;
+    padding: 2.5rem;
+    margin: 2.5rem 0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(25px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 .sound-header {
@@ -389,8 +390,9 @@ body {
 }
 
 .sound-icon {
-    font-size: 1.25rem;
-    transition: all 0.3s ease;
+    font-size: 2rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .sound-icon.active {
@@ -400,37 +402,39 @@ body {
 
 .sound-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
 }
 
 .sound-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 1rem 0.5rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 20px;
+    padding: 1.5rem 1rem;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
     position: relative;
     color: #ffffff;
+    backdrop-filter: blur(10px);
 }
 
 .sound-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%);
     border-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
 }
 
 .sound-btn.active {
     background: linear-gradient(135deg, #48dbfb 0%, #0abde3 100%);
     border-color: #48dbfb;
-    box-shadow: 0 8px 25px rgba(72, 219, 251, 0.4);
+    box-shadow: 0 16px 40px rgba(72, 219, 251, 0.4);
+    transform: translateY(-2px) scale(1.05);
 }
 
 .sound-btn.premium {
