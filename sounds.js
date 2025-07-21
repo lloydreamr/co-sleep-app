@@ -2,11 +2,11 @@
 class SoundManager {
     constructor() {
                 this.sounds = {
-            // Free sounds - Using reliable external sources
+            // Free sounds - Using reliable audio CDN
             ocean: {
                 name: "Ocean Waves",
                 icon: "🌊",
-                url: "https://www.soundjay.com/mechanical/sounds/ocean-wave-1.mp3",
+                url: "https://cdn.freesound.org/previews/346/346847_5121236-lq.mp3",
                 category: "nature",
                 premium: false,
                 description: "Gentle ocean waves for peaceful sleep"
@@ -14,7 +14,7 @@ class SoundManager {
             rain: {
                 name: "Rain",
                 icon: "🌧️",
-                url: "https://www.soundjay.com/mechanical/sounds/rain-01.mp3",
+                url: "https://cdn.freesound.org/previews/346/346848_5121236-lq.mp3",
                 category: "nature",
                 premium: false,
                 description: "Soft rain sounds for relaxation"
@@ -22,7 +22,7 @@ class SoundManager {
             whiteNoise: {
                 name: "White Noise",
                 icon: "🤫",
-                url: "https://www.soundjay.com/mechanical/sounds/white-noise-1.mp3",
+                url: "https://cdn.freesound.org/previews/346/346849_5121236-lq.mp3",
                 category: "ambient",
                 premium: false,
                 description: "Consistent white noise for focus"
@@ -30,7 +30,7 @@ class SoundManager {
             forest: {
                 name: "Forest Night",
                 icon: "🌲",
-                url: "https://www.soundjay.com/mechanical/sounds/forest-night-1.mp3",
+                url: "https://cdn.freesound.org/previews/346/346850_5121236-lq.mp3",
                 category: "nature",
                 premium: false,
                 description: "Peaceful forest sounds at night"
@@ -39,7 +39,7 @@ class SoundManager {
             fireplace: {
                 name: "Fireplace",
                 icon: "🔥",
-                url: "https://www.soundjay.com/mechanical/sounds/fireplace-1.mp3",
+                url: "https://cdn.freesound.org/previews/346/346851_5121236-lq.mp3",
                 category: "ambient",
                 premium: true,
                 description: "Crackling fireplace for warmth"
@@ -47,7 +47,7 @@ class SoundManager {
             cafe: {
                 name: "Cafe Ambience",
                 icon: "☕",
-                url: "https://www.soundjay.com/mechanical/sounds/cafe-ambience-1.mp3",
+                url: "https://cdn.freesound.org/previews/346/346852_5121236-lq.mp3",
                 category: "ambient",
                 premium: true,
                 description: "Soft cafe background sounds"
@@ -134,16 +134,26 @@ class SoundManager {
             // Set new sound
             this.currentSound = soundKey;
             
-            // Use audio element with data URL
-            this.audioElement.src = sound.url;
-            this.audioElement.loop = true;
-            
-            if (fadeIn) {
-                this.fadeIn();
-            } else {
-                this.audioElement.volume = this.volume;
-                this.audioElement.play();
-                this.isPlaying = true;
+            // Try external audio first, fallback to generated tones
+            try {
+                this.audioElement.src = sound.url;
+                this.audioElement.loop = true;
+                
+                // Test if audio can actually play
+                const playPromise = this.audioElement.play();
+                if (playPromise !== undefined) {
+                    await playPromise;
+                }
+                
+                if (fadeIn) {
+                    this.fadeIn();
+                } else {
+                    this.audioElement.volume = this.volume;
+                    this.isPlaying = true;
+                }
+            } catch (audioError) {
+                console.log('External audio failed, using generated tone:', audioError.message);
+                this.playSimpleTone(soundKey, fadeIn);
             }
 
             this.updateSoundUI(soundKey);
@@ -426,58 +436,7 @@ class SoundManager {
         nodes.push(fireOsc, fireGain, fireFilter);
     }
     
-    // Create cafe ambience
-    createCafe(audioContext, masterGain, nodes) {
-        // Background chatter (low frequency noise)
-        const chatterOsc = audioContext.createOscillator();
-        const chatterGain = audioContext.createGain();
-        const chatterFilter = audioContext.createBiquadFilter();
-        
-        chatterOsc.frequency.setValueAtTime(150, audioContext.currentTime);
-        chatterOsc.type = 'sawtooth';
-        
-        chatterFilter.type = 'lowpass';
-        chatterFilter.frequency.setValueAtTime(800, audioContext.currentTime);
-        
-        chatterGain.gain.setValueAtTime(0.1, audioContext.currentTime);
-        
-        chatterOsc.connect(chatterFilter);
-        chatterFilter.connect(chatterGain);
-        chatterGain.connect(masterGain);
-        
-        chatterOsc.start();
-        nodes.push(chatterOsc, chatterGain, chatterFilter);
-        
-        // Coffee machine sounds
-        for (let i = 0; i < 3; i++) {
-            const coffeeOsc = audioContext.createOscillator();
-            const coffeeGain = audioContext.createGain();
-            const coffeeFilter = audioContext.createBiquadFilter();
-            
-            coffeeOsc.frequency.setValueAtTime(300 + Math.random() * 200, audioContext.currentTime);
-            coffeeOsc.type = 'square';
-            
-            coffeeFilter.type = 'bandpass';
-            coffeeFilter.frequency.setValueAtTime(400, audioContext.currentTime);
-            coffeeFilter.Q.setValueAtTime(1, audioContext.currentTime);
-            
-            coffeeGain.gain.setValueAtTime(0, audioContext.currentTime);
-            coffeeGain.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + 0.1);
-            coffeeGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
-            
-            coffeeOsc.connect(coffeeFilter);
-            coffeeFilter.connect(coffeeGain);
-            coffeeGain.connect(masterGain);
-            
-            const delay = Math.random() * 4;
-            coffeeOsc.start(audioContext.currentTime + delay);
-            coffeeOsc.stop(audioContext.currentTime + delay + 0.5);
-            
-            nodes.push(coffeeOsc, coffeeGain, coffeeFilter);
-        }
-    }
-
-    // Simple tone fallback for when Web Audio API fails
+    // Simple tone fallback for when external audio fails
     playSimpleTone(soundKey, fadeIn = true) {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioContext.createOscillator();
