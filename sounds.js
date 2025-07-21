@@ -2,11 +2,12 @@
 class SoundManager {
     constructor() {
                 this.sounds = {
-            // All sounds are now free - Real ambient audio files
+            // All sounds are now free - Real ambient audio files with fallbacks
             ocean: {
                 name: "Ocean Waves",
                 icon: "waves",
                 url: "https://www.soundjay.com/nature/sounds/ocean-wave-1.mp3",
+                fallbackUrl: "https://www.soundjay.com/mechanical/sounds/ocean-wave-2.mp3",
                 category: "nature",
                 premium: false,
                 description: "Gentle ocean waves for peaceful sleep"
@@ -15,6 +16,7 @@ class SoundManager {
                 name: "Rain",
                 icon: "rain",
                 url: "https://www.soundjay.com/nature/sounds/rain-01.mp3",
+                fallbackUrl: "https://www.soundjay.com/mechanical/sounds/rain-02.mp3",
                 category: "nature",
                 premium: false,
                 description: "Soft rain sounds for relaxation"
@@ -23,6 +25,7 @@ class SoundManager {
                 name: "White Noise",
                 icon: "noise",
                 url: "https://www.soundjay.com/mechanical/sounds/white-noise-1.mp3",
+                fallbackUrl: "https://www.soundjay.com/mechanical/sounds/white-noise-2.mp3",
                 category: "ambient",
                 premium: false,
                 description: "Consistent white noise for focus"
@@ -31,6 +34,7 @@ class SoundManager {
                 name: "Forest Night",
                 icon: "forest",
                 url: "https://www.soundjay.com/nature/sounds/forest-night-1.mp3",
+                fallbackUrl: "https://www.soundjay.com/mechanical/sounds/forest-night-2.mp3",
                 category: "nature",
                 premium: false,
                 description: "Peaceful forest sounds at night"
@@ -39,6 +43,7 @@ class SoundManager {
                 name: "Fireplace",
                 icon: "fire",
                 url: "https://www.soundjay.com/mechanical/sounds/fireplace-1.mp3",
+                fallbackUrl: "https://www.soundjay.com/mechanical/sounds/fireplace-2.mp3",
                 category: "ambient",
                 premium: false,
                 description: "Crackling fireplace for warmth"
@@ -47,6 +52,7 @@ class SoundManager {
                 name: "Cafe Ambience",
                 icon: "cafe",
                 url: "https://www.soundjay.com/mechanical/sounds/cafe-ambience-1.mp3",
+                fallbackUrl: "https://www.soundjay.com/mechanical/sounds/cafe-ambience-2.mp3",
                 category: "ambient",
                 premium: false,
                 description: "Soft cafe background sounds"
@@ -127,30 +133,26 @@ class SoundManager {
         try {
             // Stop current sound if playing
             if (this.isPlaying) {
-                await this.stopSound();
+                await this.stopSound(false); // No fade out for faster switching
             }
 
             // Set new sound
             this.currentSound = soundKey;
             
-            // Play real ambient sounds with seamless looping
+            // Preload and play immediately for faster response
             this.audioElement.src = sound.url;
             this.audioElement.loop = true;
+            this.audioElement.preload = 'auto';
+            this.audioElement.volume = this.volume;
             
-            // Ensure seamless looping by setting crossfade
-            this.audioElement.addEventListener('ended', () => {
-                if (this.isPlaying) {
-                    this.audioElement.currentTime = 0;
-                    this.audioElement.play();
-                }
-            });
+            // Play immediately for instant feedback
+            await this.audioElement.play();
+            this.isPlaying = true;
             
+            // Apply fade in after playing if requested
             if (fadeIn) {
+                this.audioElement.volume = 0;
                 this.fadeIn();
-            } else {
-                this.audioElement.volume = this.volume;
-                this.audioElement.play();
-                this.isPlaying = true;
             }
 
             this.updateSoundUI(soundKey);
@@ -158,6 +160,36 @@ class SoundManager {
             
         } catch (error) {
             console.error('Error playing sound:', error);
+            // Try alternative URL if main one fails
+            await this.playFallbackSound(soundKey);
+        }
+    }
+
+    // Play fallback sound if main URL fails
+    async playFallbackSound(soundKey) {
+        const sound = this.sounds[soundKey];
+        if (!sound || !sound.fallbackUrl) {
+            console.error('No fallback URL available for:', soundKey);
+            return;
+        }
+
+        try {
+            console.log(`🔄 Trying fallback URL for ${sound.name}`);
+            this.audioElement.src = sound.fallbackUrl;
+            this.audioElement.loop = true;
+            this.audioElement.preload = 'auto';
+            this.audioElement.volume = this.volume;
+            
+            await this.audioElement.play();
+            this.isPlaying = true;
+            this.updateSoundUI(soundKey);
+            console.log(`🎵 Playing fallback: ${sound.name}`);
+            
+        } catch (fallbackError) {
+            console.error('Fallback sound also failed:', fallbackError);
+            this.isPlaying = false;
+            this.currentSound = null;
+            this.updateSoundUI(null);
         }
     }
 
