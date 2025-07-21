@@ -89,13 +89,38 @@ class SoundManager {
             });
         }
 
-        // Close sound panel
-        const closeBtn = document.getElementById('close-sound-panel');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
+        // Close sound panel - use event delegation for better reliability
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#close-sound-panel')) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔒 Close button clicked');
                 this.hideSoundPanel();
-            });
-        }
+            }
+        });
+
+        // Keyboard escape to close sound panel
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const soundPanel = document.getElementById('sound-panel');
+                if (soundPanel && !soundPanel.classList.contains('hidden')) {
+                    console.log('🔒 Escape key pressed - closing sound panel');
+                    this.hideSoundPanel();
+                }
+            }
+        });
+
+        // Click outside to close sound panel
+        document.addEventListener('click', (e) => {
+            const soundPanel = document.getElementById('sound-panel');
+            if (soundPanel && !soundPanel.classList.contains('hidden')) {
+                // Check if click is outside the sound panel
+                if (!soundPanel.contains(e.target) && !e.target.closest('#main-play-btn') && !e.target.closest('.sound-count-btn')) {
+                    console.log('🔒 Clicked outside - closing sound panel');
+                    this.hideSoundPanel();
+                }
+            }
+        });
 
         // Setup individual sound controls
         this.setupSoundControls();
@@ -149,6 +174,9 @@ class SoundManager {
         const soundPanel = document.getElementById('sound-panel');
         if (soundPanel) {
             soundPanel.classList.add('hidden');
+            console.log('🎵 Sound panel hidden');
+        } else {
+            console.error('❌ Sound panel not found');
         }
     }
 
