@@ -17,12 +17,18 @@ class CoSleepApp {
         // Sound system integration
         this.soundManager = window.soundManager;
         
+        // Analytics and preferences integration
+        this.analyticsManager = window.analyticsManager;
+        this.preferencesManager = window.preferencesManager;
+        
         this.initializeElements();
         this.bindEvents();
         this.initializeWebRTC();
         this.initializeSocket();
         this.initializeAuth();
         this.initializeSoundSystem();
+        this.initializeAnalytics();
+        this.initializePreferences();
         
         // Start periodic mute state sync
         this.startMuteSync();
@@ -289,6 +295,12 @@ class CoSleepApp {
         // Continue playing background sound if active
         if (this.soundManager && this.soundManager.currentSound) {
             console.log('🎵 Continuing background sound during call');
+        }
+        
+        // Start analytics tracking
+        if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
+            this.analyticsManager.startSession(this.partnerId);
+            console.log('📊 Analytics session started');
         }
         
         try {
@@ -690,6 +702,12 @@ class CoSleepApp {
             console.log('🎵 Keeping background sound active after disconnection');
         }
         
+        // End analytics session
+        if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
+            this.analyticsManager.endSession();
+            console.log('📊 Analytics session ended due to disconnection');
+        }
+        
         // Reinitialize microphone access
         this.initializeWebRTC();
     }
@@ -904,6 +922,12 @@ class CoSleepApp {
             console.log('🎵 Keeping background sound active after call');
         }
         
+        // End analytics session
+        if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
+            this.analyticsManager.endSession();
+            console.log('📊 Analytics session ended');
+        }
+        
         // Reinitialize microphone access
         this.initializeWebRTC();
     }
@@ -1040,6 +1064,22 @@ class CoSleepApp {
         await this.soundManager.playSound(soundKey);
     }
 
+    // Analytics system methods
+    initializeAnalytics() {
+        if (this.analyticsManager) {
+            this.analyticsManager.init();
+            console.log('📊 Analytics system initialized');
+        }
+    }
+
+    // Preferences system methods
+    initializePreferences() {
+        if (this.preferencesManager) {
+            this.preferencesManager.init();
+            console.log('⚙️ Preferences system initialized');
+        }
+    }
+
     updateAuthUI() {
         if (this.currentUser) {
             // Show user menu, hide login button
@@ -1124,15 +1164,7 @@ function showProfile() {
 }
 
 function showAnalytics() {
-    if (window.coSleepApp) {
-        window.coSleepApp.getUserAnalytics().then(analytics => {
-            if (analytics) {
-                alert(`Sleep Analytics:\nTotal Sessions: ${analytics.totalSessions}\nTotal Duration: ${Math.round(analytics.totalDuration / 60)} hours\nAverage Quality: ${analytics.averageQuality.toFixed(1)}/5\nAverage Duration: ${Math.round(analytics.averageDuration)} minutes`);
-            } else {
-                alert('No analytics data available');
-            }
-        });
-    }
+    window.location.href = 'analytics.html';
 }
 
 function upgradePremium() {
