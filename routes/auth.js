@@ -41,7 +41,7 @@ router.post('/register', async (req, res) => {
         email,
         username,
         name,
-        // Note: We'll add password field to schema later
+        password: hashedPassword,
       },
       select: {
         id: true,
@@ -78,7 +78,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
     
-    // Find user
+    // Find user with password
     const user = await prisma.user.findUnique({
       where: { email },
       select: {
@@ -86,6 +86,7 @@ router.post('/login', async (req, res) => {
         email: true,
         username: true,
         name: true,
+        password: true,
         isPremium: true,
         premiumUntil: true,
         sleepTime: true,
@@ -101,11 +102,11 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    // Note: We'll add password verification when we add password field
-    // const isValidPassword = await comparePassword(password, user.password);
-    // if (!isValidPassword) {
-    //   return res.status(401).json({ error: 'Invalid credentials' });
-    // }
+    // Verify password
+    const isValidPassword = await comparePassword(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
     
     // Generate token
     const token = generateToken(user.id);

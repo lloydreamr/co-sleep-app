@@ -16,6 +16,7 @@ model User {
   email         String   @unique
   username      String?  @unique
   name          String?
+  password      String?  // Add password field
   avatar        String?
   timezone      String   @default("UTC")
   createdAt     DateTime @default(now())
