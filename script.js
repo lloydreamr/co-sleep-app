@@ -1,3 +1,15 @@
+// Onboarding check - redirect if not completed
+(function checkOnboarding() {
+    const onboardingComplete = localStorage.getItem('hence_onboarding_complete');
+    const userId = localStorage.getItem('hence_user_id');
+    
+    if (!onboardingComplete || !userId) {
+        // Redirect to onboarding
+        window.location.href = '/onboarding';
+        return;
+    }
+})();
+
 class CoSleepApp {
     constructor() {
         this.cachedElements = new Map(); // Always initialize first
@@ -141,6 +153,21 @@ class CoSleepApp {
             this.loginBtn.addEventListener('click', () => {
                 // For now, just show a placeholder message
                 alert('Login functionality coming soon!');
+            });
+        }
+
+        // Reset onboarding button
+        const resetBtn = this.getCachedElement('reset-onboarding');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                // Clear onboarding data
+                localStorage.removeItem('hence_user_id');
+                localStorage.removeItem('hence_user_type');
+                localStorage.removeItem('hence_display_name');
+                localStorage.removeItem('hence_onboarding_complete');
+                
+                // Redirect to onboarding
+                window.location.href = '/onboarding';
             });
         }
     }
@@ -389,7 +416,7 @@ class CoSleepApp {
                     console.log(`🔗 Connection state changed: ${last.connectionState} → ${stats.connectionState}`);
                 }
                 if (last.iceConnectionState !== stats.iceConnectionState) {
-                    console.log(`�� ICE state changed: ${last.iceConnectionState} → ${stats.iceConnectionState}`);
+                    console.log(` ICE state changed: ${last.iceConnectionState} → ${stats.iceConnectionState}`);
                 }
             }
             
@@ -469,6 +496,7 @@ class CoSleepApp {
             case 'main':
                 if (heroSection) heroSection.style.display = '';
                 console.log('🔙 Showing main interface (hero section)');
+                this.updateUserInfo();
                 break;
             case 'waiting':
                 if (heroSection) heroSection.style.display = 'none';
@@ -1917,6 +1945,15 @@ class CoSleepApp {
             cafe: '☕',
         };
         return icons[icon] || icons[fallbackId] || '🎵';
+    }
+
+    updateUserInfo() {
+        // Update the main interface to show user info
+        const userInfoElement = document.getElementById('user-info');
+        if (userInfoElement) {
+            const displayText = this.displayName || 'Anonymous';
+            userInfoElement.textContent = `Welcome, ${displayText}`;
+        }
     }
 }
 

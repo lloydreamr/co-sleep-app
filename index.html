@@ -23,25 +23,28 @@
 </head>
 <body>
     <!-- Hero Section (Main Interface) -->
-    <section id="heroSection" class="hero-section">
-        <header class="moodist-header">
-            <h1>Co-Sleep</h1>
-            <p>Find Quiet Presence</p>
-        </header>
-        <main class="main-content">
-            <div class="core-interface">
-                <button class="main-play-button" id="mainPlayBtn" aria-label="Find Quiet Presence">
-                    <span class="play-icon" aria-hidden="true">▶</span>
-                    <span class="button-text">Find Quiet Presence</span>
-                </button>
+    <section class="hero-section" id="heroSection">
+        <div class="hero-content">
+            <div class="logo">🌙</div>
+            <h1>Hence</h1>
+            <p class="tagline">Find quiet presence and peaceful sleep companionship</p>
+            
+            <!-- User Info Section -->
+            <div id="user-info" class="user-info">
+                Welcome, Anonymous
             </div>
-        </main>
-        <!-- Down Arrow -->
-        <button class="down-arrow" id="downArrowBtn" aria-label="See background sounds" tabindex="0">
-            <span aria-hidden="true">&#8595;</span>
-        </button>
-        <!-- Preferences Button (Blank/Disabled) -->
-        <button class="preferences-btn disabled" id="preferencesBtn" aria-label="Preferences" disabled></button>
+            
+            <button id="findPartnerBtn" class="primary-btn">
+                Find Quiet Presence
+            </button>
+            
+            <!-- Reset button for testing -->
+            <button id="reset-onboarding" class="secondary-btn" style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.7;">
+                Reset Onboarding
+            </button>
+        </div>
+        
+        <div class="down-arrow">↓</div>
     </section>
 
     <!-- Call Interface (Hidden by default) -->

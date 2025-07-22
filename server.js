@@ -53,7 +53,12 @@ app.use(express.static(path.join(__dirname), {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/onboarding', onboardingRoutes); // New route registration
+
+// Serve onboarding page
+app.get('/onboarding', (req, res) => {
+    res.sendFile(path.join(__dirname, 'onboarding.html'));
+});
 
 // Initialize Socket.IO and matchmaking
 const socketService = initSocketService(server);

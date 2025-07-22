@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hence - Welcome</title>
+    <link rel="stylesheet" href="onboarding-styles.css?v=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="onboarding-container">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen active">
+            <div class="content">
+                <div class="logo">🌙</div>
+                <h1>Welcome to Hence</h1>
+                <p class="subtitle">Find quiet presence and peaceful sleep companionship</p>
+                <div class="features">
+                    <div class="feature">
+                        <span class="feature-icon">🔒</span>
+                        <span>Anonymous & Safe</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">🎧</span>
+                        <span>Voice-Only Connection</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">🌙</span>
+                        <span>Peaceful Sleep</span>
+                    </div>
+                </div>
+                <button id="get-started-btn" class="primary-btn">Get Started</button>
+            </div>
+        </div>
+
+        <!-- Path Selection Screen -->
+        <div id="path-screen" class="screen">
+            <div class="content">
+                <div class="back-btn" id="back-to-welcome">← Back</div>
+                <h2>Choose Your Path</h2>
+                <p class="subtitle">How would you like to experience Hence?</p>
+                
+                <div class="path-options">
+                    <div class="path-option" data-path="anonymous">
+                        <div class="path-icon">👤</div>
+                        <h3>Anonymous</h3>
+                        <p>Stay completely anonymous. No name, no profile, just quiet presence.</p>
+                        <div class="path-benefits">
+                            <span>✓ No personal info</span>
+                            <span>✓ Quick start</span>
+                            <span>✓ Match with other anonymous users</span>
+                        </div>
+                    </div>
+                    
+                    <div class="path-option" data-path="profile">
+                        <div class="path-icon">👥</div>
+                        <h3>Profile</h3>
+                        <p>Create a simple profile to find more compatible sleep partners.</p>
+                        <div class="path-benefits">
+                            <span>✓ Choose display name</span>
+                            <span>✓ Set matching preferences</span>
+                            <span>✓ Better compatibility</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Setup Screen -->
+        <div id="profile-screen" class="screen">
+            <div class="content">
+                <div class="back-btn" id="back-to-path">← Back</div>
+                <h2>Your Profile</h2>
+                <p class="subtitle">Tell us a bit about yourself</p>
+                
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label for="display-name">Display Name</label>
+                        <input type="text" id="display-name" placeholder="Enter your name" maxlength="20" required>
+                        <small>This is how others will see you</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gender-identity">Gender Identity</label>
+                        <select id="gender-identity" required>
+                            <option value="">Select gender identity</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="nonbinary">Non-binary</option>
+                            <option value="prefer_not_to_say">Prefer not to say</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="match-preference">Who would you like to match with?</label>
+                        <select id="match-preference" required>
+                            <option value="">Select preference</option>
+                            <option value="any">Anyone</option>
+                            <option value="male">Men only</option>
+                            <option value="female">Women only</option>
+                            <option value="nonbinary">Non-binary only</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="primary-btn">Continue</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Consent Screen -->
+        <div id="consent-screen" class="screen">
+            <div class="content">
+                <div class="back-btn" id="back-to-profile">← Back</div>
+                <h2>Almost There</h2>
+                <p class="subtitle">Please review and agree to our terms</p>
+                
+                <div class="consent-content">
+                    <div class="consent-section">
+                        <h3>Community Guidelines</h3>
+                        <ul>
+                            <li>Be respectful and kind to your sleep partner</li>
+                            <li>No inappropriate behavior or harassment</li>
+                            <li>Keep conversations peaceful and sleep-focused</li>
+                            <li>Report any concerning behavior</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="consent-section">
+                        <h3>Privacy & Safety</h3>
+                        <ul>
+                            <li>Your conversations are not recorded</li>
+                            <li>We don't store personal information</li>
+                            <li>You can block or skip partners anytime</li>
+                            <li>Your safety is our priority</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="consent-checkbox">
+                        <input type="checkbox" id="consent-checkbox" required>
+                        <label for="consent-checkbox">
+                            I understand and agree to the community guidelines and privacy policy
+                        </label>
+                    </div>
+                </div>
+                
+                <button id="start-hence-btn" class="primary-btn" disabled>Start Hence</button>
+            </div>
+        </div>
+
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="screen">
+            <div class="content">
+                <div class="loading-spinner"></div>
+                <h3>Setting up your experience...</h3>
+                <p>This will just take a moment</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="onboarding.js?v=1.0"></script>
+</body>
+</html> 
