@@ -15,15 +15,15 @@ datasource db {
 // User Management
 // =====================
 model User {
-  id            String   @id @default(cuid()) // Unique user ID
-  email         String   @unique              // User email (unique)
-  username      String?  @unique              // Optional username (unique)
-  name          String?                       // Optional display name
-  password      String?                       // Hashed password
-  avatar        String?                       // Optional avatar URL
-  timezone      String   @default("UTC")      // User's timezone
-  createdAt     DateTime @default(now())      // Account creation timestamp
-  updatedAt     DateTime @updatedAt           // Last update timestamp
+  id              String   @id @default(cuid())
+  userType        String   // "anonymous" or "profile"
+  displayName     String?  // Only for profile users
+  genderIdentity  String?  // e.g., "male", "female", "nonbinary", "prefer_not_to_say"
+  matchPreference String?  // e.g., "any", "male", "female", "nonbinary"
+  consentGiven    Boolean  @default(false)
+  onboardingStep  String   @default("welcome") // Track onboarding progress
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relationships
   sleepSessions    SleepSession[] @relation("UserSessions")      // Sessions as user
