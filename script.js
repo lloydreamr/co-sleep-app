@@ -1,6 +1,6 @@
 class CoSleepApp {
     constructor() {
-        this.cachedElements = new Map(); // Ensure always initialized at the very top
+        this.cachedElements = new Map(); // Always initialize first
         this.isInQueue = false;
         this.isInCall = false;
         this.isMuted = false;
@@ -97,7 +97,12 @@ class CoSleepApp {
     bindEvents() {
         // Bind main play button (Find Quiet Presence)
         if (this.mainPlayBtn) {
-            this.mainPlayBtn.addEventListener('click', () => this.joinQueue());
+            this.mainPlayBtn.addEventListener('click', () => {
+                console.log('🎯 Find Quiet Presence button clicked');
+                this.joinQueue();
+            });
+        } else {
+            console.warn('⚠️ mainPlayBtn not found in DOM');
         }
         
         // Bind call interface buttons
@@ -188,7 +193,7 @@ class CoSleepApp {
                 
                 // Handle match found
                 this.socket.on('match-found', (data) => {
-                    console.log('Match found with:', data.partnerId, 'Initiator:', data.isInitiator);
+                    console.log('🎉 match-found event received:', data);
                     this.partnerId = data.partnerId;
                     this.isInitiator = data.isInitiator;
                     this.connectToPeer();
@@ -474,6 +479,7 @@ class CoSleepApp {
     }
 
     async joinQueue() {
+        console.log('🚦 joinQueue called');
         // Initialize WebRTC on first user interaction
         if (!this.webrtcInitialized) {
             try {
@@ -1288,8 +1294,8 @@ class CoSleepApp {
 
     // Initialize preferences button and overlay
     initializePreferencesUI() {
-        // Only run if preferences overlay exists
-        if (!this.preferencesOverlay) return;
+        // No-op if overlay/buttons are missing
+        if (!this.preferencesOverlay || !this.closePreferencesBtn) return;
         if (this.closePreferencesBtn) {
             this.closePreferencesBtn.addEventListener('click', () => {
                 this.preferencesOverlay.classList.remove('active');
