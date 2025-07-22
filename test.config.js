@@ -3,7 +3,7 @@ module.exports = {
     // Test environment variables
     env: {
         NODE_ENV: 'test',
-        DATABASE_URL: 'file:./test.db',
+        DATABASE_URL: 'postgresql://test:test@localhost:5433/test_cosleep?sslmode=disable',
         JWT_SECRET: 'test-jwt-secret-for-hence-testing',
         PORT: 3001,
         HOST: 'localhost',
