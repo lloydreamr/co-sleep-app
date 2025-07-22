@@ -62,16 +62,6 @@ class CoSleepApp {
                 }
             });
         }
-        // Add event handler for cancelQueueBtn
-        setTimeout(() => {
-            const cancelBtn = document.getElementById('cancelQueueBtn');
-            if (cancelBtn) {
-                cancelBtn.addEventListener('click', () => {
-                    this.leaveQueue();
-                    this.showInterface('main');
-                });
-            }
-        }, 0);
     }
 
     initializeElements() {
@@ -477,6 +467,14 @@ class CoSleepApp {
                     this.loadingInterface.style.display = 'flex';
                     if (this.loadingText) {
                         this.loadingText.textContent = 'Finding partner...';
+                    }
+                    // Attach cancel button handler every time
+                    const cancelBtn = document.getElementById('cancelQueueBtn');
+                    if (cancelBtn) {
+                        cancelBtn.onclick = () => {
+                            this.leaveQueue();
+                            this.showInterface('main');
+                        };
                     }
                 }
                 break;
