@@ -377,4 +377,17 @@ class SoundManager {
         this.activeSounds.clear();
         console.log('🎵 Sound Manager destroyed');
     }
+
+    // Add this method to return all available sounds for the UI
+    getAvailableSounds() {
+        return Object.entries(this.sounds).map(([id, sound]) => ({
+            id,
+            label: sound.name || id,
+            volume: Math.round((this.getSoundVolume(id) || this.defaultVolume) * 100)
+        }));
+    }
 } 
+
+// Attach to window
+window.soundManager = new SoundManager();
+window.soundManager.init(); 
