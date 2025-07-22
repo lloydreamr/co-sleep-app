@@ -357,44 +357,6 @@ body {
     font-weight: 400;
 }
 
-.feature-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-}
-
-.feature-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 15px 20px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.95rem;
-    font-weight: 400;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    /* Performance optimization */
-    will-change: transform;
-    transform: translateZ(0);
-}
-
-.feature-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(5px) translateZ(0);
-}
-
-.feature-icon {
-    font-size: 1.1rem;
-    opacity: 0.8;
-}
-
-.feature-text {
-    font-weight: 400;
-}
-
 /* Sound Panel */
 .sound-panel {
     position: fixed;
