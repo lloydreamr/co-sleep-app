@@ -6,6 +6,7 @@ const path = require('path');
 const prisma = require('./lib/prisma');
 // Import routes
 const authRoutes = require('./routes/auth');
+const onboardingRoutes = require('./routes/onboarding');
 const { initSocketService } = require('./services/socket');
 
 const app = express();
@@ -52,6 +53,7 @@ app.use(express.static(path.join(__dirname), {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 
 // Initialize Socket.IO and matchmaking
 const socketService = initSocketService(server);
