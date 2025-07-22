@@ -1,5 +1,6 @@
 class CoSleepApp {
     constructor() {
+        this.cachedElements = new Map(); // Ensure always initialized at the very top
         this.isInQueue = false;
         this.isInCall = false;
         this.isMuted = false;
@@ -1289,52 +1290,35 @@ class CoSleepApp {
     initializePreferencesUI() {
         // Only run if preferences overlay exists
         if (!this.preferencesOverlay) return;
-        const preferencesBtn = document.getElementById('preferencesBtn');
-        const closePreferencesBtn = document.getElementById('closePreferencesBtn');
-        const soundCountBtn = document.getElementById('soundCountBtn');
-        const soundPanel = document.getElementById('soundPanel');
-        const closeSoundBtn = document.getElementById('closeSoundBtn');
-
-        // Open preferences overlay
-        preferencesBtn.addEventListener('click', () => {
-            this.preferencesOverlay.classList.add('active');
-        });
-
-        // Close preferences overlay
-        closePreferencesBtn.addEventListener('click', () => {
-            this.preferencesOverlay.classList.remove('active');
-        });
-
-        // Close preferences on overlay click
-        this.preferencesOverlay.addEventListener('click', (e) => {
-            if (e.target === this.preferencesOverlay) {
+        if (this.closePreferencesBtn) {
+            this.closePreferencesBtn.addEventListener('click', () => {
                 this.preferencesOverlay.classList.remove('active');
-            }
-        });
-
-        // Open sound panel from preferences
-        soundCountBtn.addEventListener('click', () => {
-            soundPanel.classList.add('active');
-            this.preferencesOverlay.classList.remove('active');
-        });
-
-        // Close sound panel
-        closeSoundBtn.addEventListener('click', () => {
-            soundPanel.classList.remove('active');
-        });
-
-        // Close sound panel on overlay click
-        soundPanel.addEventListener('click', (e) => {
-            if (e.target === soundPanel) {
-                soundPanel.classList.remove('active');
-            }
-        });
+            });
+        }
+        if (this.soundCountBtn) {
+            this.soundCountBtn.addEventListener('click', () => {
+                this.soundPanel.classList.add('active');
+                this.preferencesOverlay.classList.remove('active');
+            });
+        }
+        if (this.closeSoundBtn) {
+            this.closeSoundBtn.addEventListener('click', () => {
+                this.soundPanel.classList.remove('active');
+            });
+        }
+        if (this.soundPanel) {
+            this.soundPanel.addEventListener('click', (e) => {
+                if (e.target === this.soundPanel) {
+                    this.soundPanel.classList.remove('active');
+                }
+            });
+        }
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this.preferencesOverlay.classList.remove('active');
-                soundPanel.classList.remove('active');
+                this.soundPanel.classList.remove('active');
             }
         });
 
@@ -1562,7 +1546,7 @@ class CoSleepApp {
 
     // Cached element queries
     getCachedElement(id) {
-        if (!this.cachedElements) this.cachedElements = new Map();
+        if (!(this.cachedElements instanceof Map)) this.cachedElements = new Map();
         if (!this.cachedElements.has(id)) {
             const el = document.getElementById(id);
             if (el) this.cachedElements.set(id, el);
