@@ -1294,41 +1294,8 @@ class CoSleepApp {
 
     // Initialize preferences button and overlay
     initializePreferencesUI() {
-        // No-op if overlay/buttons are missing
-        if (!this.preferencesOverlay || !this.closePreferencesBtn) return;
-        if (this.closePreferencesBtn) {
-            this.closePreferencesBtn.addEventListener('click', () => {
-                this.preferencesOverlay.classList.remove('active');
-            });
-        }
-        if (this.soundCountBtn) {
-            this.soundCountBtn.addEventListener('click', () => {
-                this.soundPanel.classList.add('active');
-                this.preferencesOverlay.classList.remove('active');
-            });
-        }
-        if (this.closeSoundBtn) {
-            this.closeSoundBtn.addEventListener('click', () => {
-                this.soundPanel.classList.remove('active');
-            });
-        }
-        if (this.soundPanel) {
-            this.soundPanel.addEventListener('click', (e) => {
-                if (e.target === this.soundPanel) {
-                    this.soundPanel.classList.remove('active');
-                }
-            });
-        }
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.preferencesOverlay.classList.remove('active');
-                this.soundPanel.classList.remove('active');
-            }
-        });
-
-        console.log('⚙️ Preferences UI initialized');
+        // Preferences overlay is not present in the UI, so skip this entirely
+        return;
     }
 
     updateAuthUI() {
@@ -1552,7 +1519,7 @@ class CoSleepApp {
 
     // Cached element queries
     getCachedElement(id) {
-        if (!(this.cachedElements instanceof Map)) this.cachedElements = new Map();
+        if (!this.cachedElements || !(this.cachedElements instanceof Map)) this.cachedElements = new Map();
         if (!this.cachedElements.has(id)) {
             const el = document.getElementById(id);
             if (el) this.cachedElements.set(id, el);
