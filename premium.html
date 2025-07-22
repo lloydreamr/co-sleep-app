@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium - Hence</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <div class="premium-container">
+        <!-- Header -->
+        <header class="premium-header">
+            <div class="header-content">
+                <div class="logo">🌙 Hence</div>
+                <button class="back-btn" onclick="goBack()">← Back</button>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="premium-hero">
+            <div class="hero-content">
+                <h1>Upgrade to Premium</h1>
+                <p class="hero-subtitle">Unlock advanced features for better sleep companionship</p>
+            </div>
+        </section>
+
+        <!-- Current Status -->
+        <div id="current-status" class="status-section" style="display: none;">
+            <div class="status-card">
+                <h3>Current Subscription</h3>
+                <div id="status-content">
+                    <!-- Status content will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Plans -->
+        <section class="pricing-section">
+            <div class="pricing-grid">
+                <!-- Free Plan -->
+                <div class="pricing-card free-plan">
+                    <div class="plan-header">
+                        <h3>Free</h3>
+                        <div class="price">$0<span>/month</span></div>
+                    </div>
+                    <ul class="features-list">
+                        <li>✓ Basic voice connections</li>
+                        <li>✓ Standard matchmaking</li>
+                        <li>✓ Auto-disconnect (8 hours)</li>
+                        <li>✓ Skip partners</li>
+                        <li>✗ Background sounds</li>
+                        <li>✗ Extended sessions</li>
+                        <li>✗ Priority matching</li>
+                    </ul>
+                    <button class="plan-btn current-plan" disabled>Current Plan</button>
+                </div>
+
+                <!-- Premium Plan -->
+                <div class="pricing-card premium-plan recommended">
+                    <div class="plan-badge">Recommended</div>
+                    <div class="plan-header">
+                        <h3>Premium</h3>
+                        <div class="price">$9.99<span>/month</span></div>
+                    </div>
+                    <ul class="features-list">
+                        <li>✓ Everything in Free</li>
+                        <li>✓ Background sounds library</li>
+                        <li>✓ Priority matching</li>
+                        <li>✓ Extended session times</li>
+                        <li>✓ Advanced sleep analytics</li>
+                        <li>✓ Custom preferences</li>
+                        <li>✓ No ads</li>
+                    </ul>
+                    <button class="plan-btn premium-btn" data-plan="premium">Upgrade to Premium</button>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="pricing-card pro-plan">
+                    <div class="plan-header">
+                        <h3>Pro</h3>
+                        <div class="price">$19.99<span>/month</span></div>
+                    </div>
+                    <ul class="features-list">
+                        <li>✓ Everything in Premium</li>
+                        <li>✓ Unlimited session length</li>
+                        <li>✓ Advanced matching algorithms</li>
+                        <li>✓ Priority support</li>
+                        <li>✓ Early access to features</li>
+                        <li>✓ Custom sleep schedules</li>
+                        <li>✓ Partner history & analytics</li>
+                    </ul>
+                    <button class="plan-btn pro-btn" data-plan="pro">Upgrade to Pro</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Detail -->
+        <section class="features-detail">
+            <h2>What You Get with Premium</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎵</div>
+                    <h3>Background Sounds</h3>
+                    <p>Access to a library of calming sounds including ocean waves, rain, white noise, and more to enhance your sleep experience.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Priority Matching</h3>
+                    <p>Get matched with compatible partners faster with our priority queue system.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Sleep Analytics</h3>
+                    <p>Track your sleep patterns, session quality, and discover insights about your sleep habits.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⏰</div>
+                    <h3>Extended Sessions</h3>
+                    <p>Enjoy longer co-sleep sessions without automatic disconnection limits.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Advanced Preferences</h3>
+                    <p>Set detailed matching preferences based on sleep schedules, time zones, and compatibility factors.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💤</div>
+                    <h3>Better Sleep Quality</h3>
+                    <p>Enhanced features designed to improve your overall sleep experience and comfort.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="faq-section">
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <h3>Can I cancel anytime?</h3>
+                    <p>Yes, you can cancel your subscription at any time. You'll continue to have access to premium features until the end of your billing period.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>What payment methods do you accept?</h3>
+                    <p>We accept all major credit cards and debit cards through our secure Stripe payment system.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Is my data secure?</h3>
+                    <p>Absolutely. We use industry-standard encryption and never store your payment information on our servers.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Can I change plans later?</h3>
+                    <p>Yes, you can upgrade or downgrade your plan at any time. Changes will be prorated and reflected in your next billing cycle.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading State -->
+        <div id="loading-overlay" class="loading-overlay" style="display: none;">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <p>Redirecting to secure checkout...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="premium.js"></script>
+</body>
+</html> 

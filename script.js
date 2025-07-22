@@ -42,7 +42,8 @@ class CoSleepApp {
         this.userType = localStorage.getItem('hence_user_type');
         this.displayName = localStorage.getItem('hence_display_name');
         
-        // Sound system integration (removed - feature not implemented)
+        // Sound system integration
+        this.soundManager = window.soundManager;
         
         // Analytics and preferences integration
         this.analyticsManager = window.analyticsManager;
@@ -65,7 +66,7 @@ class CoSleepApp {
         
         this.initializeSocket();
         this.initializeAuth();
-        // this.initializeSoundSystem(); // Removed - sound system not implemented
+        this.initializeSoundSystem();
         this.initializeAnalytics();
         this.initializePreferences();
         this.initializePreferencesUI(); // Initialize preferences UI
@@ -101,6 +102,27 @@ class CoSleepApp {
             }
         });
         
+        // Sound panel controls
+        if (this.soundCountBtn) {
+            this.soundCountBtn.addEventListener('click', () => {
+                this.openSoundPanel();
+            });
+        }
+        
+        if (this.closeSoundBtn) {
+            this.closeSoundBtn.addEventListener('click', () => {
+                this.closeSoundPanel();
+            });
+        }
+        
+        if (this.globalVolumeSlider) {
+            this.globalVolumeSlider.addEventListener('input', (e) => {
+                if (window.soundManager) {
+                    window.soundManager.setGlobalVolume(e.target.value / 100);
+                }
+            });
+        }
+
         // Reset onboarding button
         const resetBtn = document.getElementById('reset-onboarding');
         if (resetBtn) {
@@ -138,6 +160,7 @@ class CoSleepApp {
         this.soundCountBtn = document.getElementById('soundCountBtn');
         this.soundPanel = document.getElementById('soundPanel');
         this.closeSoundBtn = document.getElementById('closeSoundBtn');
+        this.globalVolumeSlider = document.getElementById('globalVolume');
 
         // Header elements
         this.onlineCount = document.getElementById('onlineCount');
@@ -611,7 +634,10 @@ class CoSleepApp {
         // Start connection monitoring
         this.startConnectionMonitoring();
         
-        // Sound system removed - no background sounds
+        // Continue playing background sound if active
+        if (window.soundManager && window.soundManager.isAnySoundPlaying()) {
+            console.log('🎵 Continuing background sound during call');
+        }
         
         // Start analytics tracking
         if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
@@ -1017,7 +1043,9 @@ class CoSleepApp {
         this.updateMuteUI();
         
         // Keep background sound playing if active
-        // Sound system removed - no background sounds to manage
+        if (window.soundManager && window.soundManager.isAnySoundPlaying()) {
+            console.log('🎵 Keeping background sound active after disconnection');
+        }
         
         // End analytics session
         if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
@@ -1237,7 +1265,10 @@ class CoSleepApp {
         this.isMuted = false;
         this.updateMuteUI();
         
-        // Sound system removed - no background sounds to manage
+        // Keep background sound playing if active
+        if (window.soundManager && window.soundManager.isAnySoundPlaying()) {
+            console.log('🎵 Keeping background sound active after call');
+        }
         
         // End analytics session
         if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
@@ -1310,7 +1341,10 @@ class CoSleepApp {
         // Stop connection monitoring
         this.stopConnectionMonitoring();
         
-        // Sound system removed - no cleanup needed
+        // Clean up sound system
+        if (window.soundManager) {
+            window.soundManager.destroy();
+        }
         
         // Use enhanced cleanup
         this.cleanup();
@@ -1336,10 +1370,15 @@ class CoSleepApp {
         }
     }
 
-    // Sound system methods (removed - feature not implemented)
-    // initializeSoundSystem() {
-    //     // Removed - sound system not implemented
-    // }
+    // Sound system methods
+    initializeSoundSystem() {
+        if (window.soundManager) {
+            this.soundManager = window.soundManager;
+            console.log('🎵 Sound system initialized');
+        } else {
+            console.warn('Sound manager not available');
+        }
+    }
 
     // Analytics system methods
     initializeAnalytics() {
@@ -1878,13 +1917,168 @@ class CoSleepApp {
         performance.measure(name, startName, endName);
     }
 
-    // renderBackgroundSounds() {
-    //     // Removed - sound system not implemented
-    // }
+    // Render background sounds in the sound panel
+    renderBackgroundSounds() {
+        const soundList = document.getElementById('soundList');
+        const emptyState = document.getElementById('soundEmptyState');
+        if (!soundList || !window.soundManager) return;
+        
+        soundList.innerHTML = '';
+        const allSounds = window.soundManager.getAvailableSounds();
+        
+        if (!allSounds || allSounds.length === 0) {
+            if (emptyState) emptyState.style.display = '';
+            return;
+        } else {
+            if (emptyState) emptyState.style.display = 'none';
+        }
+        
+        // Get all categories
+        const categories = Array.from(new Set(Object.values(window.soundManager.sounds).map(s => s.category)));
+        
+        // Render category filter if more than one
+        let selectedCategory = this.selectedSoundCategory || 'all';
+        if (categories.length > 1) {
+            const filterBar = document.createElement('div');
+            filterBar.className = 'sound-filter-bar';
+            filterBar.innerHTML = `<button class="sound-filter-btn${selectedCategory==='all'?' active':''}" data-category="all">All</button>` +
+                categories.map(cat => `<button class="sound-filter-btn${selectedCategory===cat?' active':''}" data-category="${cat}">${cat.charAt(0).toUpperCase()+cat.slice(1)}</button>`).join('');
+            soundList.appendChild(filterBar);
+            
+            filterBar.querySelectorAll('.sound-filter-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    this.selectedSoundCategory = btn.getAttribute('data-category');
+                    this.renderBackgroundSounds();
+                });
+            });
+        }
+        
+        // Filter sounds by category
+        const soundsToShow = selectedCategory==='all' ? allSounds : allSounds.filter(s => window.soundManager.sounds[s.id].category === selectedCategory);
+        
+        // Render each sound as a card
+        soundsToShow.forEach(sound => {
+            const meta = window.soundManager.sounds[sound.id];
+            const isPlaying = window.soundManager.activeSounds.has(sound.id);
+            const isPremiumSound = meta.category !== 'basic';
+            const card = document.createElement('div');
+            card.className = 'sound-card' + (isPlaying ? ' playing' : '') + (isPremiumSound ? ' premium-sound' : '');
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('aria-label', `${meta.name}: ${meta.description}`);
+            card.innerHTML = `
+                <div class="sound-icon">${this.getSoundIcon(meta.icon, sound.id)}</div>
+                <div class="sound-info">
+                    <div class="sound-title">
+                        ${meta.name}
+                        ${isPremiumSound ? '<span class="premium-badge">💎</span>' : ''}
+                    </div>
+                    <div class="sound-desc">${meta.description || ''}</div>
+                </div>
+                <button class="sound-toggle-btn" aria-label="${isPlaying ? 'Pause' : 'Play'} ${meta.name}" data-sound="${sound.id}">
+                    <span class="sound-toggle-icon">${isPlaying ? '⏸️' : '▶️'}</span>
+                </button>
+                <input type="range" class="sound-volume-slider" data-sound="${sound.id}" min="0" max="100" value="${Math.round(sound.volume * 100)}" aria-label="${meta.name} volume">
+                <div class="sound-status" aria-live="polite"></div>
+            `;
+            soundList.appendChild(card);
+        });
+        
+        // Add event listeners for play/pause and volume
+        soundList.querySelectorAll('.sound-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', async e => {
+                const soundId = btn.getAttribute('data-sound');
+                try {
+                    await window.soundManager.resumeAudioContext(); // Ensure audio context is active
+                    await window.soundManager.toggleSound(soundId);
+                    setTimeout(() => this.renderBackgroundSounds(), 300); // Refresh UI after play state change
+                } catch (err) {
+                    const card = btn.closest('.sound-card');
+                    if (err.message.includes('Premium subscription required')) {
+                        // Show premium upgrade prompt
+                        this.showPremiumUpgradePrompt();
+                    } else {
+                        if (card) card.querySelector('.sound-status').textContent = 'Failed to play';
+                    }
+                    console.error('Failed to toggle sound:', err);
+                }
+            });
+        });
+        
+        soundList.querySelectorAll('.sound-volume-slider').forEach(slider => {
+            slider.addEventListener('input', e => {
+                const soundId = slider.getAttribute('data-sound');
+                window.soundManager.setSoundVolume(soundId, slider.value / 100);
+            });
+        });
+    }
 
-    // getSoundIcon(icon, fallbackId) {
-    //     // Removed - sound system not implemented
-    // }
+    getSoundIcon(icon, fallbackId) {
+        // Use emoji for now, can be replaced with SVGs
+        const icons = {
+            ocean: '🌊',
+            rain: '🌧️',
+            whiteNoise: '🔊',
+            brownNoise: '📻',
+            pinkNoise: '📶',
+            forest: '🌲',
+            fireplace: '🔥',
+            cafe: '☕',
+            fan: '🌪️',
+        };
+        return icons[icon] || icons[fallbackId] || '🎵';
+    }
+
+    // Sound panel methods
+    openSoundPanel() {
+        if (this.soundPanel) {
+            this.soundPanel.classList.add('active');
+            this.soundPanel.setAttribute('aria-hidden', 'false');
+            this.renderBackgroundSounds();
+        }
+    }
+    
+    closeSoundPanel() {
+        if (this.soundPanel) {
+            this.soundPanel.classList.remove('active');
+            this.soundPanel.setAttribute('aria-hidden', 'true');
+        }
+    }
+    
+    showPremiumUpgradePrompt() {
+        // Create premium upgrade modal
+        const modal = document.createElement('div');
+        modal.className = 'premium-modal-overlay';
+        modal.innerHTML = `
+            <div class="premium-modal">
+                <div class="premium-modal-header">
+                    <h3>Premium Feature</h3>
+                    <button class="modal-close-btn" onclick="this.closest('.premium-modal-overlay').remove()">×</button>
+                </div>
+                <div class="premium-modal-body">
+                    <div class="premium-icon">💎</div>
+                    <p>This background sound requires a Premium subscription.</p>
+                    <p>Upgrade to access the full library of calming sounds and other premium features.</p>
+                    <div class="modal-actions">
+                        <button class="premium-upgrade-btn" onclick="window.location.href='/premium'">
+                            Upgrade to Premium
+                        </button>
+                        <button class="modal-cancel-btn" onclick="this.closest('.premium-modal-overlay').remove()">
+                            Maybe Later
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (modal.parentElement) {
+                modal.remove();
+            }
+        }, 10000);
+    }
 
     updateUserInfo() {
         // Update the main interface to show user info
@@ -1899,6 +2093,28 @@ class CoSleepApp {
             }
         }
     }
+}
+
+// Global functions for UI interactions
+function showProfile() {
+    window.location.href = '/auth.html';
+}
+
+function showAnalytics() {
+    window.location.href = '/analytics.html';
+}
+
+function upgradePremium() {
+    window.location.href = '/premium';
+}
+
+function logout() {
+    localStorage.removeItem('hence_auth_token');
+    localStorage.removeItem('hence_user_id');
+    localStorage.removeItem('hence_user_type');
+    localStorage.removeItem('hence_display_name');
+    localStorage.removeItem('hence_onboarding_complete');
+    window.location.href = '/auth.html';
 }
 
 // Global functions for HTML onclick handlers

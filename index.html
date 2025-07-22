@@ -38,6 +38,13 @@
                 Find Quiet Presence
             </button>
             
+            <!-- Sound Controls -->
+            <div class="sound-controls-section">
+                <button id="soundCountBtn" class="sound-btn" aria-label="Background sounds">
+                    🎵 Background Sounds
+                </button>
+            </div>
+            
             <!-- Reset button for testing -->
             <button id="reset-onboarding" class="secondary-btn" style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.7;">
                 Reset Onboarding
@@ -107,7 +114,18 @@
                 </button>
             </div>
             <div class="sound-body">
-                <p>Background sounds feature coming soon...</p>
+                <div class="sound-controls">
+                    <div class="global-volume-control">
+                        <label for="globalVolume">Master Volume</label>
+                        <input type="range" id="globalVolume" min="0" max="100" value="50" class="volume-slider">
+                    </div>
+                </div>
+                <div id="soundList" class="sound-list">
+                    <!-- Sounds will be populated by JavaScript -->
+                </div>
+                <div id="soundEmptyState" class="sound-empty-state" style="display: none;">
+                    <p>No background sounds available</p>
+                </div>
             </div>
         </div>
     </div>
@@ -137,6 +155,7 @@
     </button>
 
     <!-- Scripts with performance optimizations -->
+    <script src="sounds.js?v=2.0" defer></script>
     <script src="preferences.js?v=1.1" defer></script>
     <script src="script.js?v=1.1" defer></script>
 </body>
