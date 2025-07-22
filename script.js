@@ -51,7 +51,6 @@ class CoSleepApp {
         
         // Start periodic mute state sync
         this.startMuteSync();
-        this.renderBackgroundSounds();
         // Down arrow smooth scroll
         const downArrow = document.getElementById('downArrowBtn');
         if (downArrow) {
