@@ -7,17 +7,8 @@ A WebRTC-based co-sleeping app for finding quiet presence and peaceful sleep com
 ### 🆓 Free Features
 - **Voice-only co-sleeping** - Connect with others for peaceful sleep presence
 - **Smart matching** - Find compatible sleep partners
-- **Basic background sounds** - Ocean waves, rain, white noise
 - **Auto-disconnect** - Automatic disconnection after set time
 - **Skip partners** - Skip and find new partners if needed
-
-### 💎 Premium Features
-- **Advanced background sounds** - Forest night, cafe ambience, fireplace
-- **Sleep analytics** - Track your sleep patterns and quality
-- **Custom sleep schedules** - Set your preferred sleep/wake times
-- **Priority matching** - Get matched faster with premium users
-- **Unlimited sessions** - No daily limits on co-sleep sessions
-- **Custom sounds** - Upload your own background sounds
 
 ## 🚀 Quick Start
 
