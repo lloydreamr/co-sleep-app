@@ -62,6 +62,14 @@ class CoSleepApp {
                 }
             });
         }
+        // Attach a single event listener for cancel-queue-btn (event delegation)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.cancel-queue-btn');
+            if (btn) {
+                this.leaveQueue();
+                this.showInterface('main');
+            }
+        });
     }
 
     initializeElements() {
