@@ -2,11 +2,23 @@
 (function checkOnboarding() {
     const onboardingComplete = localStorage.getItem('hence_onboarding_complete');
     const userId = localStorage.getItem('hence_user_id');
+    const userType = localStorage.getItem('hence_user_type');
     
-    if (!onboardingComplete || !userId) {
+    if (!onboardingComplete || !userId || !userType) {
         // Redirect to onboarding
         window.location.href = '/onboarding';
         return;
+    }
+    
+    // Update user info display
+    const userInfo = document.getElementById('user-info');
+    if (userInfo) {
+        const displayName = localStorage.getItem('hence_display_name');
+        if (displayName && userType === 'profile') {
+            userInfo.textContent = `Welcome, ${displayName}`;
+        } else {
+            userInfo.textContent = 'Welcome, Anonymous';
+        }
     }
 })();
 
@@ -26,6 +38,9 @@ class CoSleepApp {
         // User authentication
         this.currentUser = null;
         this.authToken = null;
+        this.userId = localStorage.getItem('hence_user_id');
+        this.userType = localStorage.getItem('hence_user_type');
+        this.displayName = localStorage.getItem('hence_display_name');
         
         // Sound system integration
         this.soundManager = window.soundManager;
@@ -63,6 +78,10 @@ class CoSleepApp {
         
         // Start periodic mute state sync
         this.startMuteSync();
+        
+        // Update user info display
+        this.updateUserInfo();
+        
         // Down arrow smooth scroll
         const downArrow = document.getElementById('downArrowBtn');
         if (downArrow) {
@@ -73,6 +92,7 @@ class CoSleepApp {
                 }
             });
         }
+        
         // Attach a single event listener for cancel-queue-btn (event delegation)
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('.cancel-queue-btn');
@@ -81,6 +101,18 @@ class CoSleepApp {
                 this.showInterface('main');
             }
         });
+        
+        // Reset onboarding button
+        const resetBtn = document.getElementById('reset-onboarding');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                localStorage.removeItem('hence_user_id');
+                localStorage.removeItem('hence_user_type');
+                localStorage.removeItem('hence_display_name');
+                localStorage.removeItem('hence_onboarding_complete');
+                window.location.href = '/onboarding';
+            });
+        }
     }
 
     initializeElements() {
@@ -1951,8 +1983,13 @@ class CoSleepApp {
         // Update the main interface to show user info
         const userInfoElement = document.getElementById('user-info');
         if (userInfoElement) {
-            const displayText = this.displayName || 'Anonymous';
-            userInfoElement.textContent = `Welcome, ${displayText}`;
+            const displayName = localStorage.getItem('hence_display_name');
+            const userType = localStorage.getItem('hence_user_type');
+            if (displayName && userType === 'profile') {
+                userInfoElement.textContent = `Welcome, ${displayName}`;
+            } else {
+                userInfoElement.textContent = 'Welcome, Anonymous';
+            }
         }
     }
 }

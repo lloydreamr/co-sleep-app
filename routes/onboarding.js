@@ -18,6 +18,7 @@ router.post('/start', async (req, res) => {
     });
     res.json({ userId: user.id, userType: user.userType, onboardingStep: user.onboardingStep });
   } catch (err) {
+    console.error('Onboarding start error:', err);
     res.status(500).json({ error: 'Failed to start onboarding' });
   }
 });
@@ -40,15 +41,16 @@ router.post('/profile', async (req, res) => {
     });
     res.json({ success: true, userId: user.id, onboardingStep: user.onboardingStep });
   } catch (err) {
+    console.error('Profile update error:', err);
     res.status(500).json({ error: 'Failed to update profile' });
   }
 });
 
 // POST /api/onboarding/consent
 router.post('/consent', async (req, res) => {
-  const { userId, consentGiven } = req.body;
-  if (!userId || consentGiven !== true) {
-    return res.status(400).json({ error: 'Consent required' });
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID required' });
   }
   try {
     const user = await prisma.user.update({
@@ -60,6 +62,7 @@ router.post('/consent', async (req, res) => {
     });
     res.json({ success: true, userId: user.id, onboardingStep: user.onboardingStep });
   } catch (err) {
+    console.error('Consent error:', err);
     res.status(500).json({ error: 'Failed to record consent' });
   }
 });
@@ -82,6 +85,7 @@ router.get('/user/:userId', async (req, res) => {
       updatedAt: user.updatedAt,
     });
   } catch (err) {
+    console.error('User fetch error:', err);
     res.status(500).json({ error: 'Failed to fetch user' });
   }
 });

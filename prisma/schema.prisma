@@ -16,18 +16,41 @@ datasource db {
 // =====================
 model User {
   id              String   @id @default(cuid())
-  userType        String   // "anonymous" or "profile"
+  
+  // Authentication fields
+  email           String?  @unique
+  password        String?
+  username        String?  @unique
+  name            String?
+  
+  // Onboarding fields
+  userType        String   @default("anonymous") // "anonymous" or "profile"
   displayName     String?  // Only for profile users
   genderIdentity  String?  // e.g., "male", "female", "nonbinary", "prefer_not_to_say"
   matchPreference String?  // e.g., "any", "male", "female", "nonbinary"
   consentGiven    Boolean  @default(false)
   onboardingStep  String   @default("welcome") // Track onboarding progress
+  
+  // Premium and preferences
+  isPremium       Boolean  @default(false)
+  premiumUntil    DateTime?
+  timezone        String?
+  sleepTime       String?
+  wakeTime        String?
+  backgroundSounds String[] @default([])
+  autoDisconnect  Boolean  @default(false)
+  disconnectTime  Int?     // in minutes
+  allowAnalytics  Boolean  @default(true)
+  showOnline      Boolean  @default(true)
+  
+  // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   // Relationships
   sleepSessions    SleepSession[] @relation("UserSessions")      // Sessions as user
   partnerSessions  SleepSession[] @relation("PartnerSessions")   // Sessions as partner
+  analytics        SleepAnalytics?
 
   @@map("users")
 }
@@ -56,4 +79,24 @@ model SleepSession {
   partner     User?    @relation("PartnerSessions", fields: [partnerId], references: [id], onDelete: SetNull) // Session partner
 
   @@map("sleep_sessions")
+}
+
+// =====================
+// Sleep Analytics
+// =====================
+model SleepAnalytics {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  totalSessions         Int      @default(0)
+  totalDuration         Int      @default(0) // in minutes
+  averageQuality        Float    @default(0)
+  favoritePartners      String[] @default([])
+  preferredTimes        String[] @default([])
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // User relationship
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sleep_analytics")
 }

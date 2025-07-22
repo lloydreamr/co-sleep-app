@@ -109,7 +109,7 @@ class OnboardingFlow {
 
         // Validate required fields
         if (!this.userData.displayName || !this.userData.genderIdentity || !this.userData.matchPreference) {
-            alert('Please fill in all required fields.');
+            this.showError('Please fill in all required fields.');
             return;
         }
 
@@ -118,7 +118,7 @@ class OnboardingFlow {
 
     async handleConsentSubmit() {
         if (!document.getElementById('consent-checkbox').checked) {
-            alert('Please agree to the terms before continuing.');
+            this.showError('Please agree to the terms before continuing.');
             return;
         }
 
@@ -141,7 +141,7 @@ class OnboardingFlow {
 
         } catch (error) {
             console.error('Onboarding error:', error);
-            alert('There was an error setting up your account. Please try again.');
+            this.showError('There was an error setting up your account. Please try again.');
             this.showScreen('welcome');
         }
     }
@@ -158,7 +158,8 @@ class OnboardingFlow {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to start onboarding');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to start onboarding');
         }
 
         const data = await response.json();
@@ -181,7 +182,8 @@ class OnboardingFlow {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to update profile');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to update profile');
         }
 
         return await response.json();
@@ -199,7 +201,8 @@ class OnboardingFlow {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to record consent');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to record consent');
         }
 
         return await response.json();
@@ -223,8 +226,13 @@ class OnboardingFlow {
 
     // Utility method to show error messages
     showError(message) {
+        // Remove existing error messages
+        const existingErrors = document.querySelectorAll('.error-notification');
+        existingErrors.forEach(error => error.remove());
+
         // Create a simple error notification
         const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-notification';
         errorDiv.style.cssText = `
             position: fixed;
             top: 20px;
@@ -235,12 +243,25 @@ class OnboardingFlow {
             border-radius: 8px;
             z-index: 1000;
             max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
         `;
         errorDiv.textContent = message;
         document.body.appendChild(errorDiv);
 
+        // Add slide-in animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
         setTimeout(() => {
             errorDiv.remove();
+            style.remove();
         }, 5000);
     }
 }
