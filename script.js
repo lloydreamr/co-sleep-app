@@ -42,8 +42,7 @@ class CoSleepApp {
         this.userType = localStorage.getItem('hence_user_type');
         this.displayName = localStorage.getItem('hence_display_name');
         
-        // Sound system integration
-        this.soundManager = window.soundManager;
+        // Sound system integration (removed - feature not implemented)
         
         // Analytics and preferences integration
         this.analyticsManager = window.analyticsManager;
@@ -66,7 +65,7 @@ class CoSleepApp {
         
         this.initializeSocket();
         this.initializeAuth();
-        this.initializeSoundSystem();
+        // this.initializeSoundSystem(); // Removed - sound system not implemented
         this.initializeAnalytics();
         this.initializePreferences();
         this.initializePreferencesUI(); // Initialize preferences UI
@@ -117,7 +116,7 @@ class CoSleepApp {
 
     initializeElements() {
         // Main interface elements
-        this.mainPlayBtn = document.getElementById('mainPlayBtn');
+        this.findPartnerBtn = document.getElementById('findPartnerBtn');
         this.callInterface = document.getElementById('callInterface');
         this.loadingInterface = document.getElementById('loadingInterface');
         this.errorInterface = document.getElementById('errorInterface');
@@ -147,13 +146,13 @@ class CoSleepApp {
 
     bindEvents() {
         // Bind main play button (Find Quiet Presence)
-        if (this.mainPlayBtn) {
-            this.mainPlayBtn.addEventListener('click', () => {
+        if (this.findPartnerBtn) {
+            this.findPartnerBtn.addEventListener('click', () => {
                 console.log('🎯 Find Quiet Presence button clicked');
                 this.joinQueue();
             });
         } else {
-            console.warn('⚠️ mainPlayBtn not found in DOM');
+            console.warn('⚠️ findPartnerBtn not found in DOM');
         }
         
         // Bind call interface buttons
@@ -612,10 +611,7 @@ class CoSleepApp {
         // Start connection monitoring
         this.startConnectionMonitoring();
         
-        // Continue playing background sound if active
-        if (window.soundManager && window.soundManager.isAnySoundPlaying()) {
-            console.log('🎵 Continuing background sound during call');
-        }
+        // Sound system removed - no background sounds
         
         // Start analytics tracking
         if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
@@ -1021,9 +1017,7 @@ class CoSleepApp {
         this.updateMuteUI();
         
         // Keep background sound playing if active
-        if (window.soundManager && window.soundManager.isAnySoundPlaying()) {
-            console.log('🎵 Keeping background sound active after disconnection');
-        }
+        // Sound system removed - no background sounds to manage
         
         // End analytics session
         if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
@@ -1243,10 +1237,7 @@ class CoSleepApp {
         this.isMuted = false;
         this.updateMuteUI();
         
-        // Keep background sound playing if active
-        if (window.soundManager && window.soundManager.isAnySoundPlaying()) {
-            console.log('🎵 Keeping background sound active after call');
-        }
+        // Sound system removed - no background sounds to manage
         
         // End analytics session
         if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
@@ -1319,10 +1310,7 @@ class CoSleepApp {
         // Stop connection monitoring
         this.stopConnectionMonitoring();
         
-        // Clean up sound system
-        if (window.soundManager) {
-            window.soundManager.destroy();
-        }
+        // Sound system removed - no cleanup needed
         
         // Use enhanced cleanup
         this.cleanup();
@@ -1348,13 +1336,10 @@ class CoSleepApp {
         }
     }
 
-    // Sound system methods
-    initializeSoundSystem() {
-        // Initialize the global sound manager
-        window.soundManager = new SoundManager();
-        window.soundManager.init();
-        console.log('🎵 Sound system initialized');
-    }
+    // Sound system methods (removed - feature not implemented)
+    // initializeSoundSystem() {
+    //     // Removed - sound system not implemented
+    // }
 
     // Analytics system methods
     initializeAnalytics() {
@@ -1893,91 +1878,13 @@ class CoSleepApp {
         performance.measure(name, startName, endName);
     }
 
-    // Render background sounds in the new section
-    renderBackgroundSounds() {
-        const soundList = document.getElementById('soundList');
-        const emptyState = document.getElementById('soundEmptyState');
-        if (!soundList || !window.soundManager) return;
-        soundList.innerHTML = '';
-        const allSounds = window.soundManager.getAvailableSounds();
-        if (!allSounds || allSounds.length === 0) {
-            if (emptyState) emptyState.style.display = '';
-            return;
-        } else {
-            if (emptyState) emptyState.style.display = 'none';
-        }
-        // Get all categories
-        const categories = Array.from(new Set(Object.values(window.soundManager.sounds).map(s => s.category)));
-        // Render category filter if more than one
-        let selectedCategory = this.selectedSoundCategory || 'all';
-        if (categories.length > 1) {
-            const filterBar = document.createElement('div');
-            filterBar.className = 'sound-filter-bar';
-            filterBar.innerHTML = `<button class="sound-filter-btn${selectedCategory==='all'?' active':''}" data-category="all">All</button>` +
-                categories.map(cat => `<button class="sound-filter-btn${selectedCategory===cat?' active':''}" data-category="${cat}">${cat.charAt(0).toUpperCase()+cat.slice(1)}</button>`).join('');
-            soundList.appendChild(filterBar);
-            filterBar.querySelectorAll('.sound-filter-btn').forEach(btn => {
-                btn.addEventListener('click', e => {
-                    this.selectedSoundCategory = btn.getAttribute('data-category');
-                    this.renderBackgroundSounds();
-                });
-            });
-        }
-        // Filter sounds by category
-        const soundsToShow = selectedCategory==='all' ? allSounds : allSounds.filter(s => window.soundManager.sounds[s.id].category === selectedCategory);
-        // Render each sound as a card
-        soundsToShow.forEach(sound => {
-            const meta = window.soundManager.sounds[sound.id];
-            const isPlaying = window.soundManager.activeSounds.has(sound.id);
-            const card = document.createElement('div');
-            card.className = 'sound-card' + (isPlaying ? ' playing' : '');
-            card.setAttribute('tabindex', '0');
-            card.setAttribute('aria-label', `${meta.name}: ${meta.description}`);
-            card.innerHTML = `
-                <div class="sound-icon">${this.getSoundIcon(meta.icon, sound.id)}</div>
-                <div class="sound-info">
-                    <div class="sound-title">${meta.name}</div>
-                    <div class="sound-desc">${meta.description || ''}</div>
-                </div>
-                <button class="sound-toggle-btn" aria-label="${isPlaying ? 'Pause' : 'Play'} ${meta.name}" data-sound="${sound.id}">
-                    <span class="sound-toggle-icon">${isPlaying ? '⏸️' : '▶️'}</span>
-                </button>
-                <input type="range" class="sound-volume-slider" data-sound="${sound.id}" min="0" max="100" value="${sound.volume}" aria-label="${meta.name} volume">
-                <div class="sound-status" aria-live="polite"></div>
-            `;
-            soundList.appendChild(card);
-        });
-        // Add event listeners for play/pause and volume
-        soundList.querySelectorAll('.sound-toggle-btn').forEach(btn => {
-            btn.addEventListener('click', e => {
-                const soundId = btn.getAttribute('data-sound');
-                window.soundManager.toggleSound(soundId).catch(err => {
-                    const card = btn.closest('.sound-card');
-                    if (card) card.querySelector('.sound-status').textContent = 'Failed to play';
-                });
-                setTimeout(() => this.renderBackgroundSounds(), 300); // Refresh UI after play state change
-            });
-        });
-        soundList.querySelectorAll('.sound-volume-slider').forEach(slider => {
-            slider.addEventListener('input', e => {
-                const soundId = slider.getAttribute('data-sound');
-                window.soundManager.setSoundVolume(soundId, slider.value / 100);
-            });
-        });
-    }
+    // renderBackgroundSounds() {
+    //     // Removed - sound system not implemented
+    // }
 
-    getSoundIcon(icon, fallbackId) {
-        // Use emoji for now, can be replaced with SVGs
-        const icons = {
-            ocean: '🌊',
-            rain: '🌧️',
-            whiteNoise: '🔊',
-            forest: '🌲',
-            fireplace: '🔥',
-            cafe: '☕',
-        };
-        return icons[icon] || icons[fallbackId] || '🎵';
-    }
+    // getSoundIcon(icon, fallbackId) {
+    //     // Removed - sound system not implemented
+    // }
 
     updateUserInfo() {
         // Update the main interface to show user info

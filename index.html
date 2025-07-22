@@ -81,8 +81,62 @@
         </div>
     </div>
 
+    <!-- Preferences Overlay -->
+    <div class="preferences-overlay" id="preferencesOverlay" role="dialog" aria-labelledby="preferences-title" aria-hidden="true">
+        <div class="preferences-content">
+            <div class="preferences-header">
+                <h2 id="preferences-title">Preferences</h2>
+                <button class="close-btn" id="closePreferencesBtn" aria-label="Close preferences">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="preferences-body">
+                <!-- Preferences content will be loaded dynamically -->
+                <p>Preferences coming soon...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sound Panel -->
+    <div class="sound-panel" id="soundPanel" role="dialog" aria-labelledby="sound-title" aria-hidden="true">
+        <div class="sound-content">
+            <div class="sound-header">
+                <h2 id="sound-title">Background Sounds</h2>
+                <button class="close-btn" id="closeSoundBtn" aria-label="Close sound panel">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="sound-body">
+                <p>Background sounds feature coming soon...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Menu -->
+    <div class="user-menu" id="userMenu" style="display: none;">
+        <div class="user-info">
+            <span id="userName">User</span>
+        </div>
+        <div class="user-dropdown" id="userDropdown">
+            <button class="dropdown-item" onclick="showProfile()">Profile</button>
+            <button class="dropdown-item" onclick="showAnalytics()">Analytics</button>
+            <button class="dropdown-item" onclick="upgradePremium()">Upgrade</button>
+            <button class="dropdown-item" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Online Count -->
+    <div class="online-count" id="onlineCount">
+        <span class="count-label">Online:</span>
+        <span class="count-value">0</span>
+    </div>
+
+    <!-- Login Button -->
+    <button class="login-btn" id="loginBtn" style="display: none;">
+        Login
+    </button>
+
     <!-- Scripts with performance optimizations -->
-    <script src="sounds.js?v=1.2" defer></script>
     <script src="preferences.js?v=1.1" defer></script>
     <script src="script.js?v=1.1" defer></script>
 </body>
