@@ -12,6 +12,9 @@ const { initSocketService } = require('./services/socket');
 const app = express();
 const server = http.createServer(app);
 
+// Trust proxy for rate limiting behind load balancers
+app.set('trust proxy', 1);
+
 // Performance optimizations
 const rateLimit = require('express-rate-limit');
 
@@ -22,6 +25,8 @@ const apiLimiter = rateLimit({
     message: 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
+    // Skip rate limiting for health checks
+    skip: (req) => req.path === '/health'
 });
 
 // Apply rate limiting to API routes
@@ -34,9 +39,9 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             connectSrc: ["'self'", "wss:", "ws:"],
             scriptSrc: ["'self'", "'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
             imgSrc: ["'self'", "data:", "https:"],
-            fontSrc: ["'self'", "https:", "data:"],
+            fontSrc: ["'self'", "https:", "data:", "https://fonts.gstatic.com"],
             objectSrc: ["'none'"],
             mediaSrc: ["'self'", "https://www.soundjay.com", "https:"],
             frameSrc: ["'none'"]
@@ -84,6 +89,15 @@ app.get('/health', (req, res) => {
             cpu: process.cpuUsage()
         },
         timestamp: new Date().toISOString()
+    });
+});
+
+// Simple health check that doesn't require database
+app.get('/ping', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
     });
 });
 
@@ -141,17 +155,40 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
-server.listen(PORT, HOST, () => {
-    console.log(`Co-Sleep server running on port ${PORT}`);
-    console.log(`Local: http://localhost:${PORT}`);
-    console.log(`Network: http://${HOST === '0.0.0.0' ? '10.0.0.31' : HOST}:${PORT}`);
-    console.log(`Mobile: Open the Network URL on your phone (make sure you're on the same WiFi)`);
-    
-    // Log initial performance metrics
-    const memUsage = process.memoryUsage();
-    console.log('Initial memory usage:', {
-        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024 * 100) / 100 + 'MB',
-        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024 * 100) / 100 + 'MB'
+// Check for required environment variables
+if (!process.env.DATABASE_URL) {
+    console.error('❌ DATABASE_URL environment variable is required but not set');
+    console.error('Please set DATABASE_URL in your environment variables');
+    console.error('Example: DATABASE_URL="postgresql://username:password@localhost:5432/cosleep_db"');
+    process.exit(1);
+}
+
+// Test database connection before starting server
+async function testDatabaseConnection() {
+    try {
+        await prisma.$connect();
+        console.log('✅ Database connection successful');
+    } catch (error) {
+        console.error('❌ Database connection failed:', error.message);
+        console.error('Please check your DATABASE_URL and ensure the database is accessible');
+        process.exit(1);
+    }
+}
+
+// Start server after database connection test
+testDatabaseConnection().then(() => {
+    server.listen(PORT, HOST, () => {
+        console.log(`Co-Sleep server running on port ${PORT}`);
+        console.log(`Local: http://localhost:${PORT}`);
+        console.log(`Network: http://${HOST === '0.0.0.0' ? '10.0.0.31' : HOST}:${PORT}`);
+        console.log(`Mobile: Open the Network URL on your phone (make sure you're on the same WiFi)`);
+        
+        // Log initial performance metrics
+        const memUsage = process.memoryUsage();
+        console.log('Initial memory usage:', {
+            heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024 * 100) / 100 + 'MB',
+            heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024 * 100) / 100 + 'MB'
+        });
     });
 });
 

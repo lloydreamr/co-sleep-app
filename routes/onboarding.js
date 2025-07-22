@@ -9,6 +9,18 @@ router.post('/start', async (req, res) => {
   if (!['anonymous', 'profile'].includes(path)) {
     return res.status(400).json({ error: 'Invalid path' });
   }
+  
+  // Check database connection
+  try {
+    await prisma.$connect();
+  } catch (error) {
+    console.error('Database connection error:', error);
+    return res.status(500).json({ 
+      error: 'Database connection failed',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+  
   try {
     const user = await prisma.user.create({
       data: {
@@ -19,7 +31,18 @@ router.post('/start', async (req, res) => {
     res.json({ userId: user.id, userType: user.userType, onboardingStep: user.onboardingStep });
   } catch (err) {
     console.error('Onboarding start error:', err);
-    res.status(500).json({ error: 'Failed to start onboarding' });
+    
+    // Provide more specific error messages
+    if (err.code === 'P2002') {
+      res.status(400).json({ error: 'User already exists' });
+    } else if (err.code === 'P2025') {
+      res.status(404).json({ error: 'Database record not found' });
+    } else {
+      res.status(500).json({ 
+        error: 'Failed to start onboarding',
+        details: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+      });
+    }
   }
 });
 

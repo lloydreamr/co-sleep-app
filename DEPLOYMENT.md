@@ -1,162 +1,122 @@
-# 🚀 Deployment Guide
+# Deployment Guide
 
-## **Railway Deployment (Recommended)**
+## Environment Variables
 
-### **Step 1: Connect to Railway**
-1. Go to [Railway.app](https://railway.app)
-2. Connect your GitHub repository
-3. Select the `co-sleep-app` repository
-
-### **Step 2: Add Environment Variables**
-In Railway dashboard, add these environment variables:
+### Required Variables
 
 ```bash
-# Database (Railway PostgreSQL)
-DATABASE_URL="postgresql://username:password@host:port/database"
+# Database (REQUIRED)
+DATABASE_URL="postgresql://username:password@host:port/database_name"
 
-# JWT Secret (generate a secure one)
-JWT_SECRET="your-super-secure-jwt-secret-key-here"
+# JWT Secret (REQUIRED)
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
 
-# Server
-PORT=3000
+# Server Configuration
+PORT=8080  # Railway uses port 8080
 HOST=0.0.0.0
-
-# Environment
 NODE_ENV=production
-
-# Optional: Stripe (for premium features)
-STRIPE_SECRET_KEY="sk_live_..."
-STRIPE_PUBLISHABLE_KEY="pk_live_..."
 ```
 
-### **Step 3: Deploy**
-1. Railway will automatically detect the Node.js app
-2. It will run `npm install` and `npm start`
-3. The app will be available at your Railway URL
-
-### **Step 4: Database Setup**
-After deployment, run these commands in Railway's terminal:
+### Optional Variables
 
 ```bash
-# Generate Prisma client
-npx prisma generate
-
-# Push database schema
-npx prisma db push
-
-# Seed initial data
-npm run db:seed
+# Stripe (for premium features)
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_PUBLISHABLE_KEY="pk_test_..."
 ```
 
-## **Heroku Deployment**
+## Railway Deployment
 
-### **Step 1: Create Heroku App**
+### 1. Database Setup
+
+1. Create a PostgreSQL database on Railway
+2. Get the connection string from Railway dashboard
+3. Set the `DATABASE_URL` environment variable
+
+### 2. Environment Variables
+
+Set these environment variables in Railway:
+
 ```bash
-heroku create your-co-sleep-app
+DATABASE_URL=your_railway_postgres_connection_string
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+NODE_ENV=production
+PORT=8080
 ```
 
-### **Step 2: Add PostgreSQL**
+### 3. Database Migration
+
+The app will automatically run database migrations on startup.
+
+### 4. Common Issues & Fixes
+
+#### Rate Limiter Error
+- **Issue:** `ERR_ERL_UNEXPECTED_X_FORWARDED_FOR`
+- **Fix:** Added `app.set('trust proxy', 1)` in server.js
+
+#### Content Security Policy
+- **Issue:** Google Fonts blocked by CSP
+- **Fix:** Added `https://fonts.googleapis.com` and `https://fonts.gstatic.com` to CSP
+
+#### Database Connection
+- **Issue:** `DATABASE_URL` not found
+- **Fix:** Added environment variable validation and better error messages
+
+#### Port Configuration
+- **Issue:** Port mismatch between local and production
+- **Fix:** Railway uses port 8080, local uses 3000
+
+## Local Development
+
+1. Copy `env.example` to `.env`
+2. Set up a local PostgreSQL database
+3. Update `DATABASE_URL` in `.env`
+4. Run `npm install`
+5. Run `npx prisma db push`
+6. Run `npm start`
+
+## Health Check
+
+The app provides a health check endpoint:
+
 ```bash
-heroku addons:create heroku-postgresql:mini
+curl https://your-app.railway.app/health
 ```
 
-### **Step 3: Set Environment Variables**
-```bash
-heroku config:set JWT_SECRET="your-super-secure-jwt-secret-key-here"
-heroku config:set NODE_ENV=production
+Expected response:
+```json
+{
+  "status": "healthy",
+  "onlineUsers": 0,
+  "queueLength": 0,
+  "activeConnections": 0,
+  "performance": {
+    "uptime": 123,
+    "memory": {
+      "rss": 53604352,
+      "heapUsed": 11074672,
+      "heapTotal": 13873152,
+      "external": 2247893
+    }
+  }
+}
 ```
 
-### **Step 4: Deploy**
-```bash
-git push heroku main
-```
+## Troubleshooting
 
-### **Step 5: Database Setup**
-```bash
-heroku run npx prisma generate
-heroku run npx prisma db push
-heroku run npm run db:seed
-```
+### Database Connection Issues
+- Verify `DATABASE_URL` is set correctly
+- Check database is accessible from Railway
+- Ensure database schema is up to date
 
-## **Vercel Deployment**
+### Rate Limiting Issues
+- The app skips rate limiting for health checks
+- Rate limiting is configured for API endpoints only
 
-### **Step 1: Connect to Vercel**
-1. Go to [Vercel.com](https://vercel.com)
-2. Import your GitHub repository
-3. Configure as Node.js app
+### CSP Issues
+- Google Fonts are now allowed in CSP
+- All required domains are whitelisted
 
-### **Step 2: Add Environment Variables**
-In Vercel dashboard, add the same environment variables as above.
-
-### **Step 3: Deploy**
-Vercel will automatically deploy on every push to main.
-
-## **Testing Your Deployment**
-
-### **1. Health Check**
-Visit: `https://your-app-url.railway.app/health`
-Should return: `{"status":"healthy",...}`
-
-### **2. Main App**
-Visit: `https://your-app-url.railway.app/`
-Should show the Co-Sleep interface
-
-### **3. Authentication**
-Visit: `https://your-app-url.railway.app/auth.html`
-Should show login/register forms
-
-### **4. API Test**
-```bash
-curl https://your-app-url.railway.app/api/auth/profile
-# Should return: {"error":"No token provided"}
-```
-
-## **Environment Variables Reference**
-
-| Variable | Description | Required | Example |
-|----------|-------------|----------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | Yes | `postgresql://user:pass@host:port/db` |
-| `JWT_SECRET` | Secret for JWT tokens | Yes | `your-secret-key` |
-| `PORT` | Server port | No | `3000` |
-| `HOST` | Server host | No | `0.0.0.0` |
-| `NODE_ENV` | Environment | No | `production` |
-| `STRIPE_SECRET_KEY` | Stripe secret key | No | `sk_live_...` |
-| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key | No | `pk_live_...` |
-
-## **Troubleshooting**
-
-### **Database Connection Issues**
-- Check `DATABASE_URL` format
-- Ensure database is accessible
-- Verify SSL settings if needed
-
-### **Authentication Issues**
-- Check `JWT_SECRET` is set
-- Verify token expiration settings
-- Check CORS configuration
-
-### **Build Issues**
-- Ensure all dependencies are in `package.json`
-- Check Node.js version compatibility
-- Verify build scripts are correct
-
-## **Security Checklist**
-
-- [ ] Change default JWT secret
-- [ ] Use HTTPS in production
-- [ ] Set up proper CORS
-- [ ] Configure rate limiting
-- [ ] Set up monitoring/logging
-- [ ] Regular security updates
-
-## **Performance Optimization**
-
-- [ ] Enable database connection pooling
-- [ ] Set up CDN for static assets
-- [ ] Configure caching headers
-- [ ] Monitor memory usage
-- [ ] Set up auto-scaling
-
----
-
-**Need help?** Check the [README.md](README.md) for more details or open an issue on GitHub. 
+### Port Issues
+- Railway automatically sets `PORT=8080`
+- Local development uses `PORT=3000` 
