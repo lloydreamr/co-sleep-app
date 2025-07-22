@@ -22,27 +22,13 @@
     
 </head>
 <body>
-    <!-- Main Interface -->
-    <div class="main-interface">
-        <!-- Header -->
+    <!-- Main Interface (Hero Section) -->
+    <section class="hero-section" id="heroSection">
         <header class="moodist-header">
-            <div class="header-top">
-                <div class="online-count" id="onlineCount">
-                    <span class="count-icon" aria-hidden="true">👥</span>
-                    <span class="count-text">0 online</span>
-                </div>
-                <button class="login-btn" id="loginBtn" aria-label="Login">
-                    <span class="login-icon" aria-hidden="true">👤</span>
-                    <span class="login-text">Login</span>
-                </button>
-            </div>
             <h1>Co-Sleep</h1>
             <p>Find Quiet Presence</p>
         </header>
-
-        <!-- Main Content -->
         <main class="main-content">
-            <!-- Core MVP Interface -->
             <div class="core-interface">
                 <button class="main-play-button" id="mainPlayBtn" aria-label="Find Quiet Presence">
                     <span class="play-icon" aria-hidden="true">▶</span>
@@ -50,95 +36,21 @@
                 </button>
             </div>
         </main>
-
-        <!-- Preferences Button (Bottom Right) -->
-        <button class="preferences-btn" id="preferencesBtn" aria-label="Preferences">
-            <span class="preferences-icon" aria-hidden="true">⚙</span>
+        <!-- Down Arrow -->
+        <button class="down-arrow" id="downArrowBtn" aria-label="See background sounds" tabindex="0">
+            <span aria-hidden="true">&#8595;</span>
         </button>
-    </div>
+        <!-- Preferences Button (Blank/Disabled) -->
+        <button class="preferences-btn disabled" id="preferencesBtn" aria-label="Preferences" disabled></button>
+    </section>
 
-    <!-- Preferences Overlay -->
-    <div class="preferences-overlay" id="preferencesOverlay" role="dialog" aria-labelledby="preferences-title" aria-hidden="true">
-        <div class="preferences-panel">
-            <div class="preferences-header">
-                <h2 id="preferences-title">Preferences</h2>
-                <button class="close-btn" id="closePreferencesBtn" aria-label="Close preferences">×</button>
-            </div>
-            
-            <div class="preferences-content">
-                <!-- Background Sounds Section -->
-                <section class="preferences-section">
-                    <h3>Background Sounds</h3>
-                    <div class="sound-controls">
-                        <button class="sound-count-btn" id="soundCountBtn" aria-label="Open sound panel">
-                            <span class="sound-icon" aria-hidden="true">🎵</span>
-                            <span class="count-text">6 Sounds</span>
-                        </button>
-                    </div>
-                </section>
-
-                <!-- Features section removed -->
-            </div>
+    <!-- Background Sounds Section -->
+    <section class="background-sounds-section" id="backgroundSoundsSection">
+        <h2>Background Sounds</h2>
+        <div class="sound-list" id="soundList">
+            <!-- Sound items will be rendered here by JS -->
         </div>
-    </div>
-
-    <!-- Sound Panel (Hidden by default) -->
-    <div class="sound-panel" id="soundPanel" role="dialog" aria-labelledby="sound-panel-title" aria-hidden="true">
-        <div class="sound-panel-header">
-            <h3 id="sound-panel-title">Background Sounds</h3>
-            <button class="close-btn" id="closeSoundBtn" aria-label="Close sound panel">×</button>
-        </div>
-        
-        <div class="sound-list">
-            <div class="sound-item" data-sound="rain">
-                <button class="sound-toggle" data-sound="rain" aria-label="Play rain sound">
-                    <span class="play-icon" aria-hidden="true">▶</span>
-                </button>
-                <span class="sound-label">Rain</span>
-                <input type="range" class="volume-slider" data-sound="rain" min="0" max="100" value="30" aria-label="Rain volume">
-            </div>
-            
-            <div class="sound-item" data-sound="ocean">
-                <button class="sound-toggle" data-sound="ocean" aria-label="Play ocean sound">
-                    <span class="play-icon" aria-hidden="true">▶</span>
-                </button>
-                <span class="sound-label">Ocean</span>
-                <input type="range" class="volume-slider" data-sound="ocean" min="0" max="100" value="30" aria-label="Ocean volume">
-            </div>
-            
-            <div class="sound-item" data-sound="forest">
-                <button class="sound-toggle" data-sound="forest" aria-label="Play forest sound">
-                    <span class="play-icon" aria-hidden="true">▶</span>
-                </button>
-                <span class="sound-label">Forest</span>
-                <input type="range" class="volume-slider" data-sound="forest" min="0" max="100" value="30" aria-label="Forest volume">
-            </div>
-            
-            <div class="sound-item" data-sound="fire">
-                <button class="sound-toggle" data-sound="fire" aria-label="Play fire sound">
-                    <span class="play-icon" aria-hidden="true">▶</span>
-                </button>
-                <span class="sound-label">Fire</span>
-                <input type="range" class="volume-slider" data-sound="fire" min="0" max="100" value="30" aria-label="Fire volume">
-            </div>
-            
-            <div class="sound-item" data-sound="whitenoise">
-                <button class="sound-toggle" data-sound="whitenoise" aria-label="Play white noise">
-                    <span class="play-icon" aria-hidden="true">▶</span>
-                </button>
-                <span class="sound-label">White Noise</span>
-                <input type="range" class="volume-slider" data-sound="whitenoise" min="0" max="100" value="30" aria-label="White noise volume">
-            </div>
-            
-            <div class="sound-item" data-sound="cafe">
-                <button class="sound-toggle" data-sound="cafe" aria-label="Play cafe sound">
-                    <span class="play-icon" aria-hidden="true">▶</span>
-                </button>
-                <span class="sound-label">Cafe</span>
-                <input type="range" class="volume-slider" data-sound="cafe" min="0" max="100" value="30" aria-label="Cafe volume">
-            </div>
-        </div>
-    </div>
+    </section>
 
     <!-- Call Interface (Hidden by default) -->
     <div class="call-interface" id="callInterface" role="dialog" aria-labelledby="call-status" aria-hidden="true">
@@ -146,7 +58,6 @@
             <h2>Connected</h2>
             <p id="statusText">Connected</p>
         </div>
-        
         <div class="call-controls">
             <button class="mute-btn" id="muteBtn" aria-label="Toggle mute">
                 <span class="mute-icon" aria-hidden="true">🎤</span>

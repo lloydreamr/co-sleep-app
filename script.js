@@ -50,6 +50,17 @@ class CoSleepApp {
         
         // Start periodic mute state sync
         this.startMuteSync();
+        this.renderBackgroundSounds();
+        // Down arrow smooth scroll
+        const downArrow = document.getElementById('downArrowBtn');
+        if (downArrow) {
+            downArrow.addEventListener('click', () => {
+                const bgSection = document.getElementById('backgroundSoundsSection');
+                if (bgSection) {
+                    bgSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        }
     }
 
     initializeElements() {
@@ -1843,6 +1854,39 @@ class CoSleepApp {
         callback();
         performance.mark(endName);
         performance.measure(name, startName, endName);
+    }
+
+    // Render background sounds in the new section
+    renderBackgroundSounds() {
+        const soundList = document.getElementById('soundList');
+        if (!soundList || !window.soundManager) return;
+        soundList.innerHTML = '';
+        const sounds = window.soundManager.getAvailableSounds();
+        sounds.forEach(sound => {
+            const item = document.createElement('div');
+            item.className = 'sound-item';
+            item.innerHTML = `
+                <button class="sound-toggle" aria-label="Play ${sound.label} sound" data-sound="${sound.id}">
+                    <span class="play-icon" aria-hidden="true">▶</span>
+                </button>
+                <span class="sound-label">${sound.label}</span>
+                <input type="range" class="volume-slider" data-sound="${sound.id}" min="0" max="100" value="${sound.volume}" aria-label="${sound.label} volume">
+            `;
+            soundList.appendChild(item);
+        });
+        // Add event listeners for toggles and sliders
+        soundList.querySelectorAll('.sound-toggle').forEach(btn => {
+            btn.addEventListener('click', e => {
+                const soundId = btn.getAttribute('data-sound');
+                window.soundManager.toggleSound(soundId);
+            });
+        });
+        soundList.querySelectorAll('.volume-slider').forEach(slider => {
+            slider.addEventListener('input', e => {
+                const soundId = slider.getAttribute('data-sound');
+                window.soundManager.setVolume(soundId, slider.value);
+            });
+        });
     }
 }
 
