@@ -218,10 +218,17 @@ class OnboardingFlow {
             localStorage.setItem('hence_display_name', this.userData.displayName);
         }
 
-        // Redirect to main app
+        console.log('✅ Onboarding complete! User data stored:', {
+            userId: this.userId,
+            userType: this.userData.userType,
+            displayName: this.userData.displayName
+        });
+
+        // Ensure localStorage is persisted before redirect
         setTimeout(() => {
+            console.log('🔄 Redirecting to main app...');
             window.location.href = '/';
-        }, 1000);
+        }, 1500);
     }
 
     // Utility method to show error messages

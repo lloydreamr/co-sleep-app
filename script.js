@@ -4,22 +4,43 @@
     const userId = localStorage.getItem('hence_user_id');
     const userType = localStorage.getItem('hence_user_type');
     
+    console.log('🔍 Onboarding check:', {
+        onboardingComplete,
+        userId,
+        userType,
+        url: window.location.href
+    });
+    
     if (!onboardingComplete || !userId || !userType) {
+        console.log('❌ Onboarding not complete, redirecting to /onboarding');
         // Redirect to onboarding
         window.location.href = '/onboarding';
         return;
     }
     
-    // Update user info display
-    const userInfo = document.getElementById('user-info');
-    if (userInfo) {
-        const displayName = localStorage.getItem('hence_display_name');
-        if (displayName && userType === 'profile') {
-            userInfo.textContent = `Welcome, ${displayName}`;
-        } else {
-            userInfo.textContent = 'Welcome, Anonymous';
+    console.log('✅ Onboarding complete, showing main app');
+    
+    // Ensure main interface is visible after onboarding
+    document.addEventListener('DOMContentLoaded', () => {
+        const heroSection = document.getElementById('heroSection');
+        if (heroSection) {
+            heroSection.style.display = '';
+            heroSection.style.visibility = 'visible';
+            heroSection.removeAttribute('aria-hidden');
+            console.log('🎯 Main hero section made visible');
         }
-    }
+        
+        // Update user info display
+        const userInfo = document.getElementById('user-info');
+        if (userInfo) {
+            const displayName = localStorage.getItem('hence_display_name');
+            if (displayName && userType === 'profile') {
+                userInfo.textContent = `Welcome, ${displayName}`;
+            } else {
+                userInfo.textContent = 'Welcome, Anonymous';
+            }
+        }
+    });
 })();
 
 class CoSleepApp {
@@ -548,7 +569,11 @@ class CoSleepApp {
         const heroSection = document.getElementById('heroSection');
         switch (interfaceName) {
             case 'main':
-                if (heroSection) heroSection.style.display = '';
+                if (heroSection) {
+                    heroSection.style.display = '';
+                    heroSection.style.visibility = 'visible';
+                    heroSection.removeAttribute('aria-hidden');
+                }
                 console.log('🔙 Showing main interface (hero section)');
                 this.updateUserInfo();
                 break;
@@ -1653,7 +1678,14 @@ class CoSleepApp {
             
             switch (interfaceName) {
                 case 'main':
-                    // Main interface is always visible by default
+                    // Show the main hero section
+                    const heroSection = this.getCachedElement('heroSection');
+                    if (heroSection) {
+                        heroSection.style.display = '';
+                        heroSection.removeAttribute('aria-hidden');
+                    }
+                    console.log('🔙 Showing main interface (hero section)');
+                    this.updateUserInfo();
                     break;
                 case 'waiting':
                     const loadingElement = this.getCachedElement('loadingInterface');
