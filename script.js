@@ -1819,32 +1819,78 @@ class CoSleepApp {
         const soundList = document.getElementById('soundList');
         if (!soundList || !window.soundManager) return;
         soundList.innerHTML = '';
-        const sounds = window.soundManager.getAvailableSounds();
-        sounds.forEach(sound => {
-            const item = document.createElement('div');
-            item.className = 'sound-item';
-            item.innerHTML = `
-                <button class="sound-toggle" aria-label="Play ${sound.label} sound" data-sound="${sound.id}">
-                    <span class="play-icon" aria-hidden="true">▶</span>
+        const allSounds = window.soundManager.getAvailableSounds();
+        // Get all categories
+        const categories = Array.from(new Set(Object.values(window.soundManager.sounds).map(s => s.category)));
+        // Render category filter if more than one
+        let selectedCategory = this.selectedSoundCategory || 'all';
+        if (categories.length > 1) {
+            const filterBar = document.createElement('div');
+            filterBar.className = 'sound-filter-bar';
+            filterBar.innerHTML = `<button class="sound-filter-btn${selectedCategory==='all'?' active':''}" data-category="all">All</button>` +
+                categories.map(cat => `<button class="sound-filter-btn${selectedCategory===cat?' active':''}" data-category="${cat}">${cat.charAt(0).toUpperCase()+cat.slice(1)}</button>`).join('');
+            soundList.appendChild(filterBar);
+            filterBar.querySelectorAll('.sound-filter-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    this.selectedSoundCategory = btn.getAttribute('data-category');
+                    this.renderBackgroundSounds();
+                });
+            });
+        }
+        // Filter sounds by category
+        const soundsToShow = selectedCategory==='all' ? allSounds : allSounds.filter(s => window.soundManager.sounds[s.id].category === selectedCategory);
+        // Render each sound as a card
+        soundsToShow.forEach(sound => {
+            const meta = window.soundManager.sounds[sound.id];
+            const isPlaying = window.soundManager.activeSounds.has(sound.id);
+            const card = document.createElement('div');
+            card.className = 'sound-card' + (isPlaying ? ' playing' : '');
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('aria-label', `${meta.name}: ${meta.description}`);
+            card.innerHTML = `
+                <div class="sound-icon">${this.getSoundIcon(meta.icon, sound.id)}</div>
+                <div class="sound-info">
+                    <div class="sound-title">${meta.name}</div>
+                    <div class="sound-desc">${meta.description || ''}</div>
+                </div>
+                <button class="sound-toggle-btn" aria-label="${isPlaying ? 'Pause' : 'Play'} ${meta.name}" data-sound="${sound.id}">
+                    <span class="sound-toggle-icon">${isPlaying ? '⏸️' : '▶️'}</span>
                 </button>
-                <span class="sound-label">${sound.label}</span>
-                <input type="range" class="volume-slider" data-sound="${sound.id}" min="0" max="100" value="${sound.volume}" aria-label="${sound.label} volume">
+                <input type="range" class="sound-volume-slider" data-sound="${sound.id}" min="0" max="100" value="${sound.volume}" aria-label="${meta.name} volume">
+                <div class="sound-status" aria-live="polite"></div>
             `;
-            soundList.appendChild(item);
+            soundList.appendChild(card);
         });
-        // Add event listeners for toggles and sliders
-        soundList.querySelectorAll('.sound-toggle').forEach(btn => {
+        // Add event listeners for play/pause and volume
+        soundList.querySelectorAll('.sound-toggle-btn').forEach(btn => {
             btn.addEventListener('click', e => {
                 const soundId = btn.getAttribute('data-sound');
-                window.soundManager.toggleSound(soundId);
+                window.soundManager.toggleSound(soundId).catch(err => {
+                    const card = btn.closest('.sound-card');
+                    if (card) card.querySelector('.sound-status').textContent = 'Failed to play';
+                });
+                setTimeout(() => this.renderBackgroundSounds(), 300); // Refresh UI after play state change
             });
         });
-        soundList.querySelectorAll('.volume-slider').forEach(slider => {
+        soundList.querySelectorAll('.sound-volume-slider').forEach(slider => {
             slider.addEventListener('input', e => {
                 const soundId = slider.getAttribute('data-sound');
-                window.soundManager.setVolume(soundId, slider.value);
+                window.soundManager.setSoundVolume(soundId, slider.value / 100);
             });
         });
+    }
+
+    getSoundIcon(icon, fallbackId) {
+        // Use emoji for now, can be replaced with SVGs
+        const icons = {
+            ocean: '🌊',
+            rain: '🌧️',
+            whiteNoise: '🔊',
+            forest: '🌲',
+            fireplace: '🔥',
+            cafe: '☕',
+        };
+        return icons[icon] || icons[fallbackId] || '🎵';
     }
 }
 

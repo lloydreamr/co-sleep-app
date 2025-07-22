@@ -688,3 +688,134 @@ body {
 }
 /* Remove old sound-panel styles if present */
 .sound-panel, .sound-panel-header { display: none !important; }
+
+/* Sound Card Layout for Modern Background Sounds UI */
+.sound-filter-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+    justify-content: center;
+}
+.sound-filter-btn {
+    background: #232946;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 18px;
+    padding: 8px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    outline: none;
+}
+.sound-filter-btn.active, .sound-filter-btn:focus {
+    background: #667eea;
+    color: #fff;
+    border-color: #667eea;
+}
+
+.sound-card {
+    background: #2d2d2d;
+    border-radius: 18px;
+    padding: 28px 32px 24px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 200px;
+    max-width: 260px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    color: #fff;
+    transition: box-shadow 0.2s, background 0.2s;
+    margin: 0 12px 32px 12px;
+    position: relative;
+    outline: none;
+}
+.sound-card.playing {
+    background: #232946;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.18);
+    border: 2px solid #667eea;
+}
+.sound-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    user-select: none;
+}
+.sound-info {
+    text-align: center;
+    margin-bottom: 16px;
+}
+.sound-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+.sound-desc {
+    font-size: 0.98rem;
+    color: #bfc0c0;
+    margin-bottom: 0;
+}
+.sound-toggle-btn {
+    background: #667eea;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    outline: none;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.12);
+}
+.sound-toggle-btn:focus, .sound-toggle-btn:hover {
+    background: #4f5bd5;
+    transform: scale(1.08);
+}
+.sound-toggle-icon {
+    font-size: 1.5rem;
+}
+.sound-volume-slider {
+    width: 120px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+.sound-status {
+    min-height: 18px;
+    font-size: 0.95rem;
+    color: #e53e3e;
+    margin-top: 4px;
+}
+@media (max-width: 900px) {
+    .sound-card {
+        min-width: 140px;
+        max-width: 180px;
+        padding: 18px 8px 16px 8px;
+    }
+    .sound-title {
+        font-size: 1rem;
+    }
+    .sound-icon {
+        font-size: 2rem;
+    }
+}
+@media (max-width: 600px) {
+    .sound-card {
+        min-width: 110px;
+        max-width: 98vw;
+        padding: 12px 4px 12px 4px;
+        margin: 0 4px 18px 4px;
+    }
+    .sound-title {
+        font-size: 0.98rem;
+    }
+    .sound-icon {
+        font-size: 1.5rem;
+    }
+    .sound-filter-bar {
+        gap: 6px;
+        margin-bottom: 18px;
+    }
+}
