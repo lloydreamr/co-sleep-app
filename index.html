@@ -48,7 +48,9 @@
     <section class="background-sounds-section" id="backgroundSoundsSection">
         <h2>Background Sounds</h2>
         <div class="sound-list" id="soundList">
-            <!-- Sound items will be rendered here by JS -->
+            <div class="sound-empty-state" id="soundEmptyState" style="display:none;">
+                <p>No background sounds available.<br>Check your connection or try again later.</p>
+            </div>
         </div>
     </section>
 
@@ -73,6 +75,7 @@
         <div class="loading-content">
             <div class="loading-spinner" aria-hidden="true"></div>
             <p id="loadingText">Finding partner...</p>
+            <button class="cancel-queue-btn" id="cancelQueueBtn" aria-label="Cancel finding partner">Cancel</button>
         </div>
     </div>
 

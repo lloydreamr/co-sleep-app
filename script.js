@@ -62,6 +62,16 @@ class CoSleepApp {
                 }
             });
         }
+        // Add event handler for cancelQueueBtn
+        setTimeout(() => {
+            const cancelBtn = document.getElementById('cancelQueueBtn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    this.leaveQueue();
+                    this.showInterface('main');
+                });
+            }
+        }, 0);
     }
 
     initializeElements() {
@@ -1817,9 +1827,16 @@ class CoSleepApp {
     // Render background sounds in the new section
     renderBackgroundSounds() {
         const soundList = document.getElementById('soundList');
+        const emptyState = document.getElementById('soundEmptyState');
         if (!soundList || !window.soundManager) return;
         soundList.innerHTML = '';
         const allSounds = window.soundManager.getAvailableSounds();
+        if (!allSounds || allSounds.length === 0) {
+            if (emptyState) emptyState.style.display = '';
+            return;
+        } else {
+            if (emptyState) emptyState.style.display = 'none';
+        }
         // Get all categories
         const categories = Array.from(new Set(Object.values(window.soundManager.sounds).map(s => s.category)));
         // Render category filter if more than one

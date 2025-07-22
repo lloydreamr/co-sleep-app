@@ -819,3 +819,34 @@ body {
         margin-bottom: 18px;
     }
 }
+
+/* Empty state for background sounds */
+.sound-empty-state {
+    width: 100%;
+    text-align: center;
+    color: #bfc0c0;
+    font-size: 1.1rem;
+    margin: 32px 0 0 0;
+    padding: 24px 0;
+    background: rgba(255,255,255,0.02);
+    border-radius: 12px;
+}
+
+/* Cancel button in loading interface */
+.cancel-queue-btn {
+    margin-top: 24px;
+    background: #e53e3e;
+    color: #fff;
+    border: none;
+    border-radius: 24px;
+    padding: 12px 32px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    outline: none;
+    box-shadow: 0 2px 8px rgba(229, 62, 62, 0.12);
+}
+.cancel-queue-btn:hover, .cancel-queue-btn:focus {
+    background: #c53030;
+}
