@@ -465,12 +465,14 @@ class CoSleepApp {
         if (this.callInterface) this.callInterface.style.display = 'none';
         if (this.loadingInterface) this.loadingInterface.style.display = 'none';
         if (this.errorInterface) this.errorInterface.style.display = 'none';
-        
+        const heroSection = document.getElementById('heroSection');
         switch (interfaceName) {
             case 'main':
-                // Main interface is always visible by default
+                if (heroSection) heroSection.style.display = '';
+                console.log('🔙 Showing main interface (hero section)');
                 break;
             case 'waiting':
+                if (heroSection) heroSection.style.display = 'none';
                 if (this.loadingInterface) {
                     this.loadingInterface.style.display = 'flex';
                     if (this.loadingText) {
@@ -487,6 +489,7 @@ class CoSleepApp {
                 }
                 break;
             case 'call':
+                if (heroSection) heroSection.style.display = 'none';
                 if (this.callInterface) {
                     this.callInterface.style.display = 'flex';
                 }
@@ -527,6 +530,7 @@ class CoSleepApp {
     }
 
     leaveQueue() {
+        console.log('🚪 leaveQueue called');
         this.isInQueue = false;
         this.userInitiatedConnection = false; // Reset flag
         if (this.socket) {
