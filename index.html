@@ -3,52 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Co-Sleep - Find Quiet Presence</title>
+    <title>Hence - Find Quiet Presence</title>
     
     <!-- Performance optimizations -->
-    <meta name="description" content="Find quiet presence with Co-Sleep - A WebRTC-based voice calling app for peaceful sleep companionship">
+    <meta name="description" content="Hence - A voice-only presence platform for peaceful connection before sleep">
     <meta name="theme-color" content="#1a1a1a">
     
     <!-- Preload critical resources -->
-    <link rel="preload" href="styles.css?v=1.1" as="style">
-    <link rel="preload" href="script.js?v=1.1" as="script">
+    <link rel="preload" href="styles.css?v=2.0" as="style">
+    <link rel="preload" href="script.js?v=2.0" as="script">
     <link rel="preload" href="/socket.io/socket.io.js" as="script">
     
     <!-- Socket.IO -->
     <script src="/socket.io/socket.io.js"></script>
     
     <!-- Styles -->
-    <link rel="stylesheet" href="styles.css?v=1.1">
+    <link rel="stylesheet" href="styles.css?v=2.0">
     
 </head>
 <body>
-    <!-- Hero Section (Main Interface) -->
-    <section class="hero-section" id="heroSection">
-        <div class="hero-content">
-            <div class="logo">🌙</div>
-            <h1>Hence</h1>
-            <p class="tagline">Connect with others for peaceful sleep through voice calls</p>
-            
-            <!-- User Info Section -->
-            <div id="user-info" class="user-info">
-                Welcome, Anonymous
+    <!-- Hence Enhancement: Instagram-style Header -->
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <span class="logo-icon">🌙</span>
+                <span class="logo-text">Hence</span>
             </div>
-            
-            <button id="findPartnerBtn" class="primary-btn">
-                Find Quiet Presence
-            </button>
-            
-            <!-- Sound Controls Removed for Freemium Version -->
-            <!-- Focus on core WebRTC voice calling features -->
-            
-            <!-- Reset button for testing -->
-            <button id="reset-onboarding" class="secondary-btn" style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.7;">
-                Reset Onboarding
-            </button>
+            <div class="online-section">
+                <span id="onlineCount" class="online-number">0</span>
+                <span class="online-text">online</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- User Info Section (for profile users) -->
+        <div id="user-info" class="user-info">
+            Welcome
         </div>
         
-        <div class="down-arrow">↓</div>
-    </section>
+        <!-- Central Connection Area -->
+        <div class="connection-area">
+            <!-- Hence Enhancement: Circular Connect Button -->
+            <button id="findPartnerBtn" class="circular-connect-btn idle">
+                <div class="btn-outer-ring"></div>
+                <div class="btn-inner-ring"></div>
+                <div class="btn-center"></div>
+            </button>
+            
+            <!-- Connection State Display (shown during calls) -->
+            <div id="connectionState" class="connection-state hidden">
+                <div class="user-avatar" id="userAvatar">
+                    <div class="avatar-ring"></div>
+                    <div class="avatar-center">You</div>
+                </div>
+                <div class="partner-avatar" id="partnerAvatar">
+                    <div class="avatar-ring"></div>
+                    <div class="avatar-center">Partner</div>
+                </div>
+                <div class="voice-indicators">
+                    <div class="voice-indicator" id="userVoice"></div>
+                    <div class="voice-indicator" id="partnerVoice"></div>
+                </div>
+            </div>
+        </div>
+    </main>
 
     <!-- Call Interface (Hidden by default) -->
     <div class="call-interface" id="callInterface" role="dialog" aria-labelledby="call-status" aria-hidden="true">
@@ -84,50 +104,104 @@
         </div>
     </div>
 
-    <!-- Preferences Overlay -->
-    <div class="preferences-overlay" id="preferencesOverlay" role="dialog" aria-labelledby="preferences-title" aria-hidden="true">
-        <div class="preferences-content">
-            <div class="preferences-header">
-                <h2 id="preferences-title">Preferences</h2>
-                <button class="close-btn" id="closePreferencesBtn" aria-label="Close preferences">
-                    <span aria-hidden="true">×</span>
-                </button>
+    <!-- Hence Enhancement: Footer Navigation -->
+    <footer class="main-footer">
+        <nav class="footer-nav">
+            <button class="nav-item active" data-section="connect" aria-label="Connect">
+                <span class="nav-icon">🏠</span>
+            </button>
+            <button class="nav-item" data-section="preferences" aria-label="Preferences">
+                <span class="nav-icon">⚙️</span>
+            </button>
+            <button class="nav-item" data-section="history" id="historyBtn" aria-label="History">
+                <span class="nav-icon">🕐</span>
+            </button>
+            <button class="nav-item" data-section="info" aria-label="About">
+                <span class="nav-icon">ℹ️</span>
+            </button>
+        </nav>
+    </footer>
+
+    <!-- Preferences Drawer (Enhanced) -->
+    <div class="preferences-drawer" id="preferencesDrawer" role="dialog" aria-labelledby="preferences-title" aria-hidden="true">
+        <div class="drawer-handle"></div>
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3 id="preferences-title">Preferences</h3>
+                <button class="close-drawer" id="closeDrawer" aria-label="Close preferences">×</button>
             </div>
-            <div class="preferences-body">
-                <!-- Preferences content will be loaded dynamically -->
-                <p>Preferences coming soon...</p>
+            
+            <div class="preferences-form" id="preferencesForm">
+                <!-- For verified users only -->
+                <div class="form-section" id="verifiedSection" style="display: none;">
+                    <div class="form-group">
+                        <label for="displayNameInput">Display Name</label>
+                        <input type="text" id="displayNameInput" placeholder="Your name" />
+                    </div>
+                    <div class="form-group">
+                        <label for="genderInput">Gender Identity</label>
+                        <select id="genderInput">
+                            <option value="">Select gender identity</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="nonbinary">Non-binary</option>
+                            <option value="prefer_not_to_say">Prefer not to say</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="matchPreferenceInput">Match Preference</label>
+                        <select id="matchPreferenceInput">
+                            <option value="">Select preference</option>
+                            <option value="any">Anyone</option>
+                            <option value="male">Men only</option>
+                            <option value="female">Women only</option>
+                            <option value="nonbinary">Non-binary only</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <button id="resetOnboardingBtn" class="secondary-btn">
+                        Reset Onboarding
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Background Sounds Panel Removed for Freemium Version -->
-
-    <!-- User Menu -->
-    <div class="user-menu" id="userMenu" style="display: none;">
-        <div class="user-info">
-            <span id="userName">User</span>
-        </div>
-        <div class="user-dropdown" id="userDropdown">
-            <button class="dropdown-item" onclick="showProfile()">Profile</button>
-            <button class="dropdown-item" onclick="showAnalytics()">Analytics</button>
-            <!-- Premium upgrade removed for freemium version -->
-            <button class="dropdown-item" onclick="logout()">Logout</button>
+    <!-- History Section (Verified Users Only) -->
+    <div class="history-section" id="historySection" role="dialog" aria-labelledby="history-title" aria-hidden="true">
+        <div class="history-content">
+            <div class="history-header">
+                <h3 id="history-title">Call History</h3>
+                <button class="close-history" id="closeHistory" aria-label="Close history">×</button>
+            </div>
+            <div class="history-body" id="historyBody">
+                <p class="history-placeholder">No call history available. Complete voice calls to see your history here.</p>
+            </div>
         </div>
     </div>
 
-    <!-- Online Count -->
-    <div class="online-count" id="onlineCount">
-        <span class="count-label">Online:</span>
-        <span class="count-value">0</span>
+    <!-- Info Section -->
+    <div class="info-section" id="infoSection" role="dialog" aria-labelledby="info-title" aria-hidden="true">
+        <div class="info-content">
+            <div class="info-header">
+                <h3 id="info-title">About Hence</h3>
+                <button class="close-info" id="closeInfo" aria-label="Close info">×</button>
+            </div>
+            <div class="info-body">
+                <p>Hence is a voice-only presence platform for peaceful connection before sleep.</p>
+                <ul>
+                    <li>🔒 Anonymous & safe connections</li>
+                    <li>🎧 Voice-only, no video</li>
+                    <li>🌙 Designed for emotional safety</li>
+                    <li>💤 Perfect for bedtime companionship</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
-    <!-- Login Button -->
-    <button class="login-btn" id="loginBtn" style="display: none;">
-        Login
-    </button>
-
-    <!-- Scripts simplified for freemium version -->
-    <script src="preferences.js?v=1.1" defer></script>
-    <script src="script.js?v=1.1" defer></script>
+    <!-- Scripts -->
+    <script src="script.js?v=2.0"></script>
 </body>
 </html>

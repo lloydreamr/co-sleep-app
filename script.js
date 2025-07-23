@@ -59,7 +59,7 @@ class CoSleepApp {
         // Hence Enhancement: Enhanced State Tracking
         this.connectionState = 'idle'; // idle, searching, matched, connected
         this.voiceState = 'unmuted'; // muted, unmuted, speaking
-        this.isVerified = false; // Will be loaded from backend
+        this.isVerified = this.userType === 'profile' && this.displayName; // Profile users with display name
         this.sessionMetadata = {
             startTime: null,
             partnerId: null,
@@ -402,103 +402,382 @@ class CoSleepApp {
         this.errorText = document.getElementById('errorText');
         this.retryBtn = document.getElementById('retryBtn');
 
-        // Preferences elements
-        this.preferencesBtn = document.getElementById('preferencesBtn');
-        this.preferencesOverlay = document.getElementById('preferencesOverlay');
-        this.closePreferencesBtn = document.getElementById('closePreferencesBtn');
-        // Sound elements removed for freemium version
-
-        // Header elements
+        // Hence Enhancement: New UI elements
         this.onlineCount = document.getElementById('onlineCount');
-        this.loginBtn = document.getElementById('loginBtn');
+        this.userInfo = document.getElementById('user-info');
+        
+        // Footer navigation elements
+        this.footerNav = document.querySelector('.footer-nav');
+        this.navItems = document.querySelectorAll('.nav-item');
+        
+        // Preferences drawer elements
+        this.preferencesDrawer = document.getElementById('preferencesDrawer');
+        this.closeDrawer = document.getElementById('closeDrawer');
+        this.resetOnboardingBtn = document.getElementById('resetOnboardingBtn');
+        
+        // History section elements
+        this.historySection = document.getElementById('historySection');
+        this.historyBtn = document.getElementById('historyBtn');
+        this.closeHistory = document.getElementById('closeHistory');
+        this.historyBody = document.getElementById('historyBody');
+        
+        // Info section elements
+        this.infoSection = document.getElementById('infoSection');
+        this.closeInfo = document.getElementById('closeInfo');
+        
+        // Connection state elements
+        this.connectionState = document.getElementById('connectionState');
+        this.userAvatar = document.getElementById('userAvatar');
+        this.partnerAvatar = document.getElementById('partnerAvatar');
+        this.userVoice = document.getElementById('userVoice');
+        this.partnerVoice = document.getElementById('partnerVoice');
+
+        console.log('🎯 Elements initialized:', {
+            findPartnerBtn: !!this.findPartnerBtn,
+            footerNav: !!this.footerNav,
+            preferencesDrawer: !!this.preferencesDrawer,
+            historySection: !!this.historySection,
+            onlineCount: !!this.onlineCount
+        });
     }
 
     bindEvents() {
-        // Bind main play button (Find Quiet Presence)
-        console.log('🔗 Binding events...');
-        console.log('🔍 Looking for findPartnerBtn:', document.getElementById('findPartnerBtn'));
-        
+        // Core button events
         if (this.findPartnerBtn) {
-            console.log('✅ findPartnerBtn found, binding click event');
-            this.findPartnerBtn.addEventListener('click', () => {
-                console.log('🎯 Find Quiet Presence button clicked');
-                console.log('📊 Current app state:', {
-                    socket: !!this.socket,
-                    webrtcInitialized: this.webrtcInitialized,
-                    localStream: !!this.localStream,
-                    isInQueue: this.isInQueue,
-                    isInCall: this.isInCall
-                });
-                this.joinQueue();
-            });
-        } else {
-            console.error('❌ findPartnerBtn not found in DOM!');
-            console.log('🔍 Available elements:', {
-                heroSection: !!document.getElementById('heroSection'),
-                userInfo: !!document.getElementById('user-info'),
-                soundCountBtn: !!document.getElementById('soundCountBtn')
-            });
-            
-            // Try to find button with a delay in case DOM isn't ready
-            setTimeout(() => {
-                this.findPartnerBtn = document.getElementById('findPartnerBtn');
-                if (this.findPartnerBtn) {
-                    console.log('✅ findPartnerBtn found on retry, binding event');
-                    this.findPartnerBtn.addEventListener('click', () => {
-                        console.log('🎯 Find Quiet Presence button clicked (delayed binding)');
-                        this.joinQueue();
-                    });
-                } else {
-                    console.error('❌ findPartnerBtn still not found after retry');
-                }
-            }, 1000);
+            this.findPartnerBtn.addEventListener('click', () => this.joinQueue());
         }
-        
-        // Bind call interface buttons
+
         if (this.muteBtn) {
             this.muteBtn.addEventListener('click', () => this.toggleMute());
         }
-        
+
         if (this.endCallBtn) {
             this.endCallBtn.addEventListener('click', () => this.endCall());
         }
-        
-        // Bind retry button
+
         if (this.retryBtn) {
             this.retryBtn.addEventListener('click', () => {
-                this.showInterface('main'); // Hide error interface and show main
-                this.joinQueue();
-            });
-        }
-        
-        // Handle page visibility changes
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && this.isInCall) {
-                this.endCall();
-            }
-        });
-
-        // Bind login button
-        if (this.loginBtn) {
-            this.loginBtn.addEventListener('click', () => {
-                // For now, just show a placeholder message
-                alert('Login functionality coming soon!');
+                this.showInterface('main');
+                this.initializeWebRTC();
             });
         }
 
-        // Reset onboarding button
-        const resetBtn = this.getCachedElement('reset-onboarding');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => {
-                // Clear onboarding data
+        // Hence Enhancement: Footer navigation events
+        if (this.navItems) {
+            this.navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const section = e.currentTarget.dataset.section;
+                    this.handleNavigation(section);
+                });
+            });
+        }
+
+        // Preferences drawer events
+        if (this.closeDrawer) {
+            this.closeDrawer.addEventListener('click', () => {
+                this.closePreferencesDrawer();
+            });
+        }
+
+        if (this.resetOnboardingBtn) {
+            this.resetOnboardingBtn.addEventListener('click', () => {
+                console.log('🔄 Resetting onboarding...');
+                // Clear all stored data
                 localStorage.removeItem('hence_user_id');
                 localStorage.removeItem('hence_user_type');
                 localStorage.removeItem('hence_display_name');
                 localStorage.removeItem('hence_onboarding_complete');
-                
-                // Redirect to onboarding
                 window.location.href = '/onboarding';
             });
+        }
+
+        // History section events
+        if (this.closeHistory) {
+            this.closeHistory.addEventListener('click', () => {
+                this.closeHistorySection();
+            });
+        }
+
+        // Info section events
+        if (this.closeInfo) {
+            this.closeInfo.addEventListener('click', () => {
+                this.closeInfoSection();
+            });
+        }
+
+        // Cancel queue button (event delegation)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.cancel-queue-btn');
+            if (btn) {
+                this.leaveQueue();
+                this.showInterface('main');
+            }
+        });
+
+        // Handle drawer outside clicks
+        if (this.preferencesDrawer) {
+            this.preferencesDrawer.addEventListener('click', (e) => {
+                if (e.target === this.preferencesDrawer) {
+                    this.closePreferencesDrawer();
+                }
+            });
+        }
+
+        console.log('🎯 Events bound successfully');
+    }
+
+    // Hence Enhancement: Navigation handler
+    handleNavigation(section) {
+        console.log('🧭 Navigation:', section);
+        
+        // Update active state
+        this.navItems.forEach(item => {
+            item.classList.remove('active');
+            if (item.dataset.section === section) {
+                item.classList.add('active');
+            }
+        });
+
+        switch (section) {
+            case 'connect':
+                this.showInterface('main');
+                this.closeAllDrawers();
+                break;
+            case 'preferences':
+                this.openPreferencesDrawer();
+                break;
+            case 'history':
+                if (this.isVerified) {
+                    this.openHistorySection();
+                } else {
+                    this.showError('History is only available for profile users. Please create a profile to access this feature.', false);
+                }
+                break;
+            case 'info':
+                this.openInfoSection();
+                break;
+            default:
+                console.warn('Unknown navigation section:', section);
+        }
+    }
+
+    // Hence Enhancement: Preferences drawer methods
+    openPreferencesDrawer() {
+        if (this.preferencesDrawer) {
+            this.preferencesDrawer.classList.add('open');
+            this.preferencesDrawer.setAttribute('aria-hidden', 'false');
+            
+            // Load user preferences if verified
+            if (this.isVerified) {
+                this.loadUserPreferences();
+            }
+        }
+    }
+
+    closePreferencesDrawer() {
+        if (this.preferencesDrawer) {
+            this.preferencesDrawer.classList.remove('open');
+            this.preferencesDrawer.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    // Hence Enhancement: History section methods
+    openHistorySection() {
+        if (this.historySection) {
+            this.historySection.classList.add('open');
+            this.historySection.style.display = 'block';
+            this.historySection.setAttribute('aria-hidden', 'false');
+            
+            // Load call history
+            this.loadCallHistory();
+        }
+    }
+
+    closeHistorySection() {
+        if (this.historySection) {
+            this.historySection.classList.remove('open');
+            this.historySection.style.display = 'none';
+            this.historySection.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    // Hence Enhancement: Info section methods
+    openInfoSection() {
+        if (this.infoSection) {
+            this.infoSection.classList.add('open');
+            this.infoSection.style.display = 'block';
+            this.infoSection.setAttribute('aria-hidden', 'false');
+        }
+    }
+
+    closeInfoSection() {
+        if (this.infoSection) {
+            this.infoSection.classList.remove('open');
+            this.infoSection.style.display = 'none';
+            this.infoSection.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    closeAllDrawers() {
+        this.closePreferencesDrawer();
+        this.closeHistorySection();
+        this.closeInfoSection();
+    }
+
+    // Hence Enhancement: Load user preferences
+    loadUserPreferences() {
+        const verifiedSection = document.getElementById('verifiedSection');
+        if (verifiedSection && this.isVerified) {
+            verifiedSection.style.display = 'block';
+            
+            // Populate with current user data
+            const displayNameInput = document.getElementById('displayNameInput');
+            if (displayNameInput && this.displayName) {
+                displayNameInput.value = this.displayName;
+            }
+        }
+    }
+
+    // Hence Enhancement: Load call history
+    async loadCallHistory() {
+        if (!this.isVerified || !this.historyBody) return;
+
+        try {
+            this.historyBody.innerHTML = '<p class="loading-text">Loading history...</p>';
+
+            // For now, show placeholder - this will be enhanced when backend is integrated
+            this.historyBody.innerHTML = `
+                <div class="history-placeholder">
+                    <p>Call history will appear here once you complete voice calls.</p>
+                    <p style="font-size: 0.875rem; color: rgba(255, 255, 255, 0.5); margin-top: 1rem;">
+                        This feature tracks your call duration, connection quality, and partners (when applicable).
+                    </p>
+                </div>
+            `;
+
+        } catch (error) {
+            console.error('❌ Failed to load call history:', error);
+            this.historyBody.innerHTML = '<p class="error-text">Failed to load history. Please try again later.</p>';
+        }
+    }
+
+    // Enhanced UI update methods
+    updateUserInfo() {
+        if (!this.userInfo) return;
+
+        if (this.userType === 'profile' && this.displayName) {
+            this.userInfo.textContent = `Welcome, ${this.displayName}`;
+        } else if (this.userType === 'anonymous') {
+            this.userInfo.textContent = 'Welcome, Anonymous';
+        } else {
+            this.userInfo.textContent = 'Welcome';
+        }
+    }
+
+    updateUIForConnectionState(state) {
+        const connectBtn = this.findPartnerBtn;
+        if (!connectBtn) return;
+
+        // Remove existing state classes
+        connectBtn.classList.remove('idle', 'searching', 'matched', 'connected');
+        connectBtn.classList.add(state);
+
+        // Update button appearance based on state (no text on Hence circular button)
+        switch (state) {
+            case 'idle':
+                // Button returns to idle pulsing state
+                break;
+            case 'searching':
+                // Button shows searching animation
+                break;
+            case 'matched':
+                // Button shows matched state with glow
+                break;
+            case 'connected':
+                // Button shows connected state
+                // Show connection state display
+                if (this.connectionState) {
+                    this.connectionState.classList.remove('hidden');
+                }
+                break;
+        }
+    }
+
+    updateUIForVoiceState(state) {
+        const muteBtn = this.muteBtn;
+        if (!muteBtn) return;
+
+        // Update mute button appearance
+        muteBtn.classList.remove('muted', 'unmuted', 'speaking');
+        muteBtn.classList.add(state);
+
+        // Update user voice indicator
+        if (this.userVoice) {
+            this.userVoice.classList.remove('muted', 'unmuted', 'speaking');
+            this.userVoice.classList.add(state);
+        }
+    }
+
+    // Enhanced interface showing
+    showInterface(interfaceName) {
+        // Hide all interfaces first
+        if (this.callInterface) {
+            this.callInterface.style.display = 'none';
+            this.callInterface.setAttribute('aria-hidden', 'true');
+        }
+        if (this.loadingInterface) {
+            this.loadingInterface.style.display = 'none';
+            this.loadingInterface.setAttribute('aria-hidden', 'true');
+        }
+        if (this.errorInterface) {
+            this.errorInterface.style.display = 'none';
+            this.errorInterface.setAttribute('aria-hidden', 'true');
+        }
+
+        // Hide connection state display
+        if (this.connectionState) {
+            this.connectionState.classList.add('hidden');
+        }
+
+        // Close any open drawers/sections
+        this.closeAllDrawers();
+
+        const mainContent = document.querySelector('.main-content');
+        switch (interfaceName) {
+            case 'main':
+                if (mainContent) {
+                    mainContent.style.display = 'flex';
+                }
+                console.log('🔙 Showing main interface');
+                this.updateUserInfo();
+                break;
+            case 'waiting':
+                if (mainContent) mainContent.style.display = 'flex';
+                if (this.loadingInterface) {
+                    this.loadingInterface.style.display = 'flex';
+                    this.loadingInterface.setAttribute('aria-hidden', 'false');
+                    if (this.loadingText) {
+                        this.loadingText.textContent = 'Finding partner...';
+                    }
+                }
+                console.log('⏳ Showing waiting interface');
+                break;
+            case 'call':
+                if (mainContent) mainContent.style.display = 'none';
+                if (this.callInterface) {
+                    this.callInterface.style.display = 'flex';
+                    this.callInterface.setAttribute('aria-hidden', 'false');
+                }
+                console.log('📞 Showing call interface');
+                break;
+            case 'error':
+                if (mainContent) mainContent.style.display = 'flex';
+                if (this.errorInterface) {
+                    this.errorInterface.style.display = 'flex';
+                    this.errorInterface.setAttribute('aria-hidden', 'false');
+                }
+                console.log('❌ Showing error interface');
+                break;
         }
     }
 
@@ -639,6 +918,15 @@ class CoSleepApp {
                     console.log(`📊 Online users: ${data.count}`);
                     if (this.onlineCount) {
                         this.onlineCount.textContent = data.count;
+                    }
+                });
+
+                // Hence Enhancement: Handle partner voice activity
+                this.socket.on('partner-voice-activity', (data) => {
+                    console.log('🗣️ Partner voice activity:', data);
+                    if (this.partnerVoice) {
+                        this.partnerVoice.classList.remove('speaking', 'muted', 'unmuted');
+                        this.partnerVoice.classList.add(data.isActive ? 'speaking' : 'unmuted');
                     }
                 });
                 
@@ -943,8 +1231,9 @@ class CoSleepApp {
         this.isInQueue = true;
         this.userInitiatedConnection = true; // Set flag for user-initiated connection
         
-        // Hence Enhancement: Update state
+        // Hence Enhancement: Update state and UI
         this.setState('connectionState', 'searching');
+        this.updateUIForConnectionState('searching');
         
         this.showInterface('waiting');
         
@@ -958,8 +1247,9 @@ class CoSleepApp {
         this.isInQueue = false;
         this.userInitiatedConnection = false; // Reset flag
         
-        // Hence Enhancement: Update state
+        // Hence Enhancement: Update state and UI
         this.setState('connectionState', 'idle');
+        this.updateUIForConnectionState('idle');
         
         if (this.socket) {
             this.socket.emit('leave-queue');
@@ -971,8 +1261,9 @@ class CoSleepApp {
         this.isInQueue = false;
         this.isInCall = true;
         
-        // Hence Enhancement: Update state to connecting
+        // Hence Enhancement: Update state to connected
         this.setState('connectionState', 'connected');
+        this.updateUIForConnectionState('connected');
         
         this.showInterface('call');
         
@@ -1473,6 +1764,7 @@ class CoSleepApp {
         
         // Hence Enhancement: Update voice state
         this.setState('voiceState', this.isMuted ? 'muted' : 'unmuted');
+        this.updateUIForVoiceState(this.isMuted ? 'muted' : 'unmuted');
         
         // Update UI to reflect current state
         this.updateMuteUI();
