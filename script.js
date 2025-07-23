@@ -190,13 +190,43 @@ class CoSleepApp {
 
     bindEvents() {
         // Bind main play button (Find Quiet Presence)
+        console.log('🔗 Binding events...');
+        console.log('🔍 Looking for findPartnerBtn:', document.getElementById('findPartnerBtn'));
+        
         if (this.findPartnerBtn) {
+            console.log('✅ findPartnerBtn found, binding click event');
             this.findPartnerBtn.addEventListener('click', () => {
                 console.log('🎯 Find Quiet Presence button clicked');
+                console.log('📊 Current app state:', {
+                    socket: !!this.socket,
+                    webrtcInitialized: this.webrtcInitialized,
+                    localStream: !!this.localStream,
+                    isInQueue: this.isInQueue,
+                    isInCall: this.isInCall
+                });
                 this.joinQueue();
             });
         } else {
-            console.warn('⚠️ findPartnerBtn not found in DOM');
+            console.error('❌ findPartnerBtn not found in DOM!');
+            console.log('🔍 Available elements:', {
+                heroSection: !!document.getElementById('heroSection'),
+                userInfo: !!document.getElementById('user-info'),
+                soundCountBtn: !!document.getElementById('soundCountBtn')
+            });
+            
+            // Try to find button with a delay in case DOM isn't ready
+            setTimeout(() => {
+                this.findPartnerBtn = document.getElementById('findPartnerBtn');
+                if (this.findPartnerBtn) {
+                    console.log('✅ findPartnerBtn found on retry, binding event');
+                    this.findPartnerBtn.addEventListener('click', () => {
+                        console.log('🎯 Find Quiet Presence button clicked (delayed binding)');
+                        this.joinQueue();
+                    });
+                } else {
+                    console.error('❌ findPartnerBtn still not found after retry');
+                }
+            }, 1000);
         }
         
         // Bind call interface buttons
@@ -605,34 +635,61 @@ class CoSleepApp {
 
     async joinQueue() {
         console.log('🚦 joinQueue called');
+        console.log('📊 Pre-flight check:', {
+            webrtcInitialized: this.webrtcInitialized,
+            localStream: !!this.localStream,
+            socket: !!this.socket,
+            socketConnected: this.socket?.connected,
+            isInQueue: this.isInQueue,
+            isInCall: this.isInCall
+        });
+        
+        // Prevent multiple simultaneous queue joins
+        if (this.isInQueue || this.isInCall) {
+            console.log('⚠️ Already in queue or call, ignoring joinQueue request');
+            return;
+        }
+        
         // Initialize WebRTC on first user interaction
         if (!this.webrtcInitialized) {
+            console.log('🎤 Initializing WebRTC...');
             try {
                 await this.initializeWebRTC();
                 this.webrtcInitialized = true;
+                console.log('✅ WebRTC initialized successfully');
             } catch (error) {
                 console.error('❌ Failed to initialize WebRTC:', error);
-                this.showError('Microphone access required. Please refresh and allow access.', true);
+                this.showError('Microphone access required. Please allow microphone access and try again.', true);
                 return;
             }
         }
 
         if (!this.localStream) {
+            console.error('❌ No local stream available after WebRTC init');
             this.showError('Microphone access required. Please refresh and allow access.', true);
             return;
         }
 
         if (!this.socket) {
+            console.error('❌ Socket not available');
             this.showError('Not connected to server. Please refresh the page.', true);
             return;
         }
+        
+        if (!this.socket.connected) {
+            console.error('❌ Socket not connected');
+            this.showError('Connection lost. Please refresh the page.', true);
+            return;
+        }
 
+        console.log('🚀 All checks passed, joining queue...');
         this.isInQueue = true;
         this.userInitiatedConnection = true; // Set flag for user-initiated connection
         this.showInterface('waiting');
         
         // Join the real queue
         this.socket.emit('join-queue');
+        console.log('📤 join-queue event emitted');
     }
 
     leaveQueue() {
@@ -2191,11 +2248,59 @@ document.addEventListener('click', (e) => {
 
 // Initialize the app when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    window.coSleepApp = new CoSleepApp();
+    console.log('🌙 Initializing Co-Sleep App...');
+    console.log('📋 DOM Elements Check:', {
+        heroSection: !!document.getElementById('heroSection'),
+        findPartnerBtn: !!document.getElementById('findPartnerBtn'),
+        userInfo: !!document.getElementById('user-info'),
+        loadingInterface: !!document.getElementById('loadingInterface'),
+        callInterface: !!document.getElementById('callInterface'),
+        errorInterface: !!document.getElementById('errorInterface')
+    });
+    
+    try {
+        window.coSleepApp = new CoSleepApp();
+        window.app = window.coSleepApp; // Alias for debugging
+        console.log('✅ Co-Sleep App initialized successfully');
+    } catch (error) {
+        console.error('❌ Failed to initialize Co-Sleep App:', error);
+        
+        // Show fallback error message
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ff4757;
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            z-index: 10000;
+            text-align: center;
+            font-family: Inter, sans-serif;
+        `;
+        errorDiv.innerHTML = `
+            <h3>App Initialization Failed</h3>
+            <p>Please refresh the page or contact support.</p>
+            <button onclick="window.location.reload()" style="
+                background: white;
+                color: #ff4757;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 4px;
+                margin-top: 1rem;
+                cursor: pointer;
+            ">Refresh Page</button>
+        `;
+        document.body.appendChild(errorDiv);
+    }
     
     // Handle page unload
     window.addEventListener('beforeunload', () => {
-        window.coSleepApp.handlePageUnload();
+        if (window.coSleepApp && typeof window.coSleepApp.handlePageUnload === 'function') {
+            window.coSleepApp.handlePageUnload();
+        }
     });
 });
 
