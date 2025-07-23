@@ -31,15 +31,15 @@ model User {
   consentGiven    Boolean  @default(false)
   onboardingStep  String   @default("welcome") // Track onboarding progress
   
-  // Premium and preferences
-  isPremium       Boolean  @default(false)
-  premiumUntil    DateTime?
-  stripeCustomerId String? @unique
-  stripeSubscriptionId String? @unique
+  // Premium features disabled for freemium version
+  // isPremium       Boolean  @default(false)
+  // premiumUntil    DateTime?
+  // stripeCustomerId String? @unique
+  // stripeSubscriptionId String? @unique
   timezone        String?
   sleepTime       String?
   wakeTime        String?
-  backgroundSounds String[] @default([])
+  // backgroundSounds String[] @default([]) // Removed for freemium version
   autoDisconnect  Boolean  @default(false)
   disconnectTime  Int?     // in minutes
   allowAnalytics  Boolean  @default(true)
