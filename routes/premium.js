@@ -65,7 +65,10 @@ router.get('/plans', (req, res) => {
 // POST /api/premium/create-checkout-session - Create Stripe checkout session
 router.post('/create-checkout-session', authenticateUser, async (req, res) => {
     if (!stripe) {
-        return res.status(500).json({ error: 'Stripe not configured' });
+        return res.status(503).json({ 
+            error: 'Stripe not configured',
+            message: 'Premium features are temporarily unavailable. Please install the Stripe package or configure Stripe API keys.'
+        });
     }
 
     try {
