@@ -99,13 +99,31 @@ export class App {
     }
     
     async setupEventListeners() {
-        // Global event delegation
-        this.eventManager.setupGlobalListeners();
+        // Initialize global event delegation first
+        this.eventManager.initialize();
         
-        // App-specific events
-        this.eventManager.on('findPartner', () => this.startMatching());
-        this.eventManager.on('endCall', () => this.endCall());
-        this.eventManager.on('toggleMute', () => this.toggleMute());
+        // App-specific events - connect EventManager to App methods
+        this.eventManager.on('findPartner', () => {
+            console.log('🎯 Find Partner event received by App');
+            this.startMatching();
+        });
+        
+        this.eventManager.on('endCall', () => {
+            console.log('🎯 End Call event received by App');
+            this.endCall();
+        });
+        
+        this.eventManager.on('toggleMute', () => {
+            console.log('🎯 Toggle Mute event received by App');
+            this.toggleMute();
+        });
+        
+        this.eventManager.on('cancelQueue', () => {
+            console.log('🎯 Cancel Queue event received by App');
+            this.cancelQueue();
+        });
+        
+        console.log('✅ Event listeners connected to App methods');
     }
     
     async startServices() {
@@ -120,6 +138,7 @@ export class App {
     // Main app actions
     async startMatching() {
         try {
+            console.log('🔍 Starting partner matching...');
             this.stateManager.updateConnectionState('searching');
             await this.socketManager.joinQueue();
         } catch (error) {
@@ -130,6 +149,7 @@ export class App {
     
     async endCall() {
         try {
+            console.log('📞 Ending call...');
             this.webrtcManager.endCall();
             this.socketManager.leaveCall();
             this.stateManager.updateConnectionState('idle');
@@ -139,9 +159,21 @@ export class App {
         }
     }
     
+    async cancelQueue() {
+        try {
+            console.log('❌ Canceling queue...');
+            this.socketManager.leaveQueue();
+            this.stateManager.updateConnectionState('idle');
+        } catch (error) {
+            console.error('Failed to cancel queue:', error);
+        }
+    }
+    
     toggleMute() {
+        console.log('🔇 Toggling mute...');
         const isMuted = this.webrtcManager.toggleMute();
         this.stateManager.updateVoiceState(isMuted ? 'muted' : 'unmuted');
+        return isMuted;
     }
     
     handleInitializationError(error) {
@@ -158,28 +190,4 @@ export class App {
         this.socketManager.cleanup();
         this.eventManager.cleanup();
     }
-}
-
-// Auto-initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    // Check onboarding completion first
-    const onboardingComplete = localStorage.getItem('hence_onboarding_complete');
-    const userId = localStorage.getItem('hence_user_id');
-    const userType = localStorage.getItem('hence_user_type');
-    
-    if (!onboardingComplete || !userId || !userType) {
-        console.log('❌ Onboarding not complete, redirecting to /onboarding');
-        window.location.href = '/onboarding';
-        return;
-    }
-    
-    // Initialize the app
-    window.henceApp = new App();
-    
-    // Handle page unload
-    window.addEventListener('beforeunload', () => {
-        if (window.henceApp) {
-            window.henceApp.cleanup();
-        }
-    });
-}); 
+} 

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Test - Hence Modular System</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .pass { background-color: #d4edda; border-color: #c3e6cb; }
+        .fail { background-color: #f8d7da; border-color: #f5c6cb; }
+        .pending { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-warning { background-color: #ffc107; color: black; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        #console-output { background: #000; color: #0f0; padding: 10px; font-family: monospace; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Hence Modular System Quick Test</h1>
+    
+    <div class="test-section pending">
+        <h3>1. Setup Test Environment</h3>
+        <p>Initialize required localStorage data for testing</p>
+        <button class="btn-primary" onclick="setupTestData()">Setup Test Data</button>
+        <span id="setup-status">Click to setup</span>
+    </div>
+    
+    <div class="test-section pending">
+        <h3>2. Test Modular System Initialization</h3>
+        <p>Check if the modular system loads without emergency fix</p>
+        <button class="btn-primary" onclick="testModularInit()">Test Initialization</button>
+        <span id="init-status">Click to test</span>
+    </div>
+    
+    <div class="test-section pending">
+        <h3>3. Test Button Functionality</h3>
+        <p>Verify buttons trigger proper events in modular system</p>
+        <button class="btn-primary" onclick="testButtons()">Test Buttons</button>
+        <span id="buttons-status">Click to test</span>
+    </div>
+    
+    <div class="test-section pending">
+        <h3>4. Load Main App</h3>
+        <p>Navigate to main app to test in production environment</p>
+        <button class="btn-success" onclick="loadMainApp()">Go to Main App</button>
+        <span id="main-status">Ready to test</span>
+    </div>
+    
+    <div class="test-section">
+        <h3>Console Output</h3>
+        <div id="console-output"></div>
+        <button class="btn-warning" onclick="clearConsole()">Clear Console</button>
+    </div>
+    
+    <script>
+        // Capture console output
+        const originalLog = console.log;
+        const originalError = console.error;
+        const consoleOutput = document.getElementById('console-output');
+        
+        function addToConsole(message, type = 'log') {
+            const line = document.createElement('div');
+            line.style.color = type === 'error' ? '#ff6b6b' : '#0f0';
+            line.textContent = `[${new Date().toISOString().substr(11, 8)}] ${message}`;
+            consoleOutput.appendChild(line);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+        
+        function setupTestData() {
+            try {
+                // Set required onboarding data
+                localStorage.setItem('hence_onboarding_complete', 'true');
+                localStorage.setItem('hence_user_id', 'test-user-' + Date.now());
+                localStorage.setItem('hence_user_type', 'anonymous');
+                localStorage.setItem('hence_display_name', 'Test User');
+                
+                document.getElementById('setup-status').textContent = '✅ Test data set';
+                document.getElementById('setup-status').parentElement.className = 'test-section pass';
+                
+                console.log('✅ Test onboarding data has been set');
+                console.log('UserID:', localStorage.getItem('hence_user_id'));
+                console.log('UserType:', localStorage.getItem('hence_user_type'));
+                
+            } catch (error) {
+                document.getElementById('setup-status').textContent = '❌ Failed: ' + error.message;
+                document.getElementById('setup-status').parentElement.className = 'test-section fail';
+                console.error('Failed to setup test data:', error);
+            }
+        }
+        
+        function testModularInit() {
+            try {
+                // Test if we can load the modular components
+                console.log('🔍 Testing modular system initialization...');
+                
+                // Check if modules are accessible
+                const testModuleLoad = async () => {
+                    try {
+                        const { App } = await import('./components/core/App.js');
+                        console.log('✅ App module loaded successfully');
+                        
+                        // Test instantiation
+                        const app = new App();
+                        console.log('✅ App instance created successfully');
+                        
+                        // Wait a moment for initialization
+                        setTimeout(() => {
+                            if (window.henceApp) {
+                                console.log('✅ window.henceApp is available');
+                                document.getElementById('init-status').textContent = '✅ Modular system working';
+                                document.getElementById('init-status').parentElement.className = 'test-section pass';
+                            } else {
+                                console.log('❌ window.henceApp not found');
+                                document.getElementById('init-status').textContent = '❌ App not on window';
+                                document.getElementById('init-status').parentElement.className = 'test-section fail';
+                            }
+                        }, 2000);
+                        
+                    } catch (error) {
+                        console.error('❌ Failed to load modular system:', error);
+                        document.getElementById('init-status').textContent = '❌ Module load failed';
+                        document.getElementById('init-status').parentElement.className = 'test-section fail';
+                    }
+                };
+                
+                testModuleLoad();
+                
+            } catch (error) {
+                console.error('Test initialization failed:', error);
+                document.getElementById('init-status').textContent = '❌ Failed: ' + error.message;
+                document.getElementById('init-status').parentElement.className = 'test-section fail';
+            }
+        }
+        
+        function testButtons() {
+            try {
+                console.log('🔘 Testing button functionality...');
+                
+                // Check if app is available
+                if (window.henceApp) {
+                    console.log('✅ App instance found, testing methods...');
+                    
+                    // Test if key methods exist
+                    const methods = ['startMatching', 'endCall', 'toggleMute', 'cancelQueue'];
+                    let allMethodsExist = true;
+                    
+                    methods.forEach(method => {
+                        if (typeof window.henceApp[method] === 'function') {
+                            console.log(`✅ Method ${method} exists`);
+                        } else {
+                            console.log(`❌ Method ${method} missing`);
+                            allMethodsExist = false;
+                        }
+                    });
+                    
+                    if (allMethodsExist) {
+                        document.getElementById('buttons-status').textContent = '✅ All methods available';
+                        document.getElementById('buttons-status').parentElement.className = 'test-section pass';
+                    } else {
+                        document.getElementById('buttons-status').textContent = '❌ Some methods missing';
+                        document.getElementById('buttons-status').parentElement.className = 'test-section fail';
+                    }
+                    
+                } else {
+                    console.log('❌ No app instance found');
+                    document.getElementById('buttons-status').textContent = '❌ No app instance';
+                    document.getElementById('buttons-status').parentElement.className = 'test-section fail';
+                }
+                
+            } catch (error) {
+                console.error('Button test failed:', error);
+                document.getElementById('buttons-status').textContent = '❌ Failed: ' + error.message;
+                document.getElementById('buttons-status').parentElement.className = 'test-section fail';
+            }
+        }
+        
+        function loadMainApp() {
+            console.log('🚀 Redirecting to main app...');
+            window.location.href = '/';
+        }
+        
+        function clearConsole() {
+            consoleOutput.innerHTML = '';
+        }
+        
+        // Auto-setup on page load
+        window.addEventListener('load', () => {
+            console.log('🔧 Quick test page loaded');
+            console.log('📍 Current localStorage state:');
+            console.log('  onboarding_complete:', localStorage.getItem('hence_onboarding_complete'));
+            console.log('  user_id:', localStorage.getItem('hence_user_id'));
+            console.log('  user_type:', localStorage.getItem('hence_user_type'));
+        });
+    </script>
+</body>
+</html> 

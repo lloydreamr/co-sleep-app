@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modular System Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .fail { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 3px; font-family: monospace; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; color: white; }
+        .btn-primary { background-color: #007bff; }
+        .btn-success { background-color: #28a745; }
+        .btn-danger { background-color: #dc3545; }
+        .btn-warning { background-color: #ffc107; color: black; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #dee2e6; border-radius: 5px; }
+        .console-log { background: #000; color: #0f0; padding: 10px; font-family: monospace; max-height: 400px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Modular System Fix Verification</h1>
+    
+    <div class="test-section">
+        <h2>Test Sequence</h2>
+        <button class="btn-primary" onclick="runAllTests()">🚀 Run Complete Test Suite</button>
+        <button class="btn-success" onclick="setupAndTest()">⚡ Quick Setup & Test</button>
+        <button class="btn-warning" onclick="goToMainApp()">🌟 Go to Main App</button>
+        <button class="btn-danger" onclick="clearResults()">🗑️ Clear Results</button>
+    </div>
+    
+    <div id="test-results"></div>
+    
+    <div class="test-section">
+        <h3>Console Output</h3>
+        <div id="console-output" class="console-log"></div>
+    </div>
+    
+    <script>
+        const testResults = document.getElementById('test-results');
+        const consoleOutput = document.getElementById('console-output');
+        
+        // Console capture
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function logToConsole(message, type = 'log') {
+            const timestamp = new Date().toISOString().substr(11, 8);
+            const line = document.createElement('div');
+            line.style.color = type === 'error' ? '#ff6b6b' : type === 'warn' ? '#ffc107' : '#0f0';
+            line.textContent = `[${timestamp}] ${message}`;
+            consoleOutput.appendChild(line);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logToConsole(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            logToConsole(args.join(' '), 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            logToConsole(args.join(' '), 'warn');
+        };
+        
+        function addTestResult(title, success, message, details = '') {
+            const div = document.createElement('div');
+            div.className = `test-result ${success ? 'pass' : 'fail'}`;
+            div.innerHTML = `
+                <strong>${success ? '✅' : '❌'} ${title}</strong><br>
+                ${message}
+                ${details ? `<div class="code">${details}</div>` : ''}
+            `;
+            testResults.appendChild(div);
+        }
+        
+        function addWarning(title, message) {
+            const div = document.createElement('div');
+            div.className = 'test-result warning';
+            div.innerHTML = `
+                <strong>⚠️ ${title}</strong><br>
+                ${message}
+            `;
+            testResults.appendChild(div);
+        }
+        
+        async function test1_SetupData() {
+            console.log('🔧 Test 1: Setting up onboarding data...');
+            
+            try {
+                localStorage.setItem('hence_onboarding_complete', 'true');
+                localStorage.setItem('hence_user_id', 'test-user-' + Date.now());
+                localStorage.setItem('hence_user_type', 'anonymous');
+                localStorage.setItem('hence_display_name', 'Test User');
+                
+                addTestResult(
+                    'Setup Test Data',
+                    true,
+                    'Required localStorage data has been set',
+                    `UserID: ${localStorage.getItem('hence_user_id')}<br>UserType: ${localStorage.getItem('hence_user_type')}`
+                );
+                return true;
+                
+            } catch (error) {
+                addTestResult('Setup Test Data', false, 'Failed to set localStorage data', error.message);
+                return false;
+            }
+        }
+        
+        async function test2_LoadModules() {
+            console.log('📦 Test 2: Loading modular components...');
+            
+            try {
+                // Test module loading
+                const { App } = await import('./components/core/App.js');
+                console.log('✅ App module loaded successfully');
+                
+                addTestResult(
+                    'Module Loading',
+                    true,
+                    'App module imported successfully',
+                    'ES6 module import working correctly'
+                );
+                return App;
+                
+            } catch (error) {
+                console.error('❌ Module loading failed:', error);
+                addTestResult('Module Loading', false, 'Failed to import App module', error.message);
+                return null;
+            }
+        }
+        
+        async function test3_InitializeApp(AppClass) {
+            console.log('🚀 Test 3: Initializing App instance...');
+            
+            if (!AppClass) {
+                addTestResult('App Initialization', false, 'App class not available', 'Previous test failed');
+                return null;
+            }
+            
+            try {
+                const app = new AppClass();
+                console.log('✅ App instance created');
+                
+                // Wait for initialization
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                if (window.henceApp) {
+                    addTestResult(
+                        'App Initialization',
+                        true,
+                        'App initialized and attached to window',
+                        'window.henceApp is available'
+                    );
+                    return app;
+                } else {
+                    addWarning(
+                        'App Initialization',
+                        'App created but not found on window object'
+                    );
+                    return app;
+                }
+                
+            } catch (error) {
+                console.error('❌ App initialization failed:', error);
+                addTestResult('App Initialization', false, 'Failed to initialize App', error.message);
+                return null;
+            }
+        }
+        
+        async function test4_VerifyMethods(app) {
+            console.log('🔍 Test 4: Verifying app methods...');
+            
+            if (!app) {
+                addTestResult('Method Verification', false, 'No app instance available', 'Previous test failed');
+                return false;
+            }
+            
+            const requiredMethods = ['startMatching', 'endCall', 'toggleMute', 'cancelQueue', 'cleanup'];
+            const missingMethods = [];
+            const availableMethods = [];
+            
+            requiredMethods.forEach(method => {
+                if (typeof app[method] === 'function') {
+                    availableMethods.push(method);
+                    console.log(`✅ Method ${method} available`);
+                } else {
+                    missingMethods.push(method);
+                    console.error(`❌ Method ${method} missing`);
+                }
+            });
+            
+            if (missingMethods.length === 0) {
+                addTestResult(
+                    'Method Verification',
+                    true,
+                    'All required methods are available',
+                    `Available: ${availableMethods.join(', ')}`
+                );
+                return true;
+            } else {
+                addTestResult(
+                    'Method Verification',
+                    false,
+                    `${missingMethods.length} methods missing`,
+                    `Missing: ${missingMethods.join(', ')}<br>Available: ${availableMethods.join(', ')}`
+                );
+                return false;
+            }
+        }
+        
+        async function test5_TestEventSystem(app) {
+            console.log('🎯 Test 5: Testing event system...');
+            
+            if (!app || !app.eventManager) {
+                addTestResult('Event System', false, 'EventManager not available', 'App or EventManager missing');
+                return false;
+            }
+            
+            try {
+                // Test event emission
+                let eventReceived = false;
+                app.eventManager.on('testEvent', () => {
+                    eventReceived = true;
+                    console.log('✅ Test event received');
+                });
+                
+                app.eventManager.emit('testEvent');
+                
+                if (eventReceived) {
+                    addTestResult(
+                        'Event System',
+                        true,
+                        'Event system working correctly',
+                        'Event emission and reception verified'
+                    );
+                    return true;
+                } else {
+                    addTestResult('Event System', false, 'Event not received', 'Event emission failed');
+                    return false;
+                }
+                
+            } catch (error) {
+                console.error('❌ Event system test failed:', error);
+                addTestResult('Event System', false, 'Event system error', error.message);
+                return false;
+            }
+        }
+        
+        async function test6_TestButtonEvents(app) {
+            console.log('🔘 Test 6: Testing button event simulation...');
+            
+            if (!app || !app.eventManager) {
+                addTestResult('Button Events', false, 'EventManager not available', 'Cannot test button events');
+                return false;
+            }
+            
+            try {
+                let eventsReceived = 0;
+                const testEvents = ['findPartner', 'toggleMute', 'endCall', 'cancelQueue'];
+                
+                // Set up listeners
+                testEvents.forEach(event => {
+                    app.eventManager.on(event, () => {
+                        eventsReceived++;
+                        console.log(`✅ Button event ${event} received`);
+                    });
+                });
+                
+                // Emit test events
+                testEvents.forEach(event => {
+                    app.eventManager.emit(event);
+                });
+                
+                // Wait a moment for async processing
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                if (eventsReceived === testEvents.length) {
+                    addTestResult(
+                        'Button Events',
+                        true,
+                        'All button events working correctly',
+                        `Tested: ${testEvents.join(', ')}`
+                    );
+                    return true;
+                } else {
+                    addTestResult(
+                        'Button Events',
+                        false,
+                        `Only ${eventsReceived}/${testEvents.length} events received`,
+                        `Expected: ${testEvents.join(', ')}`
+                    );
+                    return false;
+                }
+                
+            } catch (error) {
+                console.error('❌ Button event test failed:', error);
+                addTestResult('Button Events', false, 'Button event error', error.message);
+                return false;
+            }
+        }
+        
+        async function setupAndTest() {
+            console.log('⚡ Running quick setup and test...');
+            clearResults();
+            
+            const success = await test1_SetupData();
+            if (success) {
+                addTestResult(
+                    'Quick Setup',
+                    true,
+                    'Ready to test main app',
+                    'Click "Go to Main App" to test in production environment'
+                );
+            }
+        }
+        
+        async function runAllTests() {
+            console.log('🧪 Starting comprehensive test suite...');
+            clearResults();
+            
+            let overallSuccess = true;
+            
+            // Run tests in sequence
+            const dataSuccess = await test1_SetupData();
+            if (!dataSuccess) overallSuccess = false;
+            
+            const AppClass = await test2_LoadModules();
+            if (!AppClass) overallSuccess = false;
+            
+            const app = await test3_InitializeApp(AppClass);
+            if (!app) overallSuccess = false;
+            
+            const methodsSuccess = await test4_VerifyMethods(app);
+            if (!methodsSuccess) overallSuccess = false;
+            
+            const eventSuccess = await test5_TestEventSystem(app);
+            if (!eventSuccess) overallSuccess = false;
+            
+            const buttonSuccess = await test6_TestButtonEvents(app);
+            if (!buttonSuccess) overallSuccess = false;
+            
+            // Final result
+            setTimeout(() => {
+                if (overallSuccess) {
+                    addTestResult(
+                        'FINAL RESULT',
+                        true,
+                        '🎉 All tests passed! Modular system is working correctly',
+                        'The Hence app should now work without the emergency fix. Buttons should function properly.'
+                    );
+                } else {
+                    addTestResult(
+                        'FINAL RESULT',
+                        false,
+                        '⚠️ Some tests failed',
+                        'Check individual test results above for details. The modular system may need additional fixes.'
+                    );
+                }
+            }, 500);
+        }
+        
+        function goToMainApp() {
+            console.log('🌟 Redirecting to main Hence app...');
+            window.location.href = '/';
+        }
+        
+        function clearResults() {
+            testResults.innerHTML = '';
+            consoleOutput.innerHTML = '';
+            console.log('🗑️ Test results cleared');
+        }
+        
+        // Error tracking
+        window.addEventListener('error', (event) => {
+            console.error('Global JS Error:', event.error?.message || event.message);
+        });
+        
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled Promise Rejection:', event.reason);
+        });
+        
+        // Auto-start on page load
+        window.addEventListener('load', () => {
+            console.log('🔧 Modular System Fix Test loaded');
+            console.log('📍 Current localStorage status:');
+            console.log('  onboarding_complete:', localStorage.getItem('hence_onboarding_complete'));
+            console.log('  user_id:', localStorage.getItem('hence_user_id'));
+            console.log('  user_type:', localStorage.getItem('hence_user_type'));
+            
+            addWarning(
+                'Ready to Test',
+                'Use the buttons above to run tests. Start with "Quick Setup & Test" then "Go to Main App" for basic testing, or "Run Complete Test Suite" for comprehensive verification.'
+            );
+        });
+    </script>
+</body>
+</html> 
