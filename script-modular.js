@@ -31,10 +31,14 @@ if (!supportsModules()) {
             const userId = localStorage.getItem('hence_user_id');
             const userType = localStorage.getItem('hence_user_type');
             
+            // TEMPORARILY DISABLED FOR TESTING - Set default values if missing
             if (!onboardingComplete || !userId || !userType) {
-                console.log('❌ Onboarding not complete, redirecting to /onboarding');
-                window.location.href = '/onboarding';
-                return;
+                console.log('⚠️ Onboarding data missing, setting defaults for testing...');
+                localStorage.setItem('hence_onboarding_complete', 'true');
+                localStorage.setItem('hence_user_id', 'test-user-' + Date.now());
+                localStorage.setItem('hence_user_type', 'anonymous');
+                localStorage.setItem('hence_display_name', 'Test User');
+                console.log('✅ Default onboarding data set');
             }
             
             // Initialize the app

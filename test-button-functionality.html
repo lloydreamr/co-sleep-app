@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Functionality Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .log { background: #000; color: #0f0; padding: 10px; font-family: monospace; max-height: 400px; overflow-y: auto; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-test { background-color: #007bff; color: white; }
+        .btn-main { background-color: #28a745; color: white; }
+        .btn-setup { background-color: #ffc107; color: black; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 3px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Button Functionality Debug Test</h1>
+    
+    <div class="test-section">
+        <h3>Quick Actions</h3>
+        <button class="btn-setup" onclick="setupOnboarding()">🔧 Setup Onboarding Data</button>
+        <button class="btn-test" onclick="testModularSystem()">🧪 Test Modular System</button>
+        <button class="btn-test" onclick="testButtonElements()">🔘 Test Button Elements</button>
+        <button class="btn-main" onclick="goToMainApp()">🚀 Go to Main App</button>
+    </div>
+    
+    <div id="status-container"></div>
+    
+    <div class="test-section">
+        <h3>Debug Console</h3>
+        <div id="debug-log" class="log"></div>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <script>
+        const logContainer = document.getElementById('debug-log');
+        const statusContainer = document.getElementById('status-container');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toISOString().substr(11, 8);
+            const line = document.createElement('div');
+            line.style.color = type === 'error' ? '#ff6b6b' : type === 'warn' ? '#ffc107' : '#0f0';
+            line.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(line);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(message);
+        }
+        
+        function addStatus(title, success, message) {
+            const div = document.createElement('div');
+            div.className = `status ${success ? 'success' : 'error'}`;
+            div.innerHTML = `<strong>${success ? '✅' : '❌'} ${title}</strong><br>${message}`;
+            statusContainer.appendChild(div);
+        }
+        
+        function addWarning(title, message) {
+            const div = document.createElement('div');
+            div.className = 'status warning';
+            div.innerHTML = `<strong>⚠️ ${title}</strong><br>${message}`;
+            statusContainer.appendChild(div);
+        }
+        
+        function clearLog() {
+            logContainer.innerHTML = '';
+            statusContainer.innerHTML = '';
+        }
+        
+        function setupOnboarding() {
+            log('🔧 Setting up onboarding data...');
+            try {
+                localStorage.setItem('hence_onboarding_complete', 'true');
+                localStorage.setItem('hence_user_id', 'debug-user-' + Date.now());
+                localStorage.setItem('hence_user_type', 'anonymous');
+                localStorage.setItem('hence_display_name', 'Debug User');
+                
+                addStatus('Onboarding Setup', true, 'All required localStorage data has been set');
+                log('✅ Onboarding data set successfully');
+                log('UserID: ' + localStorage.getItem('hence_user_id'));
+                log('UserType: ' + localStorage.getItem('hence_user_type'));
+                
+            } catch (error) {
+                addStatus('Onboarding Setup', false, 'Failed to set localStorage: ' + error.message);
+                log('❌ Failed to set onboarding data: ' + error.message, 'error');
+            }
+        }
+        
+        async function testModularSystem() {
+            log('🧪 Testing modular system...');
+            clearErrors();
+            
+            try {
+                // Test module import
+                log('📦 Attempting to import App module...');
+                const { App } = await import('./components/core/App.js');
+                log('✅ App module imported successfully');
+                
+                // Test instantiation
+                log('🏗️ Creating App instance...');
+                const app = new App();
+                log('✅ App instance created');
+                
+                // Wait for initialization
+                log('⏳ Waiting for initialization...');
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // Check if it's on window
+                if (window.henceApp) {
+                    addStatus('Modular System', true, 'App successfully initialized and available on window');
+                    log('✅ window.henceApp available');
+                    
+                    // Test methods
+                    const methods = ['startMatching', 'endCall', 'toggleMute', 'cancelQueue'];
+                    const available = methods.filter(method => typeof window.henceApp[method] === 'function');
+                    const missing = methods.filter(method => typeof window.henceApp[method] !== 'function');
+                    
+                    log(`✅ Available methods: ${available.join(', ')}`);
+                    if (missing.length > 0) {
+                        log(`❌ Missing methods: ${missing.join(', ')}`, 'warn');
+                    }
+                    
+                } else {
+                    addWarning('Modular System', 'App created but not found on window object');
+                    log('⚠️ App not attached to window', 'warn');
+                }
+                
+            } catch (error) {
+                addStatus('Modular System', false, 'Failed to load or initialize: ' + error.message);
+                log('❌ Modular system test failed: ' + error.message, 'error');
+            }
+        }
+        
+        function testButtonElements() {
+            log('🔘 Testing button elements and event handling...');
+            
+            // Test button existence
+            const findPartnerBtn = document.querySelector('#findPartnerBtn');
+            const muteBtn = document.querySelector('#muteBtn');
+            const endCallBtn = document.querySelector('#endCallBtn');
+            
+            log('🔍 Button existence check:');
+            log(`  findPartnerBtn: ${!!findPartnerBtn}`);
+            log(`  muteBtn: ${!!muteBtn}`);
+            log(`  endCallBtn: ${!!endCallBtn}`);
+            
+            if (!findPartnerBtn) {
+                addStatus('Button Elements', false, 'Main buttons not found - wrong page context');
+                return;
+            }
+            
+            // Test if buttons have existing event listeners
+            log('🎯 Testing click event handling...');
+            
+            let clickReceived = false;
+            
+            // Add our own test listener
+            const testListener = (e) => {
+                clickReceived = true;
+                log('✅ Click event received by test listener');
+                e.stopPropagation();
+                return false;
+            };
+            
+            findPartnerBtn.addEventListener('click', testListener, true);
+            
+            // Simulate click
+            log('🖱️ Simulating button click...');
+            findPartnerBtn.click();
+            
+            setTimeout(() => {
+                if (clickReceived) {
+                    addStatus('Button Events', true, 'Button click events are working');
+                    log('✅ Button click test successful');
+                } else {
+                    addStatus('Button Events', false, 'Button click events not firing');
+                    log('❌ Button click test failed', 'error');
+                }
+                
+                // Check if modular system handled it
+                if (window.henceApp && window.henceApp.eventManager) {
+                    log('🎯 EventManager detected, testing delegation...');
+                    
+                    // Test event emission
+                    try {
+                        window.henceApp.eventManager.emit('findPartner');
+                        log('✅ Event emission test successful');
+                    } catch (error) {
+                        log('❌ Event emission failed: ' + error.message, 'error');
+                    }
+                } else {
+                    log('❌ No EventManager found', 'warn');
+                }
+                
+                findPartnerBtn.removeEventListener('click', testListener, true);
+            }, 100);
+        }
+        
+        function goToMainApp() {
+            log('🚀 Redirecting to main app...');
+            window.location.href = '/';
+        }
+        
+        let errorCount = 0;
+        function clearErrors() {
+            errorCount = 0;
+        }
+        
+        // Global error tracking
+        window.addEventListener('error', (event) => {
+            errorCount++;
+            log(`🚨 JavaScript Error #${errorCount}: ${event.error?.message || event.message}`, 'error');
+            if (event.error?.stack) {
+                log(`Stack: ${event.error.stack}`, 'error');
+            }
+        });
+        
+        window.addEventListener('unhandledrejection', (event) => {
+            errorCount++;
+            log(`🚨 Promise Rejection #${errorCount}: ${event.reason}`, 'error');
+        });
+        
+        // Initial setup
+        window.addEventListener('load', () => {
+            log('🔧 Debug test page loaded');
+            log('📍 Current localStorage status:');
+            log('  onboarding_complete: ' + localStorage.getItem('hence_onboarding_complete'));
+            log('  user_id: ' + localStorage.getItem('hence_user_id'));
+            log('  user_type: ' + localStorage.getItem('hence_user_type'));
+            
+            addWarning('Debug Mode', 'This page helps diagnose why buttons aren\'t working in the main app. Start with "Setup Onboarding Data" then test the modular system.');
+        });
+    </script>
+</body>
+</html> 
