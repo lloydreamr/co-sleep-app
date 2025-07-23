@@ -6,7 +6,7 @@
     <title>Co-Sleep - Find Quiet Presence</title>
     
     <!-- Performance optimizations -->
-    <meta name="description" content="Find quiet presence with Co-Sleep - A WebRTC-based co-sleeping app">
+    <meta name="description" content="Find quiet presence with Co-Sleep - A WebRTC-based voice calling app for peaceful sleep companionship">
     <meta name="theme-color" content="#1a1a1a">
     
     <!-- Preload critical resources -->
@@ -27,7 +27,7 @@
         <div class="hero-content">
             <div class="logo">🌙</div>
             <h1>Hence</h1>
-            <p class="tagline">Find quiet presence and peaceful sleep companionship</p>
+            <p class="tagline">Connect with others for peaceful sleep through voice calls</p>
             
             <!-- User Info Section -->
             <div id="user-info" class="user-info">
@@ -38,12 +38,8 @@
                 Find Quiet Presence
             </button>
             
-            <!-- Sound Controls -->
-            <div class="sound-controls-section">
-                <button id="soundCountBtn" class="sound-btn" aria-label="Background sounds">
-                    🎵 Background Sounds
-                </button>
-            </div>
+            <!-- Sound Controls Removed for Freemium Version -->
+            <!-- Focus on core WebRTC voice calling features -->
             
             <!-- Reset button for testing -->
             <button id="reset-onboarding" class="secondary-btn" style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.7;">
@@ -104,31 +100,7 @@
         </div>
     </div>
 
-    <!-- Sound Panel -->
-    <div class="sound-panel" id="soundPanel" role="dialog" aria-labelledby="sound-title" aria-hidden="true">
-        <div class="sound-content">
-            <div class="sound-header">
-                <h2 id="sound-title">Background Sounds</h2>
-                <button class="close-btn" id="closeSoundBtn" aria-label="Close sound panel">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            <div class="sound-body">
-                <div class="sound-controls">
-                    <div class="global-volume-control">
-                        <label for="globalVolume">Master Volume</label>
-                        <input type="range" id="globalVolume" min="0" max="100" value="50" class="volume-slider">
-                    </div>
-                </div>
-                <div id="soundList" class="sound-list">
-                    <!-- Sounds will be populated by JavaScript -->
-                </div>
-                <div id="soundEmptyState" class="sound-empty-state" style="display: none;">
-                    <p>No background sounds available</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Background Sounds Panel Removed for Freemium Version -->
 
     <!-- User Menu -->
     <div class="user-menu" id="userMenu" style="display: none;">
@@ -138,7 +110,7 @@
         <div class="user-dropdown" id="userDropdown">
             <button class="dropdown-item" onclick="showProfile()">Profile</button>
             <button class="dropdown-item" onclick="showAnalytics()">Analytics</button>
-            <button class="dropdown-item" onclick="upgradePremium()">Upgrade</button>
+            <!-- Premium upgrade removed for freemium version -->
             <button class="dropdown-item" onclick="logout()">Logout</button>
         </div>
     </div>
@@ -154,8 +126,7 @@
         Login
     </button>
 
-    <!-- Scripts with performance optimizations -->
-    <script src="sounds.js?v=2.0" defer></script>
+    <!-- Scripts simplified for freemium version -->
     <script src="preferences.js?v=1.1" defer></script>
     <script src="script.js?v=1.1" defer></script>
 </body>

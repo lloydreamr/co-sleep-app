@@ -63,8 +63,8 @@ class CoSleepApp {
         this.userType = localStorage.getItem('hence_user_type');
         this.displayName = localStorage.getItem('hence_display_name');
         
-        // Sound system integration
-        this.soundManager = window.soundManager;
+        // Simplified for freemium version - no sound system
+        // Focus on core WebRTC functionality
         
         // Analytics and preferences integration
         this.analyticsManager = window.analyticsManager;
@@ -87,7 +87,7 @@ class CoSleepApp {
         
         this.initializeSocket();
         this.initializeAuth();
-        this.initializeSoundSystem();
+        // Sound system removed for freemium version
         this.initializeAnalytics();
         this.initializePreferences();
         this.initializePreferencesUI(); // Initialize preferences UI
@@ -124,25 +124,9 @@ class CoSleepApp {
         });
         
         // Sound panel controls
-        if (this.soundCountBtn) {
-            this.soundCountBtn.addEventListener('click', () => {
-                this.openSoundPanel();
-            });
-        }
+        // Sound controls removed for freemium version
         
-        if (this.closeSoundBtn) {
-            this.closeSoundBtn.addEventListener('click', () => {
-                this.closeSoundPanel();
-            });
-        }
-        
-        if (this.globalVolumeSlider) {
-            this.globalVolumeSlider.addEventListener('input', (e) => {
-                if (window.soundManager) {
-                    window.soundManager.setGlobalVolume(e.target.value / 100);
-                }
-            });
-        }
+        // Global volume control removed for freemium version
 
         // Reset onboarding button
         const resetBtn = document.getElementById('reset-onboarding');
@@ -178,10 +162,7 @@ class CoSleepApp {
         this.preferencesBtn = document.getElementById('preferencesBtn');
         this.preferencesOverlay = document.getElementById('preferencesOverlay');
         this.closePreferencesBtn = document.getElementById('closePreferencesBtn');
-        this.soundCountBtn = document.getElementById('soundCountBtn');
-        this.soundPanel = document.getElementById('soundPanel');
-        this.closeSoundBtn = document.getElementById('closeSoundBtn');
-        this.globalVolumeSlider = document.getElementById('globalVolume');
+        // Sound elements removed for freemium version
 
         // Header elements
         this.onlineCount = document.getElementById('onlineCount');
@@ -1124,10 +1105,7 @@ class CoSleepApp {
         this.isMuted = false;
         this.updateMuteUI();
         
-        // Keep background sound playing if active
-        if (window.soundManager && window.soundManager.isAnySoundPlaying()) {
-            console.log('🎵 Keeping background sound active after disconnection');
-        }
+        // Background sounds removed for freemium version
         
         // End analytics session
         if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
@@ -2227,7 +2205,7 @@ function showAnalytics() {
 }
 
 function upgradePremium() {
-    alert('Premium upgrade coming soon! This will include:\n• Advanced background sounds\n• Sleep analytics\n• Custom sleep schedules\n• Priority matching\n• Unlimited sessions');
+    alert('Premium features are disabled in this freemium version. Focus on core WebRTC voice calling features!');
 }
 
 function logout() {
@@ -2313,31 +2291,5 @@ window.addEventListener('offline', () => {
     console.log('Connection lost');
 });
 
-// Background Sound Button Functionality
-function initBackgroundSoundButton() {
-    const soundToggle = document.getElementById('background-sound-toggle');
-    const soundSection = document.querySelector('.sound-section');
-    
-    if (soundToggle && soundSection) {
-        soundToggle.addEventListener('click', () => {
-            soundSection.classList.toggle('hidden');
-            soundToggle.classList.toggle('active');
-            
-            // Update button icon
-            const svg = soundToggle.querySelector('svg');
-            if (soundSection.classList.contains('hidden')) {
-                svg.innerHTML = '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>';
-            } else {
-                svg.innerHTML = '<path d="M12 2v20M2 10h20"/>';
-            }
-        });
-        
-        // Initially hide the sound section
-        soundSection.classList.add('hidden');
-    }
-}
-
-// Initialize background sound button when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    initBackgroundSoundButton();
-});
+// Background Sound functionality removed for freemium version
+// Focus on core WebRTC voice calling features

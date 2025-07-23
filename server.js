@@ -7,7 +7,8 @@ const prisma = require('./lib/prisma');
 // Import routes
 const authRoutes = require('./routes/auth');
 const onboardingRoutes = require('./routes/onboarding');
-const premiumRoutes = require('./routes/premium');
+// Premium routes disabled for freemium version
+// const premiumRoutes = require('./routes/premium');
 const { initSocketService } = require('./services/socket');
 
 const app = express();
@@ -60,26 +61,26 @@ app.use(express.static(path.join(__dirname), {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/onboarding', onboardingRoutes);
-app.use('/api/premium', premiumRoutes);
+// Premium routes disabled for freemium version
+// app.use('/api/premium', premiumRoutes);
 
 // Serve onboarding page
 app.get('/onboarding', (req, res) => {
     res.sendFile(path.join(__dirname, 'onboarding.html'));
 });
 
-// Serve premium page
-app.get('/premium', (req, res) => {
-    res.sendFile(path.join(__dirname, 'premium.html'));
-});
+// Premium pages disabled for freemium version
+// app.get('/premium', (req, res) => {
+//     res.sendFile(path.join(__dirname, 'premium.html'));
+// });
 
-// Serve premium success/cancel pages
-app.get('/premium/success', (req, res) => {
-    res.sendFile(path.join(__dirname, 'premium.html'));
-});
+// app.get('/premium/success', (req, res) => {
+//     res.sendFile(path.join(__dirname, 'premium.html'));
+// });
 
-app.get('/premium/cancel', (req, res) => {
-    res.sendFile(path.join(__dirname, 'premium.html'));
-});
+// app.get('/premium/cancel', (req, res) => {
+//     res.sendFile(path.join(__dirname, 'premium.html'));
+// });
 
 // Initialize Socket.IO and matchmaking
 const socketService = initSocketService(server);
