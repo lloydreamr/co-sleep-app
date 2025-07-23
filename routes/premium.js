@@ -4,8 +4,20 @@ const { PrismaClient } = require('@prisma/client');
 const { authenticateUser } = require('../lib/auth');
 const prisma = new PrismaClient();
 
-// Stripe configuration
-const stripe = process.env.STRIPE_SECRET_KEY ? require('stripe')(process.env.STRIPE_SECRET_KEY) : null;
+// Stripe configuration - load conditionally to avoid crashes
+let stripe = null;
+try {
+    if (process.env.STRIPE_SECRET_KEY) {
+        stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        console.log('✅ Stripe initialized with API key');
+    } else {
+        console.log('⚠️ Stripe not configured - premium features will be disabled');
+    }
+} catch (error) {
+    console.warn('⚠️ Stripe module not installed - premium features will be disabled');
+    console.warn('Install Stripe with: npm install stripe');
+    stripe = null;
+}
 
 // Premium plan configurations
 const PREMIUM_PLANS = {
