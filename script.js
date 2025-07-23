@@ -73,9 +73,8 @@ class CoSleepApp {
         // Simplified for freemium version - no sound system
         // Focus on core WebRTC functionality
         
-        // Analytics and preferences integration
+        // Analytics integration
         this.analyticsManager = window.analyticsManager;
-        this.preferencesManager = window.preferencesManager;
         
         // Performance optimizations
         this.debounceTimers = new Map();
@@ -1282,7 +1281,7 @@ class CoSleepApp {
         }
         
         // Start analytics tracking
-        if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
+        if (this.analyticsManager) {
             this.analyticsManager.startSession(this.partnerId);
             console.log('📊 Analytics session started');
         }
@@ -1687,7 +1686,7 @@ class CoSleepApp {
         // Background sounds removed for freemium version
         
         // End analytics session
-        if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
+        if (this.analyticsManager) {
             this.analyticsManager.endSession();
             console.log('📊 Analytics session ended due to disconnection');
         }
@@ -1914,7 +1913,7 @@ class CoSleepApp {
         }
         
         // End analytics session
-        if (this.analyticsManager && this.preferencesManager?.isAnalyticsAllowed()) {
+        if (this.analyticsManager) {
             this.analyticsManager.endSession();
             console.log('📊 Analytics session ended');
         }
@@ -2031,11 +2030,12 @@ class CoSleepApp {
         }
     }
 
-    // Preferences system methods
+    // Hence Enhancement: Preferences system methods (drawer-based)
     initializePreferences() {
-        this.preferencesManager = new PreferencesManager();
-        this.preferencesManager.init();
-        console.log('⚙️ Preferences initialized');
+        // Preferences are now handled via drawer system
+        // Load user preferences for verified users
+        this.loadUserPreferences();
+        console.log('⚙️ Preferences initialized (drawer-based)');
     }
 
     // Initialize preferences button and overlay
