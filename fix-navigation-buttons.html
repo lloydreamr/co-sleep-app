@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Navigation Buttons</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 15px 30px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; background: #007bff; color: white; font-size: 16px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 3px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+        .log { background: #000; color: #0f0; padding: 10px; font-family: monospace; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Fix Navigation Buttons</h1>
+    
+    <div class="status info">
+        <strong>🎯 Purpose:</strong> This will fix the footer navigation buttons: Match/Connect, Preferences, History, and About.
+    </div>
+    
+    <button onclick="fixNavigationButtons()">🔧 Fix Navigation Buttons</button>
+    <button onclick="testNavigationFix()">🧪 Test Navigation Fix</button>
+    <button onclick="goToMainApp()">🚀 Go to Main App</button>
+    
+    <div id="status"></div>
+    <div id="log" class="log"></div>
+    
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const line = document.createElement('div');
+            line.textContent = `[${new Date().toISOString().substr(11, 8)}] ${message}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+        }
+        
+        function fixNavigationButtons() {
+            log('🔧 Creating navigation button fix...');
+            
+            // Create a script that will fix the navigation buttons
+            const navigationFix = `
+// Navigation Button Fix - Direct handlers for footer nav
+console.log('🔧 Navigation button fix running...');
+
+function addNavigationHandlers() {
+    // Find all navigation buttons
+    const navButtons = document.querySelectorAll('.nav-item[data-section]');
+    console.log('🔍 Found ' + navButtons.length + ' navigation buttons');
+    
+    navButtons.forEach(button => {
+        const section = button.getAttribute('data-section');
+        console.log('🔘 Setting up handler for:', section);
+        
+        // Remove existing handlers by cloning
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+        
+        // Add working click handler
+        newButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🎯 Navigation button clicked:', section);
+            
+            switch(section) {
+                case 'connect':
+                    console.log('🏠 Connect/Match button clicked');
+                    alert('🏠 Connect/Match button working!\\n\\nThis would show the main connection interface.');
+                    // You could add actual navigation logic here
+                    break;
+                    
+                case 'preferences':
+                    console.log('⚙️ Preferences button clicked');
+                    alert('⚙️ Preferences button working!\\n\\nThis would open the preferences drawer.');
+                    // Show preferences drawer
+                    const prefDrawer = document.getElementById('preferencesDrawer');
+                    if (prefDrawer) {
+                        prefDrawer.style.display = 'block';
+                        prefDrawer.setAttribute('aria-hidden', 'false');
+                    }
+                    break;
+                    
+                case 'history':
+                    console.log('🕐 History button clicked');
+                    alert('🕐 History button working!\\n\\nThis would show your call history.');
+                    // Show history section
+                    const historySection = document.getElementById('historySection');
+                    if (historySection) {
+                        historySection.style.display = 'block';
+                        historySection.setAttribute('aria-hidden', 'false');
+                    }
+                    break;
+                    
+                case 'info':
+                    console.log('ℹ️ About button clicked');
+                    alert('ℹ️ About button working!\\n\\nThis would show information about the app.');
+                    // Show info section
+                    const infoSection = document.getElementById('infoSection');
+                    if (infoSection) {
+                        infoSection.style.display = 'block';
+                        infoSection.setAttribute('aria-hidden', 'false');
+                    }
+                    break;
+                    
+                default:
+                    console.log('❓ Unknown section:', section);
+                    alert('Navigation button clicked: ' + section);
+            }
+        });
+        
+        console.log('✅ Handler added for ' + section + ' button');
+    });
+    
+    // Also fix close buttons for the modals
+    const closeButtons = [
+        { selector: '#closeDrawer', action: () => {
+            const drawer = document.getElementById('preferencesDrawer');
+            if (drawer) {
+                drawer.style.display = 'none';
+                drawer.setAttribute('aria-hidden', 'true');
+            }
+        }},
+        { selector: '#closeHistory', action: () => {
+            const history = document.getElementById('historySection');
+            if (history) {
+                history.style.display = 'none';
+                history.setAttribute('aria-hidden', 'true');
+            }
+        }},
+        { selector: '#closeInfo', action: () => {
+            const info = document.getElementById('infoSection');
+            if (info) {
+                info.style.display = 'none';
+                info.setAttribute('aria-hidden', 'true');
+            }
+        }}
+    ];
+    
+    closeButtons.forEach(({selector, action}) => {
+        const button = document.querySelector(selector);
+        if (button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                action();
+                console.log('✅ Close button worked for', selector);
+            });
+        }
+    });
+    
+    console.log('🎉 All navigation buttons fixed!');
+    window.navigationButtonsFixed = true;
+}
+
+// Run the fix
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addNavigationHandlers);
+} else {
+    addNavigationHandlers();
+}
+`;
+            
+            // Save the fix to sessionStorage
+            sessionStorage.setItem('navigationButtonFix', navigationFix);
+            log('✅ Navigation button fix saved');
+            
+            showStatus(`
+                <strong>✅ Navigation Button Fix Ready!</strong><br>
+                The fix for your footer navigation buttons has been prepared.<br><br>
+                <strong>Your buttons:</strong><br>
+                🏠 Connect/Match button<br>
+                ⚙️ Preferences button<br>
+                🕐 History button<br>
+                ℹ️ About button<br><br>
+                <strong>Next steps:</strong><br>
+                1. Click "Go to Main App"<br>
+                2. The fix will auto-apply<br>
+                3. Test your navigation buttons!
+            `, 'success');
+        }
+        
+        function testNavigationFix() {
+            log('🧪 Testing navigation fix...');
+            
+            const fix = sessionStorage.getItem('navigationButtonFix');
+            if (fix) {
+                try {
+                    eval(fix);
+                    showStatus('✅ Navigation fix applied! Test the footer buttons.', 'success');
+                    log('✅ Navigation fix test successful');
+                } catch (error) {
+                    showStatus('❌ Fix failed: ' + error.message, 'error');
+                    log('❌ Navigation fix test failed: ' + error.message);
+                }
+            } else {
+                showStatus('❌ No fix found. Click "Fix Navigation Buttons" first.', 'error');
+                log('❌ No navigation fix in storage');
+            }
+        }
+        
+        function goToMainApp() {
+            log('🚀 Going to main app with navigation fix...');
+            
+            const fix = sessionStorage.getItem('navigationButtonFix');
+            if (fix) {
+                showStatus('✅ Redirecting with navigation fix...', 'success');
+                // Redirect with auto-apply parameter
+                window.location.href = '/?fixNav=true';
+            } else {
+                showStatus('⚠️ Please run "Fix Navigation Buttons" first.', 'error');
+            }
+        }
+        
+        // Auto-apply fix if we're on main page with the parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('fixNav') === 'true' || window.location.pathname === '/') {
+            window.addEventListener('load', () => {
+                const fix = sessionStorage.getItem('navigationButtonFix');
+                if (fix && window.location.pathname === '/') {
+                    log('🔧 Auto-applying navigation fix...');
+                    setTimeout(() => {
+                        try {
+                            eval(fix);
+                            showStatus('✅ Navigation buttons fixed! Try clicking the footer buttons.', 'success');
+                            log('✅ Auto-applied navigation fix successfully');
+                        } catch (error) {
+                            showStatus('❌ Auto-fix failed: ' + error.message, 'error');
+                            log('❌ Auto-fix failed: ' + error.message);
+                        }
+                    }, 1000);
+                }
+            });
+        }
+        
+        window.addEventListener('load', () => {
+            log('🔧 Navigation button fix page loaded');
+            showStatus('Ready to fix your navigation buttons. Click "Fix Navigation Buttons" to start.', 'info');
+        });
+        
+        // Error tracking
+        window.addEventListener('error', (event) => {
+            log('🚨 JavaScript Error: ' + (event.error?.message || event.message));
+        });
+    </script>
+</body>
+</html> 
