@@ -425,7 +425,7 @@ class CoSleepApp {
         this.closeInfo = document.getElementById('closeInfo');
         
         // Connection state elements
-        this.connectionState = document.getElementById('connectionState');
+        this.connectionStateElement = document.getElementById('connectionState');
         this.userAvatar = document.getElementById('userAvatar');
         this.partnerAvatar = document.getElementById('partnerAvatar');
         this.userVoice = document.getElementById('userVoice');
@@ -695,8 +695,8 @@ class CoSleepApp {
             case 'connected':
                 // Button shows connected state
                 // Show connection state display
-                if (this.connectionState) {
-                    this.connectionState.classList.remove('hidden');
+                if (this.connectionStateElement) {
+                    this.connectionStateElement.classList.remove('hidden');
                 } else {
                     console.warn('⚠️ connectionState element not found');
                 }
@@ -736,8 +736,8 @@ class CoSleepApp {
         }
 
         // Hide connection state display
-        if (this.connectionState) {
-            this.connectionState.classList.add('hidden');
+        if (this.connectionStateElement) {
+            this.connectionStateElement.classList.add('hidden');
         }
 
         // Close any open drawers/sections
