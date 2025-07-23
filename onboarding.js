@@ -133,8 +133,14 @@ class OnboardingFlow {
                 await this.updateProfile();
             }
 
-            // Give consent
-            await this.giveConsent();
+            // Give consent and get authentication token
+            const consentResponse = await this.giveConsent();
+            
+            // Store authentication token for Phase 3 features
+            if (consentResponse.token) {
+                localStorage.setItem('token', consentResponse.token);
+                console.log('✅ Authentication token stored for Phase 3 features');
+            }
 
             // Redirect to main app
             this.redirectToMainApp();

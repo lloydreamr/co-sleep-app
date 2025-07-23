@@ -697,6 +697,8 @@ class CoSleepApp {
                 // Show connection state display
                 if (this.connectionState) {
                     this.connectionState.classList.remove('hidden');
+                } else {
+                    console.warn('⚠️ connectionState element not found');
                 }
                 break;
         }
@@ -2790,7 +2792,7 @@ function upgradePremium() {
 }
 
 function logout() {
-    localStorage.removeItem('hence_auth_token');
+            localStorage.removeItem('token');
     localStorage.removeItem('hence_user_id');
     localStorage.removeItem('hence_user_type');
     localStorage.removeItem('hence_display_name');
@@ -2943,14 +2945,45 @@ class HenceAdvancedFeatures {
     initPreferencesDrawer() {
         // Show Phase 3 sections for verified users
         if (this.app.isVerified) {
-            document.getElementById('favoritesSection').style.display = 'block';
-            document.getElementById('schedulingSection').style.display = 'block';
-            document.getElementById('analyticsSection').style.display = 'block';
+            console.log('🔧 Initializing Phase 3 UI for verified user');
+            
+            const favoritesSection = document.getElementById('favoritesSection');
+            const schedulingSection = document.getElementById('schedulingSection');
+            const analyticsSection = document.getElementById('analyticsSection');
+            const scheduledTimeInput = document.getElementById('scheduledTimeInput');
+            
+            if (favoritesSection) {
+                favoritesSection.style.display = 'block';
+                console.log('✅ Favorites section initialized');
+            } else {
+                console.warn('⚠️ favoritesSection element not found');
+            }
+            
+            if (schedulingSection) {
+                schedulingSection.style.display = 'block';
+                console.log('✅ Scheduling section initialized');
+            } else {
+                console.warn('⚠️ schedulingSection element not found');
+            }
+            
+            if (analyticsSection) {
+                analyticsSection.style.display = 'block';
+                console.log('✅ Analytics section initialized');
+            } else {
+                console.warn('⚠️ analyticsSection element not found');
+            }
             
             // Set minimum datetime to now
-            const now = new Date();
-            now.setMinutes(now.getMinutes() + 15); // At least 15 minutes from now
-            document.getElementById('scheduledTimeInput').min = now.toISOString().slice(0, 16);
+            if (scheduledTimeInput) {
+                const now = new Date();
+                now.setMinutes(now.getMinutes() + 15); // At least 15 minutes from now
+                scheduledTimeInput.min = now.toISOString().slice(0, 16);
+                console.log('✅ Scheduling time input configured');
+            } else {
+                console.warn('⚠️ scheduledTimeInput element not found');
+            }
+        } else {
+            console.log('ℹ️ User not verified, Phase 3 features hidden');
         }
     }
 
@@ -2960,9 +2993,12 @@ class HenceAdvancedFeatures {
 
     async loadFavorites() {
         try {
+            const token = localStorage.getItem('token');
+            console.log('🔍 Loading favorites with token:', token ? 'Present' : 'Missing');
+            
             const response = await fetch('/api/favorites', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -2972,6 +3008,9 @@ class HenceAdvancedFeatures {
                 this.favorites = data.favorites;
                 this.renderFavorites();
                 this.populateFavoritesDropdown();
+                console.log('✅ Favorites loaded successfully:', this.favorites.length);
+            } else {
+                console.error('❌ Failed to load favorites:', response.status, await response.text());
             }
         } catch (error) {
             console.error('❌ Failed to load favorites:', error);
@@ -3012,7 +3051,7 @@ class HenceAdvancedFeatures {
             const response = await fetch(`/api/favorites/${favoriteId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -3031,7 +3070,7 @@ class HenceAdvancedFeatures {
             const response = await fetch('/api/favorites', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ favoriteId: userId, notes, category })
@@ -3052,7 +3091,7 @@ class HenceAdvancedFeatures {
         try {
             const response = await fetch('/api/favorites/mutual', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -3113,7 +3152,7 @@ class HenceAdvancedFeatures {
             const response = await fetch('/api/scheduling', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(callData)
@@ -3148,7 +3187,7 @@ class HenceAdvancedFeatures {
         try {
             const response = await fetch('/api/scheduling?upcoming=true', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -3204,7 +3243,7 @@ class HenceAdvancedFeatures {
             const response = await fetch(`/api/scheduling/${callId}/join`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -3237,7 +3276,7 @@ class HenceAdvancedFeatures {
             const response = await fetch(`/api/scheduling/${callId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -3259,7 +3298,7 @@ class HenceAdvancedFeatures {
         try {
             const response = await fetch('/api/analytics/dashboard', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -3296,7 +3335,7 @@ class HenceAdvancedFeatures {
             await fetch('/api/analytics/events', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -3318,7 +3357,7 @@ class HenceAdvancedFeatures {
             await fetch('/api/analytics/performance', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -3374,7 +3413,7 @@ class HenceAdvancedFeatures {
                 await fetch('/api/history', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({

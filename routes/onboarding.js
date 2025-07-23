@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
+const { generateToken } = require('../lib/auth');
 const prisma = new PrismaClient();
 
 // POST /api/onboarding/start
@@ -81,9 +82,19 @@ router.post('/consent', async (req, res) => {
       data: {
         consentGiven: true,
         onboardingStep: 'complete',
+        isVerified: true, // Mark as verified after completing onboarding
       },
     });
-    res.json({ success: true, userId: user.id, onboardingStep: user.onboardingStep });
+    
+    // Generate JWT token for authenticated access to Phase 3 features
+    const token = generateToken(user.id);
+    
+    res.json({ 
+      success: true, 
+      userId: user.id, 
+      onboardingStep: user.onboardingStep,
+      token: token // Return token for authentication
+    });
   } catch (err) {
     console.error('Consent error:', err);
     res.status(500).json({ error: 'Failed to record consent' });
