@@ -25,35 +25,37 @@ export class EventManager {
     }
     
     setupGlobalListeners() {
-        // Global click delegation
-        this.addGlobalListener('click', this.handleGlobalClick.bind(this));
+        // Global click delegation - NOT passive since we need preventDefault
+        this.addGlobalListener('click', this.handleGlobalClick.bind(this), false);
         
-        // Global form handling
-        this.addGlobalListener('submit', this.handleGlobalSubmit.bind(this));
+        // Global form handling - NOT passive since we need preventDefault
+        this.addGlobalListener('submit', this.handleGlobalSubmit.bind(this), false);
         
-        // Global input handling with debouncing
-        this.addGlobalListener('input', this.debounce(this.handleGlobalInput.bind(this), 300));
+        // Global input handling with debouncing - can be passive
+        this.addGlobalListener('input', this.debounce(this.handleGlobalInput.bind(this), 300), true);
         
-        // Global keyboard handling
-        this.addGlobalListener('keydown', this.handleGlobalKeydown.bind(this));
+        // Global keyboard handling - NOT passive since we might need preventDefault
+        this.addGlobalListener('keydown', this.handleGlobalKeydown.bind(this), false);
         
-        // Touch events for mobile
-        this.addGlobalListener('touchstart', this.handleGlobalTouch.bind(this));
+        // Touch events for mobile - can be passive
+        this.addGlobalListener('touchstart', this.handleGlobalTouch.bind(this), true);
         
-        // Window events
-        this.addWindowListener('resize', this.throttle(this.handleWindowResize.bind(this), 100));
-        this.addWindowListener('beforeunload', this.handleBeforeUnload.bind(this));
+        // Window events - can be passive
+        this.addWindowListener('resize', this.throttle(this.handleWindowResize.bind(this), 100), true);
+        this.addWindowListener('beforeunload', this.handleBeforeUnload.bind(this), true);
         
         console.log('🌐 Global event listeners established');
     }
     
-    addGlobalListener(event, handler) {
-        document.addEventListener(event, handler, { passive: true });
+    addGlobalListener(event, handler, passive = false) {
+        const options = passive ? { passive: true } : {};
+        document.addEventListener(event, handler, options);
         this.globalListeners.add({ element: document, event, handler });
     }
     
-    addWindowListener(event, handler) {
-        window.addEventListener(event, handler, { passive: true });
+    addWindowListener(event, handler, passive = false) {
+        const options = passive ? { passive: true } : {};
+        window.addEventListener(event, handler, options);
         this.globalListeners.add({ element: window, event, handler });
     }
     

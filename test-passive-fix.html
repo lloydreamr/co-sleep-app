@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Passive Event Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .status { padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .pass { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .fail { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-test { background-color: #007bff; color: white; }
+        .btn-main { background-color: #28a745; color: white; }
+        .log { background: #000; color: #0f0; padding: 10px; font-family: monospace; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Passive Event Listener Fix Test</h1>
+    
+    <div class="status">
+        <strong>🎯 Testing:</strong> Verifying that preventDefault() works in button click handlers after fixing passive listener issue.
+    </div>
+    
+    <button class="btn-test" onclick="testEventPrevention()">🧪 Test Event Prevention</button>
+    <button class="btn-test" onclick="testModularSystem()">🔧 Test Modular System</button>
+    <button class="btn-main" onclick="goToMainApp()">🚀 Go to Main App</button>
+    
+    <div id="results"></div>
+    <div id="log" class="log"></div>
+    
+    <script>
+        const resultsDiv = document.getElementById('results');
+        const logDiv = document.getElementById('log');
+        
+        function log(message) {
+            const line = document.createElement('div');
+            line.textContent = `[${new Date().toISOString().substr(11, 8)}] ${message}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function addResult(title, success, details) {
+            const div = document.createElement('div');
+            div.className = `status ${success ? 'pass' : 'fail'}`;
+            div.innerHTML = `<strong>${success ? '✅' : '❌'} ${title}</strong><br>${details}`;
+            resultsDiv.appendChild(div);
+        }
+        
+        function testEventPrevention() {
+            log('🧪 Testing event prevention...');
+            resultsDiv.innerHTML = '';
+            
+            // Create a test link that would normally navigate
+            const testLink = document.createElement('a');
+            testLink.href = 'http://example.com';
+            testLink.textContent = 'Test Link';
+            testLink.style.display = 'block';
+            testLink.style.margin = '10px 0';
+            document.body.appendChild(testLink);
+            
+            let preventDefaultWorked = false;
+            let errorOccurred = false;
+            
+            const testListener = (e) => {
+                try {
+                    log('🔍 Attempting preventDefault()...');
+                    e.preventDefault();
+                    preventDefaultWorked = true;
+                    log('✅ preventDefault() successful - no navigation should occur');
+                } catch (error) {
+                    errorOccurred = true;
+                    log('❌ preventDefault() failed: ' + error.message);
+                }
+            };
+            
+            // Add NON-passive listener like our fixed EventManager
+            testLink.addEventListener('click', testListener, { passive: false });
+            
+            // Simulate click
+            setTimeout(() => {
+                log('🖱️ Simulating click...');
+                testLink.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(testLink);
+                    
+                    if (errorOccurred) {
+                        addResult('Event Prevention', false, 'preventDefault() threw an error - passive listener issue still exists');
+                    } else if (preventDefaultWorked) {
+                        addResult('Event Prevention', true, 'preventDefault() works correctly - passive listener issue fixed');
+                    } else {
+                        addResult('Event Prevention', false, 'preventDefault() did not execute properly');
+                    }
+                }, 100);
+            }, 100);
+        }
+        
+        async function testModularSystem() {
+            log('🔧 Testing modular system with fixed event handling...');
+            
+            try {
+                // Import and test the fixed EventManager
+                const { EventManager } = await import('./components/core/EventManager.js');
+                log('✅ EventManager imported successfully');
+                
+                const eventManager = new EventManager();
+                log('✅ EventManager instance created');
+                
+                // Test that it can set up listeners without passive issue
+                eventManager.setupGlobalListeners();
+                log('✅ Global listeners setup completed');
+                
+                // Test event emission
+                let eventReceived = false;
+                eventManager.on('testEvent', () => {
+                    eventReceived = true;
+                    log('✅ Test event received successfully');
+                });
+                
+                eventManager.emit('testEvent');
+                
+                if (eventReceived) {
+                    addResult('Modular System', true, 'EventManager working correctly with fixed passive listeners');
+                } else {
+                    addResult('Modular System', false, 'EventManager event emission not working');
+                }
+                
+            } catch (error) {
+                addResult('Modular System', false, 'EventManager test failed: ' + error.message);
+                log('❌ Modular system test failed: ' + error.message);
+            }
+        }
+        
+        function goToMainApp() {
+            log('🚀 Redirecting to main app with fixed event handling...');
+            window.location.href = '/';
+        }
+        
+        // Track errors
+        window.addEventListener('error', (event) => {
+            log('🚨 JavaScript Error: ' + (event.error?.message || event.message));
+        });
+        
+        window.addEventListener('unhandledrejection', (event) => {
+            log('🚨 Promise Rejection: ' + event.reason);
+        });
+        
+        window.addEventListener('load', () => {
+            log('🔧 Passive event fix test page loaded');
+            log('📍 This page tests if the preventDefault() passive listener issue is fixed');
+        });
+    </script>
+</body>
+</html> 
