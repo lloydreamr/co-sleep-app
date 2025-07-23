@@ -856,6 +856,11 @@ class CoSleepApp {
                     this.setState('connectionState', 'matched');
                     this.startCallTracking(data.partnerId);
                     
+                    // Phase 3: Start analytics tracking
+                    if (window.henceFeatures) {
+                        window.henceFeatures.onCallStart(data.partnerId, 'queue');
+                    }
+                    
                     this.connectToPeer();
                     
                     // Set a timeout for connection establishment
@@ -890,18 +895,36 @@ class CoSleepApp {
                 this.socket.on('partner-disconnected', () => {
                     console.log('Partner disconnected');
                     this.endCallTracking('partner_disconnected');
+                    
+                    // Phase 3: Track call end
+                    if (window.henceFeatures && this.partnerId) {
+                        window.henceFeatures.onCallEnd(this.partnerId, 'partner_disconnected');
+                    }
+                    
                     this.handlePartnerDisconnection();
                 });
                 
                 this.socket.on('call-ended', () => {
                     console.log('Call ended by partner');
                     this.endCallTracking('partner_ended');
+                    
+                    // Phase 3: Track call end
+                    if (window.henceFeatures && this.partnerId) {
+                        window.henceFeatures.onCallEnd(this.partnerId, 'partner_ended');
+                    }
+                    
                     this.handlePartnerDisconnection();
                 });
                 
                 this.socket.on('partner-skipped', () => {
                     console.log('Partner skipped');
                     this.endCallTracking('partner_skipped');
+                    
+                    // Phase 3: Track call end
+                    if (window.henceFeatures && this.partnerId) {
+                        window.henceFeatures.onCallEnd(this.partnerId, 'partner_skipped');
+                    }
+                    
                     this.handlePartnerDisconnection();
                 });
                 
@@ -1918,6 +1941,18 @@ class CoSleepApp {
             console.log('📊 Analytics session ended');
         }
         
+        // Phase 3: End analytics tracking
+        if (window.henceFeatures && this.partnerId) {
+            window.henceFeatures.onCallEnd(this.partnerId, 'user_ended');
+            
+            // Show add to favorites prompt for verified users
+            if (this.isVerified) {
+                setTimeout(() => {
+                    window.henceFeatures.showAddToFavoritesPrompt(this.partnerId);
+                }, 1000);
+            }
+        }
+        
         // Don't reinitialize WebRTC here - let user trigger it
         this.webrtcInitialized = false;
     }
@@ -2745,13 +2780,9 @@ class CoSleepApp {
     }
 }
 
-// Global functions for UI interactions
+// Global functions for UI interactions  
 function showProfile() {
     window.location.href = '/auth.html';
-}
-
-function showAnalytics() {
-    window.location.href = '/analytics.html';
 }
 
 function upgradePremium() {
@@ -2775,16 +2806,6 @@ function toggleUserMenu() {
 
 function goToLogin() {
     window.location.href = 'auth.html';
-}
-
-function showProfile() {
-    if (window.coSleepApp && window.coSleepApp.currentUser) {
-        alert(`Profile: ${window.coSleepApp.currentUser.name || 'No name'}\nEmail: ${window.coSleepApp.currentUser.email}\nPremium: ${window.coSleepApp.currentUser.isPremium ? 'Yes' : 'No'}`);
-    }
-}
-
-function showAnalytics() {
-    window.location.href = 'analytics.html';
 }
 
 function upgradePremium() {
@@ -2876,3 +2897,563 @@ window.addEventListener('offline', () => {
 
 // Background Sound functionality removed for freemium version
 // Focus on core WebRTC voice calling features
+
+// =====================
+// Phase 3: Advanced Features
+// =====================
+
+class HenceAdvancedFeatures {
+    constructor(coSleepApp) {
+        this.app = coSleepApp;
+        this.favorites = [];
+        this.scheduledCalls = [];
+        this.analytics = null;
+        this.init();
+    }
+
+    init() {
+        console.log('🔧 Initializing Phase 3 Advanced Features...');
+        this.initEventListeners();
+        this.initPreferencesDrawer();
+        
+        // Load data if user is verified
+        if (this.app.isVerified) {
+            this.loadFavorites();
+            this.loadScheduledCalls();
+            this.loadAnalytics();
+        }
+    }
+
+    initEventListeners() {
+        // Favorites management
+        document.getElementById('refreshFavoritesBtn')?.addEventListener('click', () => this.loadFavorites());
+        document.getElementById('viewMutualFavoritesBtn')?.addEventListener('click', () => this.viewMutualFavorites());
+
+        // Scheduling
+        document.getElementById('scheduleTypeInput')?.addEventListener('change', (e) => this.toggleParticipantSelection(e.target.value));
+        document.getElementById('createScheduledCallBtn')?.addEventListener('click', () => this.createScheduledCall());
+
+        // Analytics
+        document.getElementById('refreshAnalyticsBtn')?.addEventListener('click', () => this.loadAnalytics());
+
+        // Track user behavior
+        this.trackBehaviorEvent('phase3_initialized', 'system');
+    }
+
+    initPreferencesDrawer() {
+        // Show Phase 3 sections for verified users
+        if (this.app.isVerified) {
+            document.getElementById('favoritesSection').style.display = 'block';
+            document.getElementById('schedulingSection').style.display = 'block';
+            document.getElementById('analyticsSection').style.display = 'block';
+            
+            // Set minimum datetime to now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + 15); // At least 15 minutes from now
+            document.getElementById('scheduledTimeInput').min = now.toISOString().slice(0, 16);
+        }
+    }
+
+    // =====================
+    // Favorites Management
+    // =====================
+
+    async loadFavorites() {
+        try {
+            const response = await fetch('/api/favorites', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.favorites = data.favorites;
+                this.renderFavorites();
+                this.populateFavoritesDropdown();
+            }
+        } catch (error) {
+            console.error('❌ Failed to load favorites:', error);
+        }
+    }
+
+    renderFavorites() {
+        const favoritesList = document.getElementById('favoritesList');
+        if (!favoritesList) return;
+
+        if (this.favorites.length === 0) {
+            favoritesList.innerHTML = '<p class="no-favorites">No favorites yet. Add users to favorites during calls!</p>';
+            return;
+        }
+
+        favoritesList.innerHTML = this.favorites.map(fav => `
+            <div class="favorite-item">
+                <div class="favorite-info">
+                    <div class="favorite-name">${fav.favorite.displayName || 'Anonymous User'}</div>
+                    <div class="favorite-details">
+                        ${fav.isMutual ? '<span class="favorite-mutual">Mutual</span>' : ''}
+                        ${fav.category || 'General'} • Added ${new Date(fav.createdAt).toLocaleDateString()}
+                    </div>
+                </div>
+                <div class="favorite-actions">
+                    <button onclick="henceFeatures.removeFavorite('${fav.favoriteId}')">Remove</button>
+                    ${fav.favorite.connectionState === 'idle' ? 
+                        `<button onclick="henceFeatures.inviteToCall('${fav.favoriteId}')">Invite</button>` : 
+                        '<button disabled>Busy</button>'
+                    }
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async removeFavorite(favoriteId) {
+        try {
+            const response = await fetch(`/api/favorites/${favoriteId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                this.loadFavorites(); // Refresh list
+                this.trackBehaviorEvent('favorite_removed', 'social', { favoriteId });
+            }
+        } catch (error) {
+            console.error('❌ Failed to remove favorite:', error);
+        }
+    }
+
+    async addToFavorites(userId, notes = '', category = 'general') {
+        try {
+            const response = await fetch('/api/favorites', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ favoriteId: userId, notes, category })
+            });
+
+            if (response.ok) {
+                this.loadFavorites(); // Refresh list
+                this.trackBehaviorEvent('favorite_added', 'social', { favoriteId: userId, category });
+                return true;
+            }
+        } catch (error) {
+            console.error('❌ Failed to add favorite:', error);
+        }
+        return false;
+    }
+
+    async viewMutualFavorites() {
+        try {
+            const response = await fetch('/api/favorites/mutual', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.favorites = data.mutualFavorites;
+                this.renderFavorites();
+            }
+        } catch (error) {
+            console.error('❌ Failed to load mutual favorites:', error);
+        }
+    }
+
+    populateFavoritesDropdown() {
+        const dropdown = document.getElementById('scheduleParticipantInput');
+        if (!dropdown) return;
+
+        dropdown.innerHTML = '<option value="">Select from favorites...</option>' +
+            this.favorites.map(fav => 
+                `<option value="${fav.favoriteId}">${fav.favorite.displayName || 'Anonymous User'}</option>`
+            ).join('');
+    }
+
+    // =====================
+    // Scheduling System
+    // =====================
+
+    toggleParticipantSelection(callType) {
+        const participantGroup = document.getElementById('scheduleParticipantGroup');
+        if (participantGroup) {
+            participantGroup.style.display = callType === 'private' ? 'block' : 'none';
+        }
+    }
+
+    async createScheduledCall() {
+        const scheduledTime = document.getElementById('scheduledTimeInput').value;
+        const duration = parseInt(document.getElementById('scheduleDurationInput').value);
+        const callType = document.getElementById('scheduleTypeInput').value;
+        const description = document.getElementById('scheduleDescriptionInput').value;
+        const participantId = document.getElementById('scheduleParticipantInput').value;
+
+        if (!scheduledTime) {
+            alert('Please select a date and time for the call.');
+            return;
+        }
+
+        const callData = {
+            scheduledTime: new Date(scheduledTime).toISOString(),
+            duration,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            isPrivate: callType === 'private',
+            description,
+            participantId: callType === 'private' ? participantId : null
+        };
+
+        try {
+            const response = await fetch('/api/scheduling', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(callData)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert('Call scheduled successfully!');
+                this.loadScheduledCalls();
+                this.clearSchedulingForm();
+                this.trackBehaviorEvent('call_scheduled', 'scheduling', callData);
+            } else {
+                const error = await response.json();
+                alert(`Failed to schedule call: ${error.error}`);
+            }
+        } catch (error) {
+            console.error('❌ Failed to schedule call:', error);
+            alert('Failed to schedule call. Please try again.');
+        }
+    }
+
+    clearSchedulingForm() {
+        document.getElementById('scheduledTimeInput').value = '';
+        document.getElementById('scheduleDurationInput').value = '30';
+        document.getElementById('scheduleTypeInput').value = 'open';
+        document.getElementById('scheduleDescriptionInput').value = '';
+        document.getElementById('scheduleParticipantInput').value = '';
+        this.toggleParticipantSelection('open');
+    }
+
+    async loadScheduledCalls() {
+        try {
+            const response = await fetch('/api/scheduling?upcoming=true', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.scheduledCalls = data.scheduledCalls;
+                this.renderScheduledCalls();
+            }
+        } catch (error) {
+            console.error('❌ Failed to load scheduled calls:', error);
+        }
+    }
+
+    renderScheduledCalls() {
+        const callsList = document.getElementById('upcomingCallsList');
+        if (!callsList) return;
+
+        if (this.scheduledCalls.length === 0) {
+            callsList.innerHTML = '<p class="no-calls">No upcoming calls scheduled.</p>';
+            return;
+        }
+
+        callsList.innerHTML = this.scheduledCalls.map(call => {
+            const callTime = new Date(call.scheduledTime);
+            const now = new Date();
+            const canJoin = Math.abs(callTime.getTime() - now.getTime()) <= 15 * 60 * 1000; // 15 minutes
+
+            return `
+                <div class="call-item">
+                    <div class="call-info">
+                        <div class="call-time">${callTime.toLocaleString()}</div>
+                        <div class="call-details">
+                            ${call.duration}min • ${call.isPrivate ? 'Private' : 'Open'} • ${call.status}
+                            ${call.description ? `<br/>${call.description}` : ''}
+                        </div>
+                    </div>
+                    <div class="call-status ${call.status}">${call.status}</div>
+                    <div class="call-actions">
+                        ${canJoin && call.status === 'scheduled' ? 
+                            `<button class="join-btn" onclick="henceFeatures.joinScheduledCall('${call.id}')">Join</button>` :
+                            ''
+                        }
+                        <button onclick="henceFeatures.cancelScheduledCall('${call.id}')">Cancel</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async joinScheduledCall(callId) {
+        try {
+            const response = await fetch(`/api/scheduling/${callId}/join`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Close preferences drawer and start call
+                this.app.togglePreferences();
+                
+                // Use the scheduled call data to establish connection
+                this.app.partnerId = data.callData.partnerId;
+                this.app.isInitiator = data.callData.initiator;
+                this.app.connectToPeer();
+                
+                this.trackBehaviorEvent('scheduled_call_joined', 'scheduling', { callId });
+            } else {
+                const error = await response.json();
+                alert(`Failed to join call: ${error.error}`);
+            }
+        } catch (error) {
+            console.error('❌ Failed to join scheduled call:', error);
+            alert('Failed to join call. Please try again.');
+        }
+    }
+
+    async cancelScheduledCall(callId) {
+        if (!confirm('Are you sure you want to cancel this scheduled call?')) return;
+
+        try {
+            const response = await fetch(`/api/scheduling/${callId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                this.loadScheduledCalls();
+                this.trackBehaviorEvent('scheduled_call_cancelled', 'scheduling', { callId });
+            }
+        } catch (error) {
+            console.error('❌ Failed to cancel scheduled call:', error);
+        }
+    }
+
+    // =====================
+    // Analytics Dashboard
+    // =====================
+
+    async loadAnalytics() {
+        try {
+            const response = await fetch('/api/analytics/dashboard', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.analytics = data;
+                this.renderAnalytics();
+            }
+        } catch (error) {
+            console.error('❌ Failed to load analytics:', error);
+        }
+    }
+
+    renderAnalytics() {
+        if (!this.analytics) return;
+
+        // Update stat cards
+        document.getElementById('totalCallsStat').textContent = this.analytics.callStats.totalCalls;
+        document.getElementById('avgRatingStat').textContent = this.analytics.callStats.averageRating.toFixed(1);
+        document.getElementById('favoritesStat').textContent = this.analytics.socialStats.totalFavorites;
+        document.getElementById('scheduledStat').textContent = this.analytics.socialStats.scheduledCalls;
+    }
+
+    // =====================
+    // Behavior Tracking
+    // =====================
+
+    async trackBehaviorEvent(eventType, eventCategory, eventData = {}) {
+        // Only track if user allows analytics
+        if (!this.app.allowAnalytics) return;
+
+        try {
+            await fetch('/api/analytics/events', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    eventType,
+                    eventCategory,
+                    eventData,
+                    sessionId: this.app.sessionId || null,
+                    userAgent: navigator.userAgent,
+                    deviceType: this.detectDeviceType()
+                })
+            });
+        } catch (error) {
+            console.error('❌ Failed to track behavior event:', error);
+        }
+    }
+
+    async trackPerformanceMetric(metricType, metricValue, metricUnit = 'ms', metadata = {}) {
+        try {
+            await fetch('/api/analytics/performance', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    metricType,
+                    metricValue,
+                    metricUnit,
+                    sessionId: this.app.sessionId || null,
+                    deviceType: this.detectDeviceType(),
+                    connectionType: this.app.peerConnection?.connectionState || 'unknown',
+                    metadata
+                })
+            });
+        } catch (error) {
+            console.error('❌ Failed to track performance metric:', error);
+        }
+    }
+
+    detectDeviceType() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        if (userAgent.includes('mobile') || userAgent.includes('android') || userAgent.includes('iphone')) {
+            return 'mobile';
+        } else if (userAgent.includes('tablet') || userAgent.includes('ipad')) {
+            return 'tablet';
+        } else {
+            return 'desktop';
+        }
+    }
+
+    // =====================
+    // Call Integration
+    // =====================
+
+    // Called when a call starts to track performance
+    onCallStart(partnerId, sessionSource = 'queue') {
+        this.callStartTime = Date.now();
+        this.trackBehaviorEvent('call_started', 'communication', {
+            partnerId,
+            sessionSource,
+            userType: this.app.userType
+        });
+    }
+
+    // Called when a call ends to save history and update analytics
+    async onCallEnd(partnerId, endReason = 'completed', userRating = null) {
+        if (!this.callStartTime) return;
+
+        const duration = Math.floor((Date.now() - this.callStartTime) / 1000);
+        const connectionQuality = this.getConnectionQuality();
+
+        // Save call history for verified users
+        if (this.app.isVerified) {
+            try {
+                await fetch('/api/history', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('hence_auth_token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        partnerId,
+                        startTime: new Date(this.callStartTime).toISOString(),
+                        endTime: new Date().toISOString(),
+                        duration,
+                        connectionQuality,
+                        endReason,
+                        userRating,
+                        sessionSource: 'queue' // Will be enhanced with advanced matching
+                    })
+                });
+            } catch (error) {
+                console.error('❌ Failed to save call history:', error);
+            }
+        }
+
+        // Track performance metrics
+        this.trackPerformanceMetric('call_duration', duration, 'seconds');
+        this.trackPerformanceMetric('connection_quality', this.getConnectionQualityScore(), 'score');
+
+        // Track behavior
+        this.trackBehaviorEvent('call_ended', 'communication', {
+            partnerId,
+            duration,
+            endReason,
+            userRating,
+            connectionQuality
+        });
+
+        this.callStartTime = null;
+    }
+
+    getConnectionQuality() {
+        if (!this.app.peerConnection) return 'unknown';
+        
+        const connectionState = this.app.peerConnection.connectionState;
+        const iceConnectionState = this.app.peerConnection.iceConnectionState;
+        
+        if (connectionState === 'connected' && iceConnectionState === 'connected') {
+            return 'excellent';
+        } else if (connectionState === 'connected') {
+            return 'good';
+        } else if (connectionState === 'connecting') {
+            return 'fair';
+        } else {
+            return 'poor';
+        }
+    }
+
+    getConnectionQualityScore() {
+        const quality = this.getConnectionQuality();
+        const scores = { excellent: 1.0, good: 0.8, fair: 0.6, poor: 0.3, unknown: 0.0 };
+        return scores[quality] || 0.0;
+    }
+
+    // Add user to favorites during a call
+    async showAddToFavoritesPrompt(partnerId) {
+        if (!this.app.isVerified) return;
+
+        const addToFavorites = confirm('Would you like to add this user to your favorites?');
+        if (addToFavorites) {
+            const success = await this.addToFavorites(partnerId, '', 'call_partner');
+            if (success) {
+                alert('User added to favorites!');
+            } else {
+                alert('Failed to add user to favorites.');
+            }
+        }
+    }
+}
+
+// Initialize Phase 3 features when the app is ready
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait for the main app to initialize
+    setTimeout(() => {
+        if (window.coSleepApp) {
+            window.henceFeatures = new HenceAdvancedFeatures(window.coSleepApp);
+        }
+    }, 1000);
+});

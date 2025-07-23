@@ -36,6 +36,12 @@ model User {
   lastActivity    DateTime @default(now())  // Track user activity
   connectionState String   @default("idle") // idle, searching, matched, connected
   
+  // Phase 3: Advanced Matching Preferences
+  preferredTimeSlots String[] @default([])   // e.g., ["20:00-22:00", "22:00-24:00"]
+  matchingScore      Float?                  // Calculated compatibility score
+  voicePreferences   Json?                   // Voice-related preferences (pitch, accent, etc.)
+  availabilityStatus String   @default("available") // "available", "busy", "scheduled"
+  
   // Premium features disabled for freemium version
   // isPremium       Boolean  @default(false)
   // premiumUntil    DateTime?
@@ -59,6 +65,14 @@ model User {
   partnerSessions  SleepSession[] @relation("PartnerSessions")   // Sessions as partner
   analytics        SleepAnalytics?
   callHistory      CallHistory[]                                 // Hence: Call history tracking
+  
+  // Phase 3: New Relationships
+  favoritedBy      UserFavorite[] @relation("FavoritedUser")     // Users who favorited this user
+  favorites        UserFavorite[] @relation("FavoritingUser")    // Users this user favorited
+  scheduledCalls   ScheduledCall[] @relation("CallCreator")      // Calls this user scheduled
+  participatingCalls ScheduledCall[] @relation("CallParticipant") // Calls this user is participating in
+  behaviorEvents   UserBehaviorEvent[]                           // User behavior tracking
+  performanceMetrics PerformanceMetric[]                         // User-specific performance data
 
   @@map("users")
 }
@@ -81,6 +95,11 @@ model SleepSession {
   connectionQuality String?                   // "excellent", "good", etc.
   iceServersUsed   String[]                   // ICE servers used for connection
   connectionType   String?                    // "direct", "relay", "host"
+
+  // Phase 3: Enhanced session tracking
+  matchingAlgorithm String?                   // Algorithm used for matching
+  compatibilityScore Float?                  // Pre-call compatibility score
+  sessionSource     String?                  // "queue", "scheduled", "favorite"
 
   // User Relationships
   user        User     @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade) // Session owner
@@ -105,6 +124,10 @@ model CallHistory {
   userRating      Int?     // 1-5 rating          // User's rating of the call
   createdAt       DateTime @default(now())        // Record creation timestamp
 
+  // Phase 3: Enhanced call tracking
+  sessionSource     String?                       // "queue", "scheduled", "favorite"
+  compatibilityScore Float?                      // Pre-call compatibility score
+  
   // User relationship
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -125,8 +148,166 @@ model SleepAnalytics {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
+  // Phase 3: Enhanced analytics
+  weeklyStats           Json?                     // Weekly usage patterns
+  monthlyTrends         Json?                     // Monthly trend analysis
+  peakUsageTimes        String[] @default([])     // Times of highest activity
+  averageCompatibility  Float    @default(0)      // Average compatibility scores
+  scheduledCallsCount   Int      @default(0)      // Number of scheduled calls
+  favoritePartnersCount Int      @default(0)      // Number of favorite partners
+
   // User relationship
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sleep_analytics")
+}
+
+// =====================
+// Phase 3: Favorites System
+// =====================
+model UserFavorite {
+  id          String   @id @default(cuid())
+  userId      String                           // User who is favoriting
+  favoriteId  String                           // User being favorited
+  createdAt   DateTime @default(now())         // When favorite was added
+  
+  // Mutual favoriting tracking
+  isMutual    Boolean  @default(false)         // Whether favorite is mutual
+  
+  // Additional metadata
+  notes       String?                          // Optional notes about this partner
+  category    String?  @default("general")     // "general", "sleep_buddy", "regular"
+  
+  // Relationships
+  user        User     @relation("FavoritingUser", fields: [userId], references: [id], onDelete: Cascade)
+  favorite    User     @relation("FavoritedUser", fields: [favoriteId], references: [id], onDelete: Cascade)
+  
+  // Ensure unique favorites
+  @@unique([userId, favoriteId])
+  @@map("user_favorites")
+}
+
+// =====================
+// Phase 3: Scheduling System
+// =====================
+model ScheduledCall {
+  id            String   @id @default(cuid())
+  creatorId     String                         // User who created the schedule
+  participantId String?                        // Optional specific participant
+  
+  // Scheduling details
+  scheduledTime DateTime                       // When the call is scheduled
+  duration      Int      @default(30)          // Expected duration in minutes
+  timezone      String                         // Timezone for the schedule
+  
+  // Call configuration
+  isPrivate     Boolean  @default(false)       // Private (specific participant) vs open
+  maxParticipants Int    @default(1)           // For future group calls
+  description   String?                        // Optional description
+  
+  // Status tracking
+  status        String   @default("scheduled") // "scheduled", "active", "completed", "cancelled"
+  reminderSent  Boolean  @default(false)       // Whether reminder was sent
+  
+  // Results (filled after call)
+  actualStartTime DateTime?                    // When call actually started
+  actualDuration  Int?                         // Actual call duration
+  callQuality     String?                      // Quality of the scheduled call
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relationships
+  creator       User     @relation("CallCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  participant   User?    @relation("CallParticipant", fields: [participantId], references: [id], onDelete: SetNull)
+  
+  @@map("scheduled_calls")
+}
+
+// =====================
+// Phase 3: User Behavior Tracking
+// =====================
+model UserBehaviorEvent {
+  id            String   @id @default(cuid())
+  userId        String                         // User who performed the action
+  
+  // Event details
+  eventType     String                         // "login", "queue_join", "call_start", "favorite_add", etc.
+  eventCategory String                         // "authentication", "matching", "communication", "social"
+  
+  // Event data
+  eventData     Json?                          // Flexible data for the event
+  sessionId     String?                        // Optional session ID for correlation
+  
+  // Context
+  userAgent     String?                        // Browser/device info
+  ipAddress     String?                        // IP address (for analytics)
+  deviceType    String?                        // "mobile", "desktop", "tablet"
+  
+  // Timestamps
+  timestamp     DateTime @default(now())
+  
+  // Relationships
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_behavior_events")
+}
+
+// =====================
+// Phase 3: Performance Metrics
+// =====================
+model PerformanceMetric {
+  id            String   @id @default(cuid())
+  userId        String?                        // Optional user-specific metric
+  
+  // Metric details
+  metricType    String                         // "connection_time", "audio_quality", "matching_speed"
+  metricValue   Float                          // Numeric value of the metric
+  metricUnit    String                         // "ms", "score", "percentage", etc.
+  
+  // Context
+  sessionId     String?                        // Related session
+  deviceType    String?                        // Device type
+  connectionType String?                       // Connection type
+  
+  // Additional data
+  metadata      Json?                          // Additional metric data
+  
+  // Timestamps
+  timestamp     DateTime @default(now())
+  
+  // Relationships
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("performance_metrics")
+}
+
+// =====================
+// Phase 3: Usage Patterns (Analyzed Data)
+// =====================
+model UsagePattern {
+  id            String   @id @default(cuid())
+  
+  // Pattern identification
+  patternType   String                         // "peak_hours", "user_compatibility", "session_success"
+  patternName   String                         // Human-readable pattern name
+  
+  // Pattern data
+  patternData   Json                           // The actual pattern data
+  confidence    Float                          // Confidence score (0-1)
+  
+  // Time period
+  periodStart   DateTime                       // Start of analysis period
+  periodEnd     DateTime                       // End of analysis period
+  
+  // Metadata
+  userCount     Int?                           // Number of users in this pattern
+  sessionCount  Int?                           // Number of sessions analyzed
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("usage_patterns")
 }

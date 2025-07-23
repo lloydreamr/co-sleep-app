@@ -8,6 +8,10 @@ const prisma = require('./lib/prisma');
 const authRoutes = require('./routes/auth');
 const onboardingRoutes = require('./routes/onboarding');
 const historyRoutes = require('./routes/history'); // Hence Enhancement
+// Phase 3: New route imports
+const favoritesRoutes = require('./routes/favorites');
+const schedulingRoutes = require('./routes/scheduling');
+const analyticsRoutes = require('./routes/analytics');
 // Premium routes disabled for freemium version
 // const premiumRoutes = require('./routes/premium');
 const { initSocketService } = require('./services/socket');
@@ -63,6 +67,10 @@ app.use(express.static(path.join(__dirname), {
 app.use('/api/auth', authRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/history', historyRoutes); // Hence Enhancement
+// Phase 3: New route registrations
+app.use('/api/favorites', favoritesRoutes);
+app.use('/api/scheduling', schedulingRoutes);
+app.use('/api/analytics', analyticsRoutes);
 // Premium routes disabled for freemium version
 // app.use('/api/premium', premiumRoutes);
 

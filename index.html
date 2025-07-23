@@ -134,6 +134,7 @@
             <div class="preferences-form" id="preferencesForm">
                 <!-- For verified users only -->
                 <div class="form-section" id="verifiedSection" style="display: none;">
+                    <h4>Profile Settings</h4>
                     <div class="form-group">
                         <label for="displayNameInput">Display Name</label>
                         <input type="text" id="displayNameInput" placeholder="Your name" />
@@ -158,6 +159,85 @@
                             <option value="nonbinary">Non-binary only</option>
                         </select>
                     </div>
+                </div>
+
+                <!-- Phase 3: Favorites Section (Verified Users Only) -->
+                <div class="form-section" id="favoritesSection" style="display: none;">
+                    <h4>My Favorites</h4>
+                    <div class="favorites-list" id="favoritesList">
+                        <p class="no-favorites">No favorites yet. Add users to favorites during calls!</p>
+                    </div>
+                    <div class="favorites-actions">
+                        <button id="refreshFavoritesBtn" class="secondary-btn">Refresh</button>
+                        <button id="viewMutualFavoritesBtn" class="secondary-btn">Mutual Only</button>
+                    </div>
+                </div>
+
+                <!-- Phase 3: Scheduling Section (Verified Users Only) -->
+                <div class="form-section" id="schedulingSection" style="display: none;">
+                    <h4>Schedule a Call</h4>
+                    <div class="form-group">
+                        <label for="scheduledTimeInput">Date & Time</label>
+                        <input type="datetime-local" id="scheduledTimeInput" />
+                    </div>
+                    <div class="form-group">
+                        <label for="scheduleDurationInput">Duration (minutes)</label>
+                        <select id="scheduleDurationInput">
+                            <option value="15">15 minutes</option>
+                            <option value="30" selected>30 minutes</option>
+                            <option value="45">45 minutes</option>
+                            <option value="60">60 minutes</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="scheduleTypeInput">Call Type</label>
+                        <select id="scheduleTypeInput">
+                            <option value="open">Open (anyone can join)</option>
+                            <option value="private">Private (invite specific user)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="scheduleParticipantGroup" style="display: none;">
+                        <label for="scheduleParticipantInput">Invite User</label>
+                        <select id="scheduleParticipantInput">
+                            <option value="">Select from favorites...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="scheduleDescriptionInput">Description (optional)</label>
+                        <input type="text" id="scheduleDescriptionInput" placeholder="What's this call about?" />
+                    </div>
+                    <button id="createScheduledCallBtn" class="primary-btn">Schedule Call</button>
+                    
+                    <div class="upcoming-calls" id="upcomingCalls">
+                        <h5>Upcoming Calls</h5>
+                        <div class="calls-list" id="upcomingCallsList">
+                            <p class="no-calls">No upcoming calls scheduled.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 3: Analytics Section (Verified Users Only) -->
+                <div class="form-section" id="analyticsSection" style="display: none;">
+                    <h4>Your Analytics</h4>
+                    <div class="analytics-summary" id="analyticsSummary">
+                        <div class="stat-card">
+                            <span class="stat-number" id="totalCallsStat">0</span>
+                            <span class="stat-label">Total Calls</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number" id="avgRatingStat">0.0</span>
+                            <span class="stat-label">Avg Rating</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number" id="favoritesStat">0</span>
+                            <span class="stat-label">Favorites</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number" id="scheduledStat">0</span>
+                            <span class="stat-label">Scheduled</span>
+                        </div>
+                    </div>
+                    <button id="refreshAnalyticsBtn" class="secondary-btn">Refresh Data</button>
                 </div>
                 
                 <div class="form-section">
