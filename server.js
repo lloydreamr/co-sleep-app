@@ -46,12 +46,17 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             connectSrc: ["'self'", "wss:", "ws:"],
             scriptSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrcAttr: ["'unsafe-inline'"], // FIXED: Allow inline event handlers
             styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
             imgSrc: ["'self'", "data:", "https:"],
             fontSrc: ["'self'", "https:", "data:", "https://fonts.gstatic.com"],
             objectSrc: ["'none'"],
             mediaSrc: ["'self'", "https://www.soundjay.com", "https:"],
-            frameSrc: ["'none'"]
+            frameSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+            frameAncestors: ["'self'"],
+            upgradeInsecureRequests: []
         }
     }
 }));
