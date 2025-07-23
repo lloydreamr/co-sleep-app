@@ -31,6 +31,11 @@ model User {
   consentGiven    Boolean  @default(false)
   onboardingStep  String   @default("welcome") // Track onboarding progress
   
+  // Hence Enhancement: Verification and Activity Tracking
+  isVerified      Boolean  @default(false)  // For history feature access
+  lastActivity    DateTime @default(now())  // Track user activity
+  connectionState String   @default("idle") // idle, searching, matched, connected
+  
   // Premium features disabled for freemium version
   // isPremium       Boolean  @default(false)
   // premiumUntil    DateTime?
@@ -53,6 +58,7 @@ model User {
   sleepSessions    SleepSession[] @relation("UserSessions")      // Sessions as user
   partnerSessions  SleepSession[] @relation("PartnerSessions")   // Sessions as partner
   analytics        SleepAnalytics?
+  callHistory      CallHistory[]                                 // Hence: Call history tracking
 
   @@map("users")
 }
@@ -81,6 +87,28 @@ model SleepSession {
   partner     User?    @relation("PartnerSessions", fields: [partnerId], references: [id], onDelete: SetNull) // Session partner
 
   @@map("sleep_sessions")
+}
+
+// =====================
+// Hence Enhancement: Call History
+// =====================
+model CallHistory {
+  id              String   @id @default(cuid())
+  userId          String                          // User who made the call
+  partnerId       String?                         // Partner user ID (if known)
+  partnerType     String?                         // "anonymous" or "profile"
+  startTime       DateTime                        // Call start time
+  endTime         DateTime?                       // Call end time
+  duration        Int?     // in seconds          // Call duration in seconds
+  connectionQuality String?                       // "excellent", "good", "fair", "poor"
+  endReason       String?                         // "completed", "disconnected", "skipped"
+  userRating      Int?     // 1-5 rating          // User's rating of the call
+  createdAt       DateTime @default(now())        // Record creation timestamp
+
+  // User relationship
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("call_history")
 }
 
 // =====================

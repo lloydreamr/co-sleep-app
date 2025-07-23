@@ -7,6 +7,7 @@ const prisma = require('./lib/prisma');
 // Import routes
 const authRoutes = require('./routes/auth');
 const onboardingRoutes = require('./routes/onboarding');
+const historyRoutes = require('./routes/history'); // Hence Enhancement
 // Premium routes disabled for freemium version
 // const premiumRoutes = require('./routes/premium');
 const { initSocketService } = require('./services/socket');
@@ -20,11 +21,11 @@ app.set('trust proxy', 1);
 // Performance optimizations
 const rateLimit = require('express-rate-limit');
 
-// Rate limiting for API endpoints
+// Rate limiting configuration
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later.',
+    message: 'Too many API requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
     // Skip rate limiting for health checks
@@ -61,6 +62,7 @@ app.use(express.static(path.join(__dirname), {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/history', historyRoutes); // Hence Enhancement
 // Premium routes disabled for freemium version
 // app.use('/api/premium', premiumRoutes);
 
@@ -90,11 +92,17 @@ app.get('/health', (req, res) => {
     const memUsage = process.memoryUsage();
     const uptime = process.uptime();
     
+    // Hence Enhancement: Include new metrics
+    const performanceMetrics = socketService.getPerformanceMetrics();
+    
     res.json({
         status: 'healthy',
         onlineUsers: socketService.getOnlineUserCount(),
         queueLength: socketService.getQueueLength(),
         activeConnections: socketService.getActiveConnections(),
+        // Hence Enhancement: New state metrics
+        activeUserStates: socketService.getActiveUserStates().length,
+        userStatesTotal: performanceMetrics.userStates || 0,
         performance: {
             uptime: Math.floor(uptime),
             memory: {
@@ -136,6 +144,24 @@ app.get('/api/performance', (req, res) => {
         uptime: process.uptime(),
         connections: socketService.getActiveConnections()
     });
+});
+
+// Hence Enhancement: User state monitoring endpoint (for debugging)
+app.get('/api/debug/user-states', (req, res) => {
+    try {
+        const userStates = socketService.getUserStates();
+        const activeStates = socketService.getActiveUserStates();
+        
+        res.json({
+            totalStates: userStates.length,
+            activeStates: activeStates.length,
+            states: activeStates, // Only return active states for privacy
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('User states debug error:', error);
+        res.status(500).json({ error: 'Failed to fetch user states' });
+    }
 });
 
 // Serve the main page
@@ -206,34 +232,35 @@ testDatabaseConnection().then(() => {
             heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024 * 100) / 100 + 'MB',
             heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024 * 100) / 100 + 'MB'
         });
+
+        // Hence Enhancement: Log new features status
+        console.log('🎯 Hence features enabled:');
+        console.log('  - Enhanced user state tracking');
+        console.log('  - Call history API (verified users)');
+        console.log('  - Role-based feature access');
+        console.log('  - Real-time activity monitoring');
     });
 });
 
-// Enhanced graceful shutdown with cleanup
-process.on('SIGINT', async () => {
-    console.log('Shutting down gracefully...');
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+    console.log('Received SIGTERM signal. Starting graceful shutdown...');
     
-    // Log final performance metrics
-    const memUsage = process.memoryUsage();
-    console.log('Final memory usage:', {
-        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024 * 100) / 100 + 'MB',
-        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024 * 100) / 100 + 'MB'
-    });
-    
-    // Close database connection
-    await prisma.$disconnect();
-    
-    // Close server
-    server.close(() => {
-        console.log('Server closed');
+    try {
+        // Close server
+        server.close(() => {
+            console.log('HTTP server closed');
+        });
+        
+        // Disconnect from database
+        await prisma.$disconnect();
+        console.log('Database connection closed');
+        
         process.exit(0);
-    });
-    
-    // Force exit after 10 seconds
-    setTimeout(() => {
-        console.error('Could not close connections in time, forcefully shutting down');
+    } catch (error) {
+        console.error('Error during shutdown:', error);
         process.exit(1);
-    }, 10000);
+    }
 });
 
 // Memory leak detection

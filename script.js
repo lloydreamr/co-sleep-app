@@ -22,46 +22,53 @@
     
     // Ensure main interface is visible after onboarding
     document.addEventListener('DOMContentLoaded', () => {
-        const heroSection = document.getElementById('heroSection');
-        if (heroSection) {
-            heroSection.style.display = '';
-            heroSection.style.visibility = 'visible';
-            heroSection.removeAttribute('aria-hidden');
-            console.log('🎯 Main hero section made visible');
-        }
-        
-        // Update user info display
-        const userInfo = document.getElementById('user-info');
-        if (userInfo) {
-            const displayName = localStorage.getItem('hence_display_name');
-            if (displayName && userType === 'profile') {
-                userInfo.textContent = `Welcome, ${displayName}`;
-            } else {
-                userInfo.textContent = 'Welcome, Anonymous';
-            }
+        // Initialize the main app
+        console.log('📱 Initializing main app...');
+        if (window.CoSleepApp) {
+            window.coSleepApp = new CoSleepApp();
         }
     });
 })();
 
 class CoSleepApp {
     constructor() {
-        this.cachedElements = new Map(); // Always initialize first
+        console.log('🚀 CoSleepApp initializing...');
+        
+        // Core properties
+        this.socket = null;
+        this.localStream = null;
+        this.remoteStream = null;
+        this.peerConnection = null;
+        this.partnerId = null;
+        this.isInitiator = null;
         this.isInQueue = false;
         this.isInCall = false;
         this.isMuted = false;
-        this.localStream = null;
-        this.peerConnection = null;
-        this.remoteStream = null;
-        this.socket = null;
-        this.partnerId = null;
-        this.muteSyncInterval = null;
+        this.retryCount = 0;
+        this.connectionTimeout = null;
+        this.connectionMonitorInterval = null;
+        this.lastConnectionStats = null;
+        this.userInitiatedConnection = false;
         
-        // User authentication
-        this.currentUser = null;
+        // Authentication
         this.authToken = null;
         this.userId = localStorage.getItem('hence_user_id');
         this.userType = localStorage.getItem('hence_user_type');
         this.displayName = localStorage.getItem('hence_display_name');
+        
+        // Hence Enhancement: Enhanced State Tracking
+        this.connectionState = 'idle'; // idle, searching, matched, connected
+        this.voiceState = 'unmuted'; // muted, unmuted, speaking
+        this.isVerified = false; // Will be loaded from backend
+        this.sessionMetadata = {
+            startTime: null,
+            partnerId: null,
+            connectionQuality: null,
+            callId: null
+        };
+        
+        // State change callbacks for UI updates
+        this.stateChangeCallbacks = new Map();
         
         // Simplified for freemium version - no sound system
         // Focus on core WebRTC functionality
@@ -100,6 +107,9 @@ class CoSleepApp {
         // Start periodic mute state sync
         this.startMuteSync();
         
+        // Hence Enhancement: Initialize state management
+        this.initializeStateManagement();
+        
         // Update user info display
         this.updateUserInfo();
         
@@ -132,12 +142,246 @@ class CoSleepApp {
         const resetBtn = document.getElementById('reset-onboarding');
         if (resetBtn) {
             resetBtn.addEventListener('click', () => {
+                console.log('🔄 Resetting onboarding...');
+                // Clear all stored data
                 localStorage.removeItem('hence_user_id');
                 localStorage.removeItem('hence_user_type');
                 localStorage.removeItem('hence_display_name');
                 localStorage.removeItem('hence_onboarding_complete');
                 window.location.href = '/onboarding';
             });
+        }
+    }
+
+    // Hence Enhancement: State Management System
+    initializeStateManagement() {
+        console.log('🔧 Initializing state management...');
+        
+        // Load user verification status
+        this.loadUserVerificationStatus();
+        
+        // Set up state change broadcasting
+        this.setupStateChangeHandling();
+        
+        // Initialize activity tracking
+        this.startActivityTracking();
+    }
+
+    async loadUserVerificationStatus() {
+        try {
+            // For now, profile users are considered verified
+            // This can be enhanced later with actual verification system
+            this.isVerified = this.userType === 'profile';
+            console.log('👤 User verification status:', this.isVerified);
+        } catch (error) {
+            console.error('❌ Failed to load verification status:', error);
+            this.isVerified = false;
+        }
+    }
+
+    setupStateChangeHandling() {
+        // Register state change callbacks
+        this.onStateChange('connectionState', (newState, oldState) => {
+            console.log(`🔄 Connection state: ${oldState} → ${newState}`);
+            this.broadcastState();
+            this.updateUIForConnectionState(newState);
+        });
+
+        this.onStateChange('voiceState', (newState, oldState) => {
+            console.log(`🎤 Voice state: ${oldState} → ${newState}`);
+            this.broadcastState();
+            this.updateUIForVoiceState(newState);
+        });
+    }
+
+    startActivityTracking() {
+        // Update last activity every 30 seconds while active
+        this.activityInterval = setInterval(() => {
+            this.updateLastActivity();
+        }, 30000);
+
+        // Track user interactions
+        ['click', 'keypress', 'touchstart'].forEach(event => {
+            document.addEventListener(event, () => {
+                this.updateLastActivity();
+            }, { passive: true });
+        });
+    }
+
+    async updateLastActivity() {
+        try {
+            if (this.socket && this.socket.connected) {
+                this.socket.emit('update-activity', {
+                    userId: this.userId,
+                    timestamp: Date.now()
+                });
+            }
+        } catch (error) {
+            console.error('Failed to update activity:', error);
+        }
+    }
+
+    // State change system
+    onStateChange(property, callback) {
+        if (!this.stateChangeCallbacks.has(property)) {
+            this.stateChangeCallbacks.set(property, []);
+        }
+        this.stateChangeCallbacks.get(property).push(callback);
+    }
+
+    setState(property, newValue) {
+        const oldValue = this[property];
+        if (oldValue !== newValue) {
+            this[property] = newValue;
+            
+            // Trigger callbacks
+            const callbacks = this.stateChangeCallbacks.get(property) || [];
+            callbacks.forEach(callback => {
+                try {
+                    callback(newValue, oldValue);
+                } catch (error) {
+                    console.error(`State change callback error for ${property}:`, error);
+                }
+            });
+        }
+    }
+
+    broadcastState() {
+        if (this.socket && this.socket.connected) {
+            this.socket.emit('user-state-update', {
+                userId: this.userId,
+                connectionState: this.connectionState,
+                voiceState: this.voiceState,
+                isInCall: this.isInCall,
+                timestamp: Date.now()
+            });
+        }
+    }
+
+    updateUIForConnectionState(state) {
+        const connectBtn = document.getElementById('findPartnerBtn');
+        if (!connectBtn) return;
+
+        // Remove existing state classes
+        connectBtn.classList.remove('idle', 'searching', 'matched', 'connected');
+        connectBtn.classList.add(state);
+
+        // Update button text/appearance based on state
+        switch (state) {
+            case 'idle':
+                connectBtn.textContent = 'Find Quiet Presence';
+                break;
+            case 'searching':
+                connectBtn.textContent = 'Searching...';
+                break;
+            case 'matched':
+                connectBtn.textContent = 'Connecting...';
+                break;
+            case 'connected':
+                connectBtn.textContent = 'Connected';
+                break;
+        }
+    }
+
+    updateUIForVoiceState(state) {
+        const muteBtn = document.getElementById('muteBtn');
+        if (!muteBtn) return;
+
+        // Update mute button appearance
+        muteBtn.classList.remove('muted', 'unmuted', 'speaking');
+        muteBtn.classList.add(state);
+    }
+
+    // Enhanced call tracking for history
+    startCallTracking(partnerId) {
+        this.sessionMetadata = {
+            startTime: Date.now(),
+            partnerId: partnerId,
+            connectionQuality: null,
+            callId: this.generateCallId()
+        };
+        
+        console.log('📞 Call tracking started:', this.sessionMetadata);
+    }
+
+    endCallTracking(endReason = 'completed') {
+        if (!this.sessionMetadata.startTime) return;
+
+        const duration = Math.floor((Date.now() - this.sessionMetadata.startTime) / 1000);
+        const callData = {
+            ...this.sessionMetadata,
+            endTime: Date.now(),
+            duration: duration,
+            endReason: endReason,
+            connectionQuality: this.getConnectionQuality()
+        };
+
+        console.log('📞 Call tracking ended:', callData);
+
+        // Store call history if user is verified
+        if (this.isVerified) {
+            this.saveCallHistory(callData);
+        }
+
+        // Reset session metadata
+        this.sessionMetadata = {
+            startTime: null,
+            partnerId: null,
+            connectionQuality: null,
+            callId: null
+        };
+    }
+
+    async saveCallHistory(callData) {
+        try {
+            if (this.socket && this.socket.connected) {
+                this.socket.emit('save-call-history', {
+                    userId: this.userId,
+                    partnerId: callData.partnerId,
+                    startTime: new Date(callData.startTime),
+                    endTime: new Date(callData.endTime),
+                    duration: callData.duration,
+                    connectionQuality: callData.connectionQuality,
+                    endReason: callData.endReason
+                });
+            }
+        } catch (error) {
+            console.error('❌ Failed to save call history:', error);
+        }
+    }
+
+    generateCallId() {
+        return `call_${this.userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    getConnectionQuality() {
+        if (!this.peerConnection) return 'unknown';
+        
+        const state = this.peerConnection.connectionState;
+        const iceState = this.peerConnection.iceConnectionState;
+        
+        if (state === 'connected' && iceState === 'connected') {
+            return 'excellent';
+        } else if (state === 'connected') {
+            return 'good';
+        } else if (state === 'connecting') {
+            return 'fair';
+        } else {
+            return 'poor';
+        }
+    }
+
+    // Hence Enhancement: Update partner state in UI
+    updatePartnerState(stateData) {
+        const { connectionState, voiceState } = stateData;
+        
+        // Update partner voice indicator if we're in a call
+        if (this.isInCall && connectionState === 'connected') {
+            const partnerVoiceIndicator = document.getElementById('partnerVoice');
+            if (partnerVoiceIndicator) {
+                partnerVoiceIndicator.classList.remove('muted', 'unmuted', 'speaking');
+                partnerVoiceIndicator.classList.add(voiceState);
+            }
         }
     }
 
@@ -297,6 +541,19 @@ class CoSleepApp {
                     console.log('✅ Connected to server');
                     // Ensure error interface is hidden on successful connection
                     this.showInterface('main');
+                    
+                    // Hence Enhancement: Identify user to server
+                    if (this.userId) {
+                        this.socket.emit('identify-user', {
+                            userId: this.userId,
+                            userType: this.userType,
+                            displayName: this.displayName
+                        });
+                        console.log('👤 User identified to server:', this.userId);
+                    }
+                    
+                    // Update initial state
+                    this.setState('connectionState', 'idle');
                 });
                 
                 this.socket.on('connect_error', (error) => {
@@ -316,6 +573,11 @@ class CoSleepApp {
                     console.log('🎉 match-found event received:', data);
                     this.partnerId = data.partnerId;
                     this.isInitiator = data.isInitiator;
+                    
+                    // Hence Enhancement: Update state and start call tracking
+                    this.setState('connectionState', 'matched');
+                    this.startCallTracking(data.partnerId);
+                    
                     this.connectToPeer();
                     
                     // Set a timeout for connection establishment
@@ -349,30 +611,44 @@ class CoSleepApp {
                 // Handle partner disconnection
                 this.socket.on('partner-disconnected', () => {
                     console.log('Partner disconnected');
+                    this.endCallTracking('partner_disconnected');
                     this.handlePartnerDisconnection();
                 });
                 
                 this.socket.on('call-ended', () => {
                     console.log('Call ended by partner');
+                    this.endCallTracking('partner_ended');
                     this.handlePartnerDisconnection();
                 });
                 
                 this.socket.on('partner-skipped', () => {
                     console.log('Partner skipped');
+                    this.endCallTracking('partner_skipped');
                     this.handlePartnerDisconnection();
                 });
                 
                 this.socket.on('return-to-queue', () => {
                     console.log('Returning to queue');
                     this.isInCall = false;
+                    this.setState('connectionState', 'searching');
                     this.showInterface('waiting');
                     this.partnerId = null;
                 });
                 
                 this.socket.on('online-count', (data) => {
-                    console.log(`Online users: ${data.count}`);
+                    console.log(`📊 Online users: ${data.count}`);
                     if (this.onlineCount) {
                         this.onlineCount.textContent = data.count;
+                    }
+                });
+                
+                // Hence Enhancement: Handle user state changes from other users
+                this.socket.on('user-state-changed', (data) => {
+                    console.log('👥 User state changed:', data);
+                    // This can be used to update UI based on partner states
+                    // For privacy, we only act on our partner's state changes
+                    if (data.userId === this.partnerId) {
+                        this.updatePartnerState(data);
                     }
                 });
                 
@@ -666,6 +942,10 @@ class CoSleepApp {
         console.log('🚀 All checks passed, joining queue...');
         this.isInQueue = true;
         this.userInitiatedConnection = true; // Set flag for user-initiated connection
+        
+        // Hence Enhancement: Update state
+        this.setState('connectionState', 'searching');
+        
         this.showInterface('waiting');
         
         // Join the real queue
@@ -677,6 +957,10 @@ class CoSleepApp {
         console.log('🚪 leaveQueue called');
         this.isInQueue = false;
         this.userInitiatedConnection = false; // Reset flag
+        
+        // Hence Enhancement: Update state
+        this.setState('connectionState', 'idle');
+        
         if (this.socket) {
             this.socket.emit('leave-queue');
         }
@@ -686,6 +970,10 @@ class CoSleepApp {
     async connectToPeer() {
         this.isInQueue = false;
         this.isInCall = true;
+        
+        // Hence Enhancement: Update state to connecting
+        this.setState('connectionState', 'connected');
+        
         this.showInterface('call');
         
         // Sync mute state when entering call interface
@@ -1182,6 +1470,9 @@ class CoSleepApp {
         this.localStream.getAudioTracks().forEach(track => {
             track.enabled = !this.isMuted;
         });
+        
+        // Hence Enhancement: Update voice state
+        this.setState('voiceState', this.isMuted ? 'muted' : 'unmuted');
         
         // Update UI to reflect current state
         this.updateMuteUI();
