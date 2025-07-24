@@ -1,0 +1,9 @@
+# Testing & Reliability Rules
+
+– Always write tests for new core functionality or shared logic  
+– Avoid skipping tests unless the work is explicitly flagged as throwaway or experimental  
+– Never test against live APIs or real services in dev or test environments  
+– Keep test files clean and scoped to the feature they validate  
+– Re-run affected downstream tests after changes to shared methods or logic  
+– Don’t leave failing or flakey tests in the codebase  
+– Every feature must be testable—even if tests are deferred, confirm that coverage is planned

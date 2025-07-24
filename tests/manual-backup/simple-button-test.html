@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Button Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 15px 30px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        .test-btn { background-color: #007bff; color: white; }
+        .main-btn { background-color: #28a745; color: white; }
+        .log { background: #000; color: #0f0; padding: 10px; font-family: monospace; margin: 20px 0; max-height: 200px; overflow-y: auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 3px; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Simple Button Test</h1>
+    <p>This tests basic button functionality without any complex systems.</p>
+    
+    <div>
+        <button class="test-btn" onclick="testSimpleClick()">📱 Test Simple Click</button>
+        <button class="test-btn" onclick="testMainPageButtons()">🔍 Test Main Page Buttons</button>
+        <button class="main-btn" onclick="goToMainPage()">🚀 Go to Main Page</button>
+    </div>
+    
+    <div id="status"></div>
+    <div id="log" class="log"></div>
+    
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const line = document.createElement('div');
+            line.textContent = `[${new Date().toISOString().substr(11, 8)}] ${message}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function showStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${isError ? 'error' : 'success'}`;
+            statusDiv.textContent = message;
+        }
+        
+        function testSimpleClick() {
+            log('🔘 Testing simple button click...');
+            showStatus('✅ Simple button click works! This proves basic clicking functionality.');
+            alert('✅ Simple button click successful!');
+        }
+        
+        function testMainPageButtons() {
+            log('🔍 Testing main page button elements...');
+            
+            // Create a hidden iframe to load the main page
+            const iframe = document.createElement('iframe');
+            iframe.src = '/';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            iframe.onload = () => {
+                try {
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // Check for button elements
+                    const findPartnerBtn = doc.getElementById('findPartnerBtn');
+                    const muteBtn = doc.getElementById('muteBtn');
+                    const endCallBtn = doc.getElementById('endCallBtn');
+                    
+                    log('🔍 Checking button elements:');
+                    log(`findPartnerBtn: ${findPartnerBtn ? 'EXISTS' : 'MISSING'}`);
+                    log(`muteBtn: ${muteBtn ? 'EXISTS' : 'MISSING'}`);
+                    log(`endCallBtn: ${endCallBtn ? 'EXISTS' : 'MISSING'}`);
+                    
+                    if (findPartnerBtn) {
+                        log('✅ Find Partner button found in DOM');
+                        log(`Button classes: ${findPartnerBtn.className}`);
+                        log(`Button style: ${findPartnerBtn.style.cssText}`);
+                        
+                        // Test if we can attach a click handler
+                        try {
+                            const testHandler = () => {
+                                log('🎯 Direct click handler fired!');
+                                alert('🎯 Direct click handler worked!');
+                            };
+                            
+                            findPartnerBtn.addEventListener('click', testHandler);
+                            log('✅ Event handler attached successfully');
+                            
+                            // Try to click it
+                            findPartnerBtn.click();
+                            log('✅ Programmatic click executed');
+                            
+                        } catch (error) {
+                            log('❌ Error with click handler: ' + error.message);
+                        }
+                    } else {
+                        log('❌ Find Partner button NOT found in DOM');
+                        showStatus('❌ Find Partner button missing from page!', true);
+                    }
+                    
+                    // Check for JavaScript errors in the main page
+                    const scriptTags = doc.getElementsByTagName('script');
+                    log(`📜 Found ${scriptTags.length} script tags in main page`);
+                    
+                    // Check if the modular system loaded
+                    const modularScript = Array.from(scriptTags).find(script => 
+                        script.src && script.src.includes('script-modular.js')
+                    );
+                    
+                    if (modularScript) {
+                        log('✅ Modular script tag found');
+                    } else {
+                        log('❌ Modular script tag not found');
+                    }
+                    
+                    // Check window.henceApp
+                    setTimeout(() => {
+                        const henceApp = iframe.contentWindow.henceApp;
+                        if (henceApp) {
+                            log('✅ window.henceApp exists');
+                            log(`Available methods: ${Object.getOwnPropertyNames(henceApp).filter(name => typeof henceApp[name] === 'function').join(', ')}`);
+                        } else {
+                            log('❌ window.henceApp not found - modular system not initialized');
+                            showStatus('❌ Main issue: Modular system not initializing properly!', true);
+                        }
+                        
+                        document.body.removeChild(iframe);
+                    }, 3000);
+                    
+                } catch (error) {
+                    log('❌ Error accessing main page: ' + error.message);
+                    showStatus('❌ Cannot access main page elements!', true);
+                    document.body.removeChild(iframe);
+                }
+            };
+            
+            iframe.onerror = () => {
+                log('❌ Main page failed to load');
+                showStatus('❌ Main page failed to load!', true);
+                document.body.removeChild(iframe);
+            };
+        }
+        
+        function goToMainPage() {
+            log('🚀 Redirecting to main page...');
+            window.location.href = '/';
+        }
+        
+        // Error tracking
+        window.addEventListener('error', (event) => {
+            log('🚨 JavaScript Error: ' + (event.error?.message || event.message));
+        });
+        
+        window.addEventListener('load', () => {
+            log('🔧 Simple button test page loaded');
+            showStatus('Ready to test - click "Test Simple Click" first to verify basic button functionality');
+        });
+    </script>
+</body>
+</html> 

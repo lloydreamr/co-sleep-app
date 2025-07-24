@@ -1,0 +1,9 @@
+# File Hygiene & Naming Rules
+
+– Avoid creating files over 300 lines of code—refactor them into smaller parts  
+– Every file must have a clear and singular purpose  
+– Avoid dumping unrelated functions or utilities into the same file  
+– Match plural/singular naming across folders and files consistently  
+– Do not use vague folder names like `misc`, `common`, or `temp` unless scoped clearly  
+– Add a comment at the top of each file describing its purpose, if not obvious  
+– Remove unused files, folders, and dead imports as soon as they are no longer needed

@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+# Feature Flag Rules
+
+– All feature flags must follow the naming convention: `feature:[area]:[short-description]`  
+– Do not leave feature flags in the codebase longer than 60 days without review  
+– Every feature flag must include a removal plan or condition before being merged  
+– Avoid hardcoding feature flag defaults—use environment variables or toggles  
+– When removing a flag, remove all related code and clean up traces  
+– Don’t ship new features behind flags without confirming the flag logic is test-covered  
+– Never use flags to delay architectural decisions—use them only for controlled rollouts

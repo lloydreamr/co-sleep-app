@@ -1,0 +1,74 @@
+---
+description: # Context7 Usage Preferences  ## taskDescription This rule helps when you’re working on something bigger than a single file or feature. Use it when your task might impact how the whole system works together—like fixing deep bugs, connecting new features to global logic, or building something foundational.  ## rules  – Only use `context7` when you’re dealing with system-level behavior: auth, app-wide config, data flow, or anything affecting more than just one feature.  – If you’re just tweaking, adding UI, or fixing something small—**don’t bother with context7. Stay in your lane. Keep it lightweight.**  – Think of `context7` like a control room. Step in when you need the full picture. Otherwise, don’t crowd the space.  – If you use it:   - Be intentional—say why you’re using it in plain language.   - Don’t change anything unless you fully understand it, or were told to.   - Leave a clear mark: “I used this because X was connected to Y.”  – Don’t add experiments, stubs, or temp hacks to `context7`. It’s too important to get messy.  – Avoid creating new patterns here unless you’re cleaning up the old ones. No duplicates, no contradictions.  – Bottom line: **If you’re not sure, ask. If you know, own it.**
+
+alwaysApply: false
+---
+# Context7 Usage Preferences
+
+– Use context7 only when the task explicitly requires awareness of surrounding application logic, external systems, or broader architectural concerns.
+
+– Do not pull in context7 unless:
+
+The current task involves system-level behavior (e.g., auth flow, deployment config, data syncing),
+
+You’re debugging an issue that crosses module boundaries,
+
+You are instructed to, or
+
+You have high confidence the task impacts or is impacted by global state or shared logic.
+
+– Before using context7, check if local code and dependencies are sufficient to complete the task. If they are, stay focused and minimal.
+
+– If you reference context7:
+
+Be deliberate about what you load and why,
+
+Avoid assuming context7 is always the source of truth—it may contain legacy or experimental code,
+
+Annotate your reasoning in the PR if context7 was critical to your solution.
+
+– Prefer adding unit tests or integration tests outside of context7 unless the feature inherently lives there.
+
+– If editing context7:
+
+Do not restructure or refactor without a specific mandate,
+
+Avoid introducing patterns not already established there,
+
+Double check that no part of your change leaks dev-only or experimental logic into prod-facing paths.
+
+– Remember: context7 is powerful but heavy. Treat it like a loaded tool—only pick it up when you mean to use it with purpose.# Context7 Usage Preferences
+
+– Use context7 only when the task explicitly requires awareness of surrounding application logic, external systems, or broader architectural concerns.
+
+– Do not pull in context7 unless:
+
+The current task involves system-level behavior (e.g., auth flow, deployment config, data syncing),
+
+You’re debugging an issue that crosses module boundaries,
+
+You are instructed to, or
+
+You have high confidence the task impacts or is impacted by global state or shared logic.
+
+– Before using context7, check if local code and dependencies are sufficient to complete the task. If they are, stay focused and minimal.
+
+– If you reference context7:
+
+Be deliberate about what you load and why,
+
+Avoid assuming context7 is always the source of truth—it may contain legacy or experimental code,
+
+Annotate your reasoning in the PR if context7 was critical to your solution.
+
+– Prefer adding unit tests or integration tests outside of context7 unless the feature inherently lives there.
+
+– If editing context7:
+
+Do not restructure or refactor without a specific mandate,
+
+Avoid introducing patterns not already established there,
+
+Double check that no part of your change leaks dev-only or experimental logic into prod-facing paths.
+
+– Remember: context7 is powerful but heavy. Treat it like a loaded tool—only pick it up when you mean to use it with purpose.

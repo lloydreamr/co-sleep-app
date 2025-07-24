@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+# Design Intent Rules
+
+– Every new pattern or file must have a clear reason for existing  
+– Always leave a note or comment explaining why a new structure or file was introduced  
+– Prefer explicit and self-explanatory architecture over cleverness  
+– Avoid introducing abstractions unless there is a clear, repeated need  
+– Keep features modular and scoped to a domain or purpose  
+– Remove legacy or deprecated structures when replacing them with new ones  
+– Don’t guess—if the purpose of a design decision is unclear, clarify it before building on top of it  

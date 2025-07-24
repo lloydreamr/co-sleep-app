@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+# AI Agent Collaboration Rules
+
+– AI agents must not touch files outside of the open task or specified scope  
+– Avoid making changes to unrelated code or files without clear context or reasoning  
+– Summarize all structural changes in plain English within the PR or output  
+– Do not introduce new libraries, folders, or naming patterns unless they already exist in the codebase  
+– When generating new files, explain their purpose clearly and follow existing conventions  
+– Respect the boundaries and logic of existing code before replacing or refactoring it  
+– Never create random helper files, config files, or utils without a clear architectural need  

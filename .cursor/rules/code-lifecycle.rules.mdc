@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+# Code Lifecycle & Ownership Rules
+
+– All code should either be owned, deprecated, or marked for removal  
+– Never leave behind code with no clear owner or responsibility  
+– When removing old code, describe what it was doing and what replaces it  
+– Mark legacy logic with `// @deprecated` and link to a migration or replacement plan  
+– Don’t leave unused flags, features, or branches without review  
+– Avoid introducing logic that won’t be maintained or tracked long-term  
+– If ownership is unclear, tag it for triage and document that fact

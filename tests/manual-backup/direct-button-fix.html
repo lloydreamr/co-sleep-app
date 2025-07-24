@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Button Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 3px; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+        .info { background-color: #d1ecf1; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; background: #007bff; color: white; }
+        .log { background: #000; color: #0f0; padding: 10px; font-family: monospace; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Direct Button Fix</h1>
+    
+    <div class="status info">
+        <strong>🎯 Purpose:</strong> This will directly add working click handlers to your main app buttons, bypassing the complex modular system.
+    </div>
+    
+    <button onclick="fixMainAppButtons()">🔧 Fix Main App Buttons Now</button>
+    <button onclick="testFix()">🧪 Test if Fix Worked</button>
+    <button onclick="goToMainApp()">🚀 Go to Main App</button>
+    
+    <div id="status"></div>
+    <div id="log" class="log"></div>
+    
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const line = document.createElement('div');
+            line.textContent = `[${new Date().toISOString().substr(11, 8)}] ${message}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+        }
+        
+        function fixMainAppButtons() {
+            log('🔧 Starting direct button fix...');
+            
+            // Create a script that will run on the main page to add button handlers
+            const fixScript = `
+// Direct Button Fix Script - Injected to make buttons work
+console.log('🔧 Direct button fix script running...');
+
+function addWorkingButtonHandlers() {
+    // Find the buttons
+    const findPartnerBtn = document.getElementById('findPartnerBtn');
+    const muteBtn = document.getElementById('muteBtn');  
+    const endCallBtn = document.getElementById('endCallBtn');
+    const cancelQueueBtn = document.getElementById('cancelQueueBtn');
+    
+    console.log('🔍 Buttons found:', {
+        findPartner: !!findPartnerBtn,
+        mute: !!muteBtn,
+        endCall: !!endCallBtn,
+        cancelQueue: !!cancelQueueBtn
+    });
+    
+    // Add working click handlers
+    if (findPartnerBtn) {
+        // Remove any existing handlers
+        findPartnerBtn.replaceWith(findPartnerBtn.cloneNode(true));
+        const newFindBtn = document.getElementById('findPartnerBtn');
+        
+        newFindBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🎯 Find Partner button clicked!');
+            alert('🎯 Find Partner button is now working!\\n\\nThis is a direct fix. The button click was successful.');
+            
+            // You can add actual functionality here later
+            // For now, just show it works
+        });
+        console.log('✅ Find Partner button handler added');
+    }
+    
+    if (muteBtn) {
+        muteBtn.replaceWith(muteBtn.cloneNode(true));
+        const newMuteBtn = document.getElementById('muteBtn');
+        
+        newMuteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🔇 Mute button clicked!');
+            alert('🔇 Mute button is now working!');
+        });
+        console.log('✅ Mute button handler added');
+    }
+    
+    if (endCallBtn) {
+        endCallBtn.replaceWith(endCallBtn.cloneNode(true));
+        const newEndBtn = document.getElementById('endCallBtn');
+        
+        newEndBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('📞 End Call button clicked!');
+            alert('📞 End Call button is now working!');
+        });
+        console.log('✅ End Call button handler added');
+    }
+    
+    if (cancelQueueBtn) {
+        cancelQueueBtn.replaceWith(cancelQueueBtn.cloneNode(true));
+        const newCancelBtn = document.getElementById('cancelQueueBtn');
+        
+        newCancelBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('❌ Cancel Queue button clicked!');
+            alert('❌ Cancel Queue button is now working!');
+        });
+        console.log('✅ Cancel Queue button handler added');
+    }
+    
+    console.log('🎉 All button handlers have been added directly!');
+    
+    // Mark that the fix has been applied
+    window.directButtonFixApplied = true;
+}
+
+// Run the fix when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addWorkingButtonHandlers);
+} else {
+    addWorkingButtonHandlers();
+}
+`;
+            
+            // Save this script to sessionStorage so it can be loaded on the main page
+            sessionStorage.setItem('directButtonFix', fixScript);
+            log('✅ Button fix script saved to sessionStorage');
+            
+            // Also create a version that can be injected via a bookmarklet or manually
+            const encodedScript = encodeURIComponent(fixScript);
+            
+            showStatus(`
+                <strong>✅ Direct Button Fix Ready!</strong><br>
+                The fix script has been prepared. Now:<br>
+                1. Click "Go to Main App" to visit the main page<br>
+                2. Open browser developer console (F12)<br>
+                3. Paste this code and press Enter:<br>
+                <div style="background: #000; color: #0f0; padding: 5px; font-family: monospace; margin: 5px 0; font-size: 12px; overflow-wrap: break-word;">
+                eval(sessionStorage.getItem('directButtonFix'));
+                </div>
+                <br><strong>OR</strong> just click "Test if Fix Worked" after going to main app.
+            `, 'success');
+            
+            log('🎯 Instructions provided for manual fix application');
+        }
+        
+        function testFix() {
+            log('🧪 Testing if button fix was applied...');
+            
+            // Test if we're on the main page and if the fix was applied
+            if (window.location.pathname === '/') {
+                // We're on the main page, check if fix is applied
+                if (window.directButtonFixApplied) {
+                    showStatus('✅ Button fix has been applied! Try clicking the Find Partner button.', 'success');
+                    log('✅ Direct button fix confirmed as applied');
+                } else {
+                    // Try to apply the fix now
+                    const fixScript = sessionStorage.getItem('directButtonFix');
+                    if (fixScript) {
+                        log('🔧 Applying button fix now...');
+                        eval(fixScript);
+                        showStatus('✅ Button fix applied! The buttons should now work.', 'success');
+                    } else {
+                        showStatus('❌ No fix script found. Please run "Fix Main App Buttons Now" first.', 'error');
+                        log('❌ No fix script in sessionStorage');
+                    }
+                }
+            } else {
+                // We're not on the main page, apply the fix and redirect
+                log('🔄 Not on main page, redirecting with fix...');
+                const fixScript = sessionStorage.getItem('directButtonFix');
+                if (fixScript) {
+                    window.location.href = '/?applyFix=true';
+                } else {
+                    showStatus('❌ Please run "Fix Main App Buttons Now" first, then click "Go to Main App".', 'error');
+                }
+            }
+        }
+        
+        function goToMainApp() {
+            log('🚀 Going to main app...');
+            const fixScript = sessionStorage.getItem('directButtonFix');
+            if (fixScript) {
+                showStatus('✅ Redirecting to main app with button fix ready...', 'success');
+                log('✅ Fix script ready, redirecting to main app');
+                window.location.href = '/';
+            } else {
+                showStatus('⚠️ No fix prepared. Click "Fix Main App Buttons Now" first.', 'error');
+                log('⚠️ No fix script prepared');
+            }
+        }
+        
+        // Auto-apply fix if we're on the main page and have the fix script
+        window.addEventListener('load', () => {
+            log('🔧 Direct button fix page loaded');
+            
+            if (window.location.pathname === '/') {
+                // We're on the main page
+                const fixScript = sessionStorage.getItem('directButtonFix');
+                if (fixScript && !window.directButtonFixApplied) {
+                    log('🔧 Auto-applying button fix...');
+                    setTimeout(() => {
+                        eval(fixScript);
+                        showStatus('✅ Button fix auto-applied! Your buttons should now work!', 'success');
+                    }, 1000);
+                }
+            } else {
+                showStatus('Ready to fix buttons. Click "Fix Main App Buttons Now" to prepare the fix.', 'info');
+            }
+        });
+        
+        // Check URL parameters for auto-fix
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('applyFix') === 'true') {
+            window.addEventListener('load', () => {
+                setTimeout(testFix, 500);
+            });
+        }
+        
+        // Error tracking
+        window.addEventListener('error', (event) => {
+            log('🚨 JavaScript Error: ' + (event.error?.message || event.message));
+        });
+    </script>
+</body>
+</html> 
