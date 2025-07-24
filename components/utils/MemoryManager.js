@@ -1,357 +1,163 @@
 /**
- * Memory Manager - Prevents memory leaks and optimizes resource usage
- * Centralized cleanup system for the Hence app
+ * Memory Manager - Main coordinator for memory and resource management
+ * Refactored to use focused modules for better separation of concerns
  */
+import { MemoryMonitor } from './MemoryMonitor.js';
+import { ResourceManager } from './ResourceManager.js';
+
 export class MemoryManager {
     constructor() {
-        this.activeTimers = new Set();
-        this.activeIntervals = new Set();
-        this.activeContexts = new WeakMap();
-        this.eventListeners = new Map();
-        this.objectPools = new Map();
-        this.memoryThreshold = 50 * 1024 * 1024; // 50MB threshold
-        this.monitoringInterval = null;
-        this.cleanupCallbacks = new Set();
-        
-        // Performance monitoring
-        this.memoryStats = {
-            initialHeap: 0,
-            currentHeap: 0,
-            peakHeap: 0,
-            cleanupCount: 0,
-            leakDetections: 0
-        };
+        // Initialize modules
+        this.monitor = new MemoryMonitor();
+        this.resources = new ResourceManager();
+
+        // Event listeners for coordination
+        this.listeners = new Map();
+
+        this.setupModuleEventHandlers();
     }
-    
+
     initialize() {
-        // Record initial memory usage
-        if (performance.memory) {
-            this.memoryStats.initialHeap = performance.memory.usedJSHeapSize;
-            this.memoryStats.currentHeap = performance.memory.usedJSHeapSize;
-            this.memoryStats.peakHeap = performance.memory.usedJSHeapSize;
-        }
+        console.log('🧠 MemoryManager initializing...');
         
-        // Initialize object pools
-        this.initializeObjectPools();
-        
-        console.log('🧠 MemoryManager initialized');
-    }
-    
-    initializeObjectPools() {
-        // Audio context pool (limit to 3 contexts)
-        this.objectPools.set('audioContexts', {
-            pool: [],
-            maxSize: 3,
-            active: new Set(),
-            create: () => new (window.AudioContext || window.webkitAudioContext)(),
-            cleanup: (context) => {
-                if (context.state !== 'closed') {
-                    context.close();
-                }
-            }
-        });
-        
-        // WebRTC connection pool
-        this.objectPools.set('rtcConnections', {
-            pool: [],
-            maxSize: 5,
-            active: new Set(),
-            create: () => new RTCPeerConnection(),
-            cleanup: (connection) => {
-                connection.close();
-            }
-        });
-    }
-    
-    // Timer management
-    createTimer(callback, delay, ...args) {
-        const timerId = setTimeout(() => {
-            this.activeTimers.delete(timerId);
-            callback(...args);
-        }, delay);
-        
-        this.activeTimers.add(timerId);
-        return timerId;
-    }
-    
-    createInterval(callback, interval, ...args) {
-        const intervalId = setInterval(() => {
-            callback(...args);
-        }, interval);
-        
-        this.activeIntervals.add(intervalId);
-        return intervalId;
-    }
-    
-    clearTimer(timerId) {
-        if (this.activeTimers.has(timerId)) {
-            clearTimeout(timerId);
-            this.activeTimers.delete(timerId);
-        }
-    }
-    
-    clearInterval(intervalId) {
-        if (this.activeIntervals.has(intervalId)) {
-            clearInterval(intervalId);
-            this.activeIntervals.delete(intervalId);
-        }
-    }
-    
-    // Object pool management
-    borrowFromPool(poolName) {
-        const pool = this.objectPools.get(poolName);
-        if (!pool) return null;
-        
-        let object;
-        if (pool.pool.length > 0) {
-            object = pool.pool.pop();
-        } else {
-            object = pool.create();
-        }
-        
-        pool.active.add(object);
-        return object;
-    }
-    
-    returnToPool(poolName, object) {
-        const pool = this.objectPools.get(poolName);
-        if (!pool || !pool.active.has(object)) return;
-        
-        pool.active.delete(object);
-        
-        if (pool.pool.length < pool.maxSize) {
-            pool.pool.push(object);
-        } else {
-            // Pool is full, cleanup the object
-            pool.cleanup(object);
-        }
-    }
-    
-    // Event listener management
-    addEventListener(element, event, handler, options = {}) {
-        const key = `${element.constructor.name}_${event}`;
-        
-        if (!this.eventListeners.has(key)) {
-            this.eventListeners.set(key, []);
-        }
-        
-        const listenerInfo = { element, event, handler, options };
-        this.eventListeners.get(key).push(listenerInfo);
-        
-        element.addEventListener(event, handler, options);
-        
-        return listenerInfo;
-    }
-    
-    removeEventListener(listenerInfo) {
-        const { element, event, handler } = listenerInfo;
-        element.removeEventListener(event, handler);
-        
-        // Remove from tracking
-        for (const [key, listeners] of this.eventListeners) {
-            const index = listeners.indexOf(listenerInfo);
-            if (index > -1) {
-                listeners.splice(index, 1);
-                if (listeners.length === 0) {
-                    this.eventListeners.delete(key);
-                }
-                break;
-            }
-        }
-    }
-    
-    // Memory monitoring
-    startMonitoring() {
-        this.monitoringInterval = this.createInterval(() => {
-            this.checkMemoryUsage();
-        }, 30000); // Check every 30 seconds
-        
-        console.log('📊 Memory monitoring started');
-    }
-    
-    checkMemoryUsage() {
-        if (!performance.memory) return;
-        
-        const currentHeap = performance.memory.usedJSHeapSize;
-        this.memoryStats.currentHeap = currentHeap;
-        
-        if (currentHeap > this.memoryStats.peakHeap) {
-            this.memoryStats.peakHeap = currentHeap;
-        }
-        
-        // Check for memory threshold breach
-        if (currentHeap > this.memoryThreshold) {
-            console.warn(`⚠️ High memory usage detected: ${Math.round(currentHeap / 1024 / 1024)}MB`);
-            this.performAutomaticCleanup();
-        }
-        
-        // Detect potential memory leaks
-        const growthRate = (currentHeap - this.memoryStats.initialHeap) / this.memoryStats.initialHeap;
-        if (growthRate > 2) { // 200% growth
-            console.warn('🚨 Potential memory leak detected');
-            this.memoryStats.leakDetections++;
-            this.performLeakCleanup();
-        }
-    }
-    
-    performAutomaticCleanup() {
-        console.log('🧹 Performing automatic cleanup...');
-        
-        // Clear unused object pools
-        this.cleanupObjectPools();
-        
-        // Force garbage collection if available
-        if (window.gc) {
-            window.gc();
-        }
-        
-        // Run registered cleanup callbacks
-        this.cleanupCallbacks.forEach(callback => {
-            try {
-                callback();
-            } catch (error) {
-                console.error('Cleanup callback error:', error);
-            }
-        });
-        
-        this.memoryStats.cleanupCount++;
-    }
-    
-    performLeakCleanup() {
-        console.log('🔍 Performing leak cleanup...');
-        
-        // More aggressive cleanup for potential leaks
-        this.clearAllTimers();
-        this.clearAllIntervals();
-        this.cleanupObjectPools(true); // Force cleanup
-        
-        // Clear DOM references that might be holding memory
-        this.cleanupDOMReferences();
-    }
-    
-    cleanupObjectPools(force = false) {
-        for (const [poolName, pool] of this.objectPools) {
-            // Clean up active objects if forcing
-            if (force) {
-                pool.active.forEach(object => {
-                    pool.cleanup(object);
-                });
-                pool.active.clear();
-            }
+        try {
+            this.monitor.initialize();
+            this.resources.initialize();
             
-            // Clean up pooled objects
-            pool.pool.forEach(object => {
-                pool.cleanup(object);
-            });
-            pool.pool.length = 0;
+            console.log('✅ MemoryManager initialized successfully');
+            
+        } catch (error) {
+            console.error('❌ MemoryManager initialization failed:', error);
+            throw error;
         }
     }
-    
-    cleanupDOMReferences() {
-        // Remove any cached DOM elements that might be stale
-        const elements = document.querySelectorAll('[data-hence-cached]');
-        elements.forEach(el => {
-            el.removeAttribute('data-hence-cached');
+
+    setupModuleEventHandlers() {
+        // Monitor events
+        this.monitor.on('memoryThresholdExceeded', () => {
+            this.performCleanup();
+            this.emit('memoryThresholdExceeded');
+        });
+
+        this.monitor.on('potentialMemoryLeak', (data) => {
+            this.performCleanup();
+            this.emit('potentialMemoryLeak', data);
+        });
+
+        this.monitor.on('automaticCleanupPerformed', () => {
+            this.emit('automaticCleanupPerformed');
         });
     }
-    
-    // Cleanup methods
-    clearAllTimers() {
-        this.activeTimers.forEach(timerId => {
-            clearTimeout(timerId);
-        });
-        this.activeTimers.clear();
+
+    startMonitoring() {
+        this.monitor.startMonitoring();
     }
-    
-    clearAllIntervals() {
-        this.activeIntervals.forEach(intervalId => {
-            clearInterval(intervalId);
-        });
-        this.activeIntervals.clear();
+
+    // Resource management delegation
+    createTimer(callback, delay, ...args) {
+        return this.resources.createTimer(callback, delay, ...args);
     }
-    
-    removeAllEventListeners() {
-        for (const listeners of this.eventListeners.values()) {
-            listeners.forEach(listenerInfo => {
-                const { element, event, handler } = listenerInfo;
-                element.removeEventListener(event, handler);
-            });
-        }
-        this.eventListeners.clear();
+
+    createInterval(callback, interval, ...args) {
+        return this.resources.createInterval(callback, interval, ...args);
     }
-    
+
+    clearTimer(timerId) {
+        this.resources.clearTimer(timerId);
+    }
+
+    clearInterval(intervalId) {
+        this.resources.clearInterval(intervalId);
+    }
+
+    // Object pool delegation
+    borrowFromPool(poolName) {
+        return this.resources.borrowFromPool(poolName);
+    }
+
+    returnToPool(poolName, object) {
+        this.resources.returnToPool(poolName, object);
+    }
+
+    // Event listener delegation
+    addEventListener(element, event, handler, options = {}) {
+        return this.resources.addEventListener(element, event, handler, options);
+    }
+
+    removeEventListener(listenerInfo) {
+        this.resources.removeEventListener(listenerInfo);
+    }
+
+    // Cleanup callback delegation
     registerCleanupCallback(callback) {
-        this.cleanupCallbacks.add(callback);
+        this.resources.registerCleanupCallback(callback);
     }
-    
+
     unregisterCleanupCallback(callback) {
-        this.cleanupCallbacks.delete(callback);
+        this.resources.unregisterCleanupCallback(callback);
     }
-    
-    // Performance methods
+
     performCleanup() {
-        this.performAutomaticCleanup();
-    }
-    
-    getMemoryStats() {
-        const current = performance.memory ? performance.memory.usedJSHeapSize : 0;
+        console.log('🧹 Performing comprehensive cleanup...');
         
-        return {
-            ...this.memoryStats,
-            currentHeap: current,
-            currentHeapMB: Math.round(current / 1024 / 1024),
-            peakHeapMB: Math.round(this.memoryStats.peakHeap / 1024 / 1024),
-            activeTimers: this.activeTimers.size,
-            activeIntervals: this.activeIntervals.size,
-            activeListeners: Array.from(this.eventListeners.values()).reduce((sum, arr) => sum + arr.length, 0),
-            poolStats: this.getPoolStats()
-        };
+        // Run resource cleanup
+        this.resources.runCleanupCallbacks();
+        
+        // Trigger automatic cleanup in monitor
+        this.monitor.performAutomaticCleanup();
+        
+        this.emit('cleanupPerformed');
     }
-    
-    getPoolStats() {
-        const stats = {};
-        for (const [poolName, pool] of this.objectPools) {
-            stats[poolName] = {
-                available: pool.pool.length,
-                active: pool.active.size,
-                maxSize: pool.maxSize
-            };
-        }
-        return stats;
-    }
-    
-    // Main cleanup method
+
     cleanup() {
-        console.log('🧹 MemoryManager cleanup initiated...');
+        console.log('🧹 Cleaning up MemoryManager...');
         
-        // Stop monitoring
-        if (this.monitoringInterval) {
-            this.clearInterval(this.monitoringInterval);
-        }
+        this.monitor.cleanup();
+        this.resources.cleanup();
         
-        // Clear all tracked resources
-        this.clearAllTimers();
-        this.clearAllIntervals();
-        this.removeAllEventListeners();
-        this.cleanupObjectPools(true);
-        
-        // Run cleanup callbacks
-        this.cleanupCallbacks.forEach(callback => {
-            try {
-                callback();
-            } catch (error) {
-                console.error('Final cleanup callback error:', error);
-            }
-        });
-        this.cleanupCallbacks.clear();
-        
-        // Final garbage collection hint
-        if (window.gc) {
-            window.gc();
-        }
-        
-        const finalStats = this.getMemoryStats();
-        console.log('📊 Final memory stats:', finalStats);
         console.log('✅ MemoryManager cleanup completed');
+    }
+
+    // Stats aggregation
+    getMemoryStats() {
+        return this.monitor.getMemoryStats();
+    }
+
+    getResourceStats() {
+        return this.resources.getResourceStats();
+    }
+
+    getPoolStats() {
+        return this.resources.getPoolStats();
+    }
+
+    // Event system
+    on(event, callback) {
+        if (!this.listeners.has(event)) {
+            this.listeners.set(event, []);
+        }
+        this.listeners.get(event).push(callback);
+    }
+
+    off(event, callback) {
+        if (this.listeners.has(event)) {
+            const callbacks = this.listeners.get(event);
+            const index = callbacks.indexOf(callback);
+            if (index > -1) {
+                callbacks.splice(index, 1);
+            }
+        }
+    }
+
+    emit(event, data = {}) {
+        if (this.listeners.has(event)) {
+            this.listeners.get(event).forEach(callback => {
+                try {
+                    callback(data);
+                } catch (error) {
+                    console.error(`Error in MemoryManager ${event} handler:`, error);
+                }
+            });
+        }
     }
 } 

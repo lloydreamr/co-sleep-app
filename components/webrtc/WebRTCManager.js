@@ -1,34 +1,14 @@
 /**
- * WebRTC Manager - Handles all WebRTC peer connection functionality
- * Optimized with memory management and connection monitoring
+ * WebRTC Manager - Main coordinator for WebRTC functionality
+ * Refactored to use focused modules for better separation of concerns
  */
+import { WebRTCConnection } from './WebRTCConnection.js';
+import { WebRTCSignaling } from './WebRTCSignaling.js';
+import { WebRTCAudio } from './WebRTCAudio.js';
+import { WebRTCMonitor } from './WebRTCMonitor.js';
+
 export class WebRTCManager {
     constructor() {
-        this.localStream = null;
-        this.remoteStream = null;
-        this.peerConnection = null;
-        this.partnerId = null;
-        this.isInitiator = false;
-        this.isMuted = false;
-        this.connectionTimeout = null;
-        this.retryCount = 0;
-        this.maxRetries = 3;
-        
-        // Audio optimization
-        this.audioContext = null;
-        this.audioNodes = null;
-        
-        // Connection monitoring
-        this.connectionMonitor = null;
-        this.connectionStats = {
-            startTime: null,
-            endTime: null,
-            quality: 'unknown'
-        };
-        
-        // Event listeners
-        this.listeners = new Map();
-        
         // Optimized ICE configuration
         this.iceConfig = {
             iceServers: [
@@ -43,414 +23,150 @@ export class WebRTCManager {
             bundlePolicy: 'max-bundle',
             rtcpMuxPolicy: 'require'
         };
+
+        // Initialize modules
+        this.connection = new WebRTCConnection(this.iceConfig);
+        this.signaling = new WebRTCSignaling(this.connection);
+        this.audio = new WebRTCAudio(this.connection);
+        this.monitor = new WebRTCMonitor(this.connection);
+
+        // Event listeners for coordination
+        this.listeners = new Map();
+
+        this.setupModuleEventHandlers();
     }
-    
+
     async initialize() {
         console.log('🔗 WebRTCManager initializing...');
         
-        // Test WebRTC support
-        if (!window.RTCPeerConnection) {
-            throw new Error('WebRTC not supported in this browser');
-        }
-        
-        console.log('✅ WebRTC support confirmed');
-    }
-    
-    async requestPermissions() {
         try {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error('getUserMedia not supported');
-            }
+            await this.connection.initialize();
+            this.audio.initialize();
             
-            this.localStream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true,
-                    sampleRate: 48000,
-                    channelCount: 1, // Mono for better performance
-                    latency: 0.01, // Low latency
-                    volume: 1.0
-                },
-                video: false
-            });
-            
-            console.log('🎤 Microphone access granted');
-            return true;
+            console.log('✅ WebRTCManager initialized successfully');
             
         } catch (error) {
-            console.error('❌ Failed to get media permissions:', error);
-            throw new Error('Microphone access required for voice calls');
-        }
-    }
-    
-    async initiateConnection(matchData) {
-        const { partnerId, isInitiator } = matchData;
-        this.partnerId = partnerId;
-        this.isInitiator = isInitiator;
-        
-        console.log(`🤝 Initiating connection with ${partnerId} (initiator: ${isInitiator})`);
-        
-        try {
-            await this.createPeerConnection();
-            
-            if (this.isInitiator) {
-                await this.createOffer();
-            }
-            
-            this.startConnectionMonitoring();
-            this.connectionStats.startTime = Date.now();
-            
-        } catch (error) {
-            console.error('❌ Connection initiation failed:', error);
-            this.handleConnectionFailure();
-        }
-    }
-    
-    async createPeerConnection() {
-        this.peerConnection = new RTCPeerConnection(this.iceConfig);
-        
-        // Add local stream
-        if (this.localStream) {
-            this.localStream.getTracks().forEach(track => {
-                this.peerConnection.addTrack(track, this.localStream);
-            });
-        }
-        
-        // Set up event handlers
-        this.setupPeerConnectionHandlers();
-        
-        console.log('🔗 Peer connection created');
-    }
-    
-    setupPeerConnectionHandlers() {
-        // Handle incoming streams
-        this.peerConnection.ontrack = (event) => {
-            console.log('📺 Received remote stream');
-            this.remoteStream = event.streams[0];
-            this.playRemoteAudio();
-        };
-        
-        // Handle ICE candidates
-        this.peerConnection.onicecandidate = (event) => {
-            if (event.candidate && this.partnerId) {
-                this.emit('iceCandidate', {
-                    candidate: event.candidate,
-                    target: this.partnerId
-                });
-            }
-        };
-        
-        // Handle connection state changes
-        this.peerConnection.onconnectionstatechange = () => {
-            const state = this.peerConnection.connectionState;
-            console.log(`🔗 Connection state: ${state}`);
-            
-            switch (state) {
-                case 'connected':
-                    this.handleConnectionEstablished();
-                    break;
-                case 'failed':
-                    this.handleConnectionFailure();
-                    break;
-                case 'disconnected':
-                    this.handleConnectionDisruption();
-                    break;
-            }
-            
-            this.emit('connectionStateChange', state);
-        };
-        
-        // Handle ICE connection state changes
-        this.peerConnection.oniceconnectionstatechange = () => {
-            const state = this.peerConnection.iceConnectionState;
-            console.log(`❄️ ICE connection state: ${state}`);
-            this.updateConnectionQuality(state);
-        };
-    }
-    
-    async createOffer() {
-        try {
-            const offer = await this.peerConnection.createOffer({
-                offerToReceiveAudio: true,
-                offerToReceiveVideo: false
-            });
-            
-            await this.peerConnection.setLocalDescription(offer);
-            
-            this.emit('offer', {
-                offer: offer,
-                target: this.partnerId
-            });
-            
-            console.log('📤 Offer created and sent');
-            
-        } catch (error) {
-            console.error('❌ Failed to create offer:', error);
+            console.error('❌ WebRTCManager initialization failed:', error);
             throw error;
         }
     }
-    
+
+    setupModuleEventHandlers() {
+        // Connection events
+        this.connection.on('remoteStream', (remoteStream) => {
+            this.audio.playRemoteAudio(remoteStream);
+            this.emit('remoteStreamReady', remoteStream);
+        });
+
+        this.connection.on('connectionStateChange', (state) => {
+            switch (state) {
+                case 'connected':
+                    this.monitor.handleConnectionEstablished();
+                    break;
+                case 'failed':
+                    this.monitor.handleConnectionFailure();
+                    break;
+                case 'disconnected':
+                    this.monitor.handleConnectionDisruption();
+                    break;
+            }
+            this.emit('connectionStateChange', state);
+        });
+
+        this.connection.on('iceConnectionStateChange', (state) => {
+            this.monitor.updateConnectionQuality(state);
+            this.emit('iceConnectionStateChange', state);
+        });
+
+        this.connection.on('iceCandidate', (data) => {
+            this.emit('iceCandidate', data);
+        });
+
+        // Signaling events
+        this.signaling.on('offer', (data) => {
+            this.emit('offer', data);
+        });
+
+        this.signaling.on('answer', (data) => {
+            this.emit('answer', data);
+        });
+
+        this.signaling.on('signalingError', (error) => {
+            this.monitor.handleConnectionFailure();
+            this.emit('signalingError', error);
+        });
+
+        // Monitor events
+        this.monitor.on('connectionEstablished', () => {
+            this.emit('connectionEstablished');
+        });
+
+        this.monitor.on('connectionFailed', (data) => {
+            this.emit('connectionFailed', data);
+        });
+
+        this.monitor.on('retrySignaling', async (data) => {
+            if (data.type === 'offer') {
+                await this.signaling.createOffer();
+            }
+        });
+
+        // Audio events
+        this.audio.on('muteToggled', (data) => {
+            this.emit('muteToggled', data);
+        });
+    }
+
+    async requestPermissions() {
+        return await this.connection.requestPermissions();
+    }
+
+    async initiateConnection(matchData) {
+        await this.connection.initiateConnection(matchData);
+        
+        if (this.connection.isInitiator) {
+            await this.signaling.createOffer();
+        }
+        
+        this.monitor.startConnectionMonitoring();
+        this.monitor.setConnectionTimeout();
+    }
+
     async handleOffer(offer, fromId) {
-        try {
-            if (!this.peerConnection) {
-                await this.createPeerConnection();
-            }
-            
-            await this.peerConnection.setRemoteDescription(offer);
-            
-            const answer = await this.peerConnection.createAnswer({
-                offerToReceiveAudio: true,
-                offerToReceiveVideo: false
-            });
-            
-            await this.peerConnection.setLocalDescription(answer);
-            
-            this.emit('answer', {
-                answer: answer,
-                target: fromId
-            });
-            
-            console.log('📥 Offer handled, answer sent');
-            
-        } catch (error) {
-            console.error('❌ Failed to handle offer:', error);
-            this.handleConnectionFailure();
-        }
+        await this.signaling.handleOffer(offer, fromId);
     }
-    
+
     async handleAnswer(answer) {
-        try {
-            await this.peerConnection.setRemoteDescription(answer);
-            console.log('✅ Answer processed successfully');
-            
-        } catch (error) {
-            console.error('❌ Failed to handle answer:', error);
-            this.handleConnectionFailure();
-        }
+        await this.signaling.handleAnswer(answer);
     }
-    
+
     async handleIceCandidate(candidate) {
-        try {
-            await this.peerConnection.addIceCandidate(candidate);
-            
-        } catch (error) {
-            console.error('❌ Failed to add ICE candidate:', error);
-        }
+        await this.signaling.handleIceCandidate(candidate);
     }
-    
-    playRemoteAudio() {
-        // Create audio element for remote stream
-        const audio = document.createElement('audio');
-        audio.srcObject = this.remoteStream;
-        audio.autoplay = true;
-        audio.style.display = 'none';
-        audio.volume = 0.8; // Slightly lower volume for comfort
-        audio.preload = 'auto';
-        
-        // Add audio processing for better quality
-        this.setupAudioProcessing(audio);
-        
-        // Remove any existing remote audio
-        const existingAudio = document.querySelector('audio[data-remote="true"]');
-        if (existingAudio) {
-            existingAudio.remove();
-        }
-        
-        audio.setAttribute('data-remote', 'true');
-        document.body.appendChild(audio);
-        
-        console.log('🔊 Remote audio playback started');
-    }
-    
-    setupAudioProcessing(audioElement) {
-        if (!this.remoteStream || !window.AudioContext) return;
-        
-        try {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const source = this.audioContext.createMediaStreamSource(this.remoteStream);
-            const gainNode = this.audioContext.createGain();
-            const lowpassFilter = this.audioContext.createBiquadFilter();
-            
-            // Gentle low-pass filter for softer sound
-            lowpassFilter.type = 'lowpass';
-            lowpassFilter.frequency.setValueAtTime(8000, this.audioContext.currentTime);
-            lowpassFilter.Q.setValueAtTime(0.5, this.audioContext.currentTime);
-            
-            // Connect the audio processing chain
-            source.connect(lowpassFilter);
-            lowpassFilter.connect(gainNode);
-            gainNode.connect(this.audioContext.destination);
-            
-            // Store for cleanup
-            this.audioNodes = { source, gainNode, lowpassFilter };
-            
-            console.log('🎛️ Audio processing setup complete');
-            
-        } catch (error) {
-            console.error('❌ Audio processing setup failed:', error);
-        }
-    }
-    
+
     toggleMute() {
-        this.isMuted = !this.isMuted;
-        
-        if (this.localStream) {
-            this.localStream.getAudioTracks().forEach(track => {
-                track.enabled = !this.isMuted;
-            });
-        }
-        
-        console.log(`🎤 Mute ${this.isMuted ? 'enabled' : 'disabled'}`);
-        this.emit('muteToggled', this.isMuted);
-        
-        return this.isMuted;
+        return this.audio.toggleMute();
     }
-    
-    handleConnectionEstablished() {
-        console.log('✅ WebRTC connection established');
-        
-        if (this.connectionTimeout) {
-            clearTimeout(this.connectionTimeout);
-            this.connectionTimeout = null;
-        }
-        
-        this.connectionStats.quality = 'excellent';
-        this.retryCount = 0;
-        
-        this.emit('connectionEstablished');
-    }
-    
-    handleConnectionFailure() {
-        console.log('❌ Connection failed');
-        
-        if (this.retryCount < this.maxRetries) {
-            this.retryCount++;
-            console.log(`🔄 Retrying connection (${this.retryCount}/${this.maxRetries})`);
-            
-            setTimeout(() => {
-                this.retryConnection();
-            }, 3000);
-        } else {
-            console.log('💥 Max retries exceeded');
-            this.emit('connectionFailed');
-        }
-    }
-    
-    async retryConnection() {
-        try {
-            this.cleanup(false); // Cleanup without emitting events
-            await this.createPeerConnection();
-            
-            if (this.isInitiator) {
-                await this.createOffer();
-            }
-        } catch (error) {
-            console.error('❌ Retry failed:', error);
-            this.handleConnectionFailure();
-        }
-    }
-    
-    handleConnectionDisruption() {
-        console.log('⚠️ Connection disrupted');
-        this.emit('connectionDisrupted');
-    }
-    
-    startConnectionMonitoring() {
-        this.connectionMonitor = setInterval(() => {
-            if (this.peerConnection) {
-                const state = this.peerConnection.connectionState;
-                const iceState = this.peerConnection.iceConnectionState;
-                
-                this.updateConnectionQuality(iceState);
-                
-                if (state === 'failed' || iceState === 'failed') {
-                    this.handleConnectionFailure();
-                }
-            }
-        }, 5000);
-    }
-    
-    updateConnectionQuality(iceState) {
-        let quality;
-        switch (iceState) {
-            case 'connected':
-                quality = 'excellent';
-                break;
-            case 'checking':
-                quality = 'good';
-                break;
-            case 'disconnected':
-                quality = 'poor';
-                break;
-            default:
-                quality = 'unknown';
-        }
-        
-        this.connectionStats.quality = quality;
-    }
-    
+
     endCall() {
-        console.log('📞 Ending call...');
+        console.log('📞 Ending WebRTC call...');
         
-        this.connectionStats.endTime = Date.now();
-        this.emit('callEnded', this.connectionStats);
-        
+        this.monitor.endConnection();
         this.cleanup();
+        
+        this.emit('callEnded');
     }
-    
-    cleanup(emitEvents = true) {
-        console.log('🧹 WebRTC cleanup...');
+
+    cleanup() {
+        console.log('🧹 Cleaning up WebRTCManager...');
         
-        // Clear monitoring
-        if (this.connectionMonitor) {
-            clearInterval(this.connectionMonitor);
-            this.connectionMonitor = null;
-        }
+        this.monitor.cleanup();
+        this.audio.cleanup();
+        this.connection.cleanup();
         
-        // Clear timeout
-        if (this.connectionTimeout) {
-            clearTimeout(this.connectionTimeout);
-            this.connectionTimeout = null;
-        }
-        
-        // Stop local stream
-        if (this.localStream) {
-            this.localStream.getTracks().forEach(track => track.stop());
-            this.localStream = null;
-        }
-        
-        // Close peer connection
-        if (this.peerConnection) {
-            this.peerConnection.close();
-            this.peerConnection = null;
-        }
-        
-        // Clean up audio processing
-        if (this.audioContext) {
-            this.audioContext.close();
-            this.audioContext = null;
-            this.audioNodes = null;
-        }
-        
-        // Remove remote audio elements
-        const audioElements = document.querySelectorAll('audio[data-remote="true"]');
-        audioElements.forEach(audio => audio.remove());
-        
-        // Reset state
-        this.partnerId = null;
-        this.isInitiator = false;
-        this.isMuted = false;
-        this.retryCount = 0;
-        this.remoteStream = null;
-        
-        if (emitEvents) {
-            this.emit('cleanup');
-        }
-        
-        console.log('✅ WebRTC cleanup completed');
+        console.log('✅ WebRTCManager cleanup completed');
     }
-    
+
     // Event system
     on(event, callback) {
         if (!this.listeners.has(event)) {
@@ -458,7 +174,7 @@ export class WebRTCManager {
         }
         this.listeners.get(event).push(callback);
     }
-    
+
     off(event, callback) {
         if (this.listeners.has(event)) {
             const callbacks = this.listeners.get(event);
@@ -468,29 +184,33 @@ export class WebRTCManager {
             }
         }
     }
-    
+
     emit(event, data = {}) {
         if (this.listeners.has(event)) {
             this.listeners.get(event).forEach(callback => {
                 try {
                     callback(data);
                 } catch (error) {
-                    console.error(`Error in WebRTC ${event} handler:`, error);
+                    console.error(`Error in WebRTCManager ${event} handler:`, error);
                 }
             });
         }
     }
-    
+
     // Getters
-    getConnectionStats() {
-        return { ...this.connectionStats };
-    }
-    
     isConnected() {
-        return this.peerConnection && this.peerConnection.connectionState === 'connected';
+        return this.connection.isConnected();
     }
-    
+
+    getConnectionStats() {
+        return this.monitor.getConnectionStats();
+    }
+
     getConnectionQuality() {
-        return this.connectionStats.quality;
+        return this.monitor.getConnectionQuality();
+    }
+
+    getMuteStatus() {
+        return this.audio.getMuteStatus();
     }
 } 
