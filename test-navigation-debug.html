@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Button Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .nav-item {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .nav-item.active {
+            background: #007bff;
+        }
+        .nav-item:hover {
+            background: #555;
+        }
+        .nav-item.active:hover {
+            background: #0056b3;
+        }
+        .test-output {
+            background: #222;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <h1>Navigation Button Debug Test</h1>
+    
+    <h2>Test Navigation Buttons</h2>
+    <div class="nav-buttons">
+        <button class="nav-item active" data-section="connect" aria-label="Connect">
+            <span class="nav-icon">🏠</span> Connect
+        </button>
+        <button class="nav-item" data-section="preferences" aria-label="Preferences">
+            <span class="nav-icon">⚙️</span> Preferences
+        </button>
+        <button class="nav-item" data-section="history" id="historyBtn" aria-label="History">
+            <span class="nav-icon">🕐</span> History
+        </button>
+        <button class="nav-item" data-section="info" aria-label="About">
+            <span class="nav-icon">ℹ️</span> Info
+        </button>
+    </div>
+
+    <h2>Test Output</h2>
+    <div class="test-output" id="testOutput"></div>
+
+    <h2>Manual Test Buttons</h2>
+    <button onclick="testButtonClicks()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer;">
+        Test All Button Clicks
+    </button>
+    <button onclick="clearOutput()" style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer;">
+        Clear Output
+    </button>
+    <button onclick="checkEventListeners()" style="background: #ffc107; color: black; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer;">
+        Check Event Listeners
+    </button>
+
+    <script>
+        const output = document.getElementById('testOutput');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `[${timestamp}] ${message}`;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function clearOutput() {
+            output.innerHTML = '';
+        }
+
+        // Test 1: Direct click handlers
+        function setupDirectClickHandlers() {
+            log('Setting up direct click handlers...', 'info');
+            
+            const navButtons = document.querySelectorAll('.nav-item');
+            navButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const section = button.getAttribute('data-section');
+                    log(`Direct click handler triggered for: ${section}`, 'success');
+                    
+                    // Update active state
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                });
+            });
+            
+            log(`Direct click handlers set up for ${navButtons.length} buttons`, 'success');
+        }
+
+        // Test 2: Event delegation (mimicking the app's approach)
+        function setupEventDelegation() {
+            log('Setting up event delegation...', 'info');
+            
+            document.addEventListener('click', (event) => {
+                const target = event.target;
+                let element = target;
+                
+                // Traverse up to find relevant elements
+                while (element && element !== document) {
+                    if (element.matches('[data-section]')) {
+                        const section = element.getAttribute('data-section');
+                        log(`Event delegation triggered for: ${section}`, 'success');
+                        
+                        // Update active state
+                        const navButtons = document.querySelectorAll('.nav-item');
+                        navButtons.forEach(btn => btn.classList.remove('active'));
+                        element.classList.add('active');
+                        
+                        break;
+                    }
+                    element = element.parentElement;
+                }
+            });
+            
+            log('Event delegation set up', 'success');
+        }
+
+        // Test 3: Programmatic clicks
+        function testButtonClicks() {
+            log('Testing programmatic button clicks...', 'info');
+            
+            const sections = ['connect', 'preferences', 'history', 'info'];
+            sections.forEach((section, index) => {
+                setTimeout(() => {
+                    const button = document.querySelector(`[data-section="${section}"]`);
+                    if (button) {
+                        log(`Programmatically clicking: ${section}`, 'info');
+                        button.click();
+                    } else {
+                        log(`Button not found for section: ${section}`, 'error');
+                    }
+                }, index * 1000);
+            });
+        }
+
+        // Test 4: Check for existing event listeners
+        function checkEventListeners() {
+            log('Checking for existing event listeners...', 'info');
+            
+            const navButtons = document.querySelectorAll('.nav-item');
+            navButtons.forEach(button => {
+                const section = button.getAttribute('data-section');
+                
+                // Try to detect if listeners are attached (this is limited in browsers)
+                const clone = button.cloneNode(true);
+                const hasListeners = button.outerHTML !== clone.outerHTML;
+                
+                log(`Button ${section}: Event listeners check - ${hasListeners ? 'may have listeners' : 'no detectable listeners'}`, 'info');
+            });
+            
+            // Check for global document listeners
+            log('Note: Global document listeners cannot be detected via JavaScript', 'info');
+        }
+
+        // Initialize tests
+        document.addEventListener('DOMContentLoaded', () => {
+            log('DOM Content Loaded - Starting navigation button tests', 'info');
+            
+            // Set up both direct and delegation approaches
+            setupDirectClickHandlers();
+            setupEventDelegation();
+            
+            log('All test handlers initialized', 'success');
+        });
+
+        // Global error handling
+        window.addEventListener('error', (e) => {
+            log(`JavaScript Error: ${e.message} at ${e.filename}:${e.lineno}`, 'error');
+        });
+    </script>
+</body>
+</html> 
