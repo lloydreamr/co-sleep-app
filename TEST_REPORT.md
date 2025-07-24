@@ -116,7 +116,7 @@ npm run test:watch    # Watch mode for development
 #### 1. Sound Management
 - **File Structure:** All sound files properly referenced
 - **Category Organization:** Logical grouping (nature, noise, indoor, basic)
-- **Premium Gating:** Correct separation of free vs premium sounds
+- **Sound Access:** All sounds available to all users (freemium model)
 - **Audio Controls:** Volume, fade, play/pause functionality
 
 #### 2. Web Audio API Integration
