@@ -69,7 +69,7 @@ export class EventDelegation {
             }
             
             // Handle navigation items
-            if (element.matches('[data-nav]')) {
+            if (element.matches('[data-nav]') || element.matches('[data-section]')) {
                 this.handleNavigation(element, event);
                 break;
             }
@@ -155,6 +155,7 @@ export class EventDelegation {
         
         const section = element.dataset.nav || element.dataset.section;
         if (section) {
+            event.preventDefault();
             this.emit('navigate', { section, element, event });
         }
     }

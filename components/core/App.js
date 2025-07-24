@@ -123,6 +123,11 @@ export class App {
             this.cancelQueue();
         });
         
+        this.eventManager.on('navigate', (data) => {
+            console.log('🎯 Navigate event received by App:', data.section);
+            this.handleNavigation(data);
+        });
+        
         console.log('✅ Event listeners connected to App methods');
     }
     
@@ -179,6 +184,161 @@ export class App {
     handleInitializationError(error) {
         console.error('Initialization error:', error);
         this.interfaceManager.showError('Failed to initialize app. Please refresh the page.');
+    }
+    
+    async handleNavigation(data) {
+        const { section, element } = data;
+        console.log(`🧭 Navigation to ${section} requested`);
+        
+        try {
+            // Update active navigation button
+            this.updateActiveNavButton(element);
+            
+            // Handle different navigation sections
+            switch (section) {
+                case 'connect':
+                    this.showMainInterface();
+                    break;
+                case 'preferences':
+                    this.showPreferencesDrawer();
+                    break;
+                case 'history':
+                    this.showHistorySection();
+                    break;
+                case 'info':
+                    this.showInfoSection();
+                    break;
+                default:
+                    console.warn(`Unknown navigation section: ${section}`);
+            }
+            
+        } catch (error) {
+            console.error('❌ Error handling navigation:', error);
+            this.interfaceManager.showError('Navigation failed');
+        }
+    }
+    
+    updateActiveNavButton(activeElement) {
+        // Remove active class from all nav items
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => item.classList.remove('active'));
+        
+        // Add active class to clicked item
+        if (activeElement) {
+            activeElement.classList.add('active');
+        }
+    }
+    
+    showMainInterface() {
+        // Hide all overlays
+        this.hideAllOverlays();
+        
+        // Ensure main interface is visible
+        this.interfaceManager.showInterface('main');
+        
+        console.log('🏠 Main interface shown');
+    }
+    
+    showPreferencesDrawer() {
+        const preferencesDrawer = document.getElementById('preferencesDrawer');
+        if (preferencesDrawer) {
+            preferencesDrawer.style.display = 'block';
+            preferencesDrawer.removeAttribute('aria-hidden');
+            preferencesDrawer.classList.add('open');
+            
+            // Set up close button handler
+            this.setupCloseHandler('closeDrawer', () => this.hidePreferencesDrawer());
+            
+            console.log('⚙️ Preferences drawer shown');
+        }
+    }
+    
+    hidePreferencesDrawer() {
+        const preferencesDrawer = document.getElementById('preferencesDrawer');
+        if (preferencesDrawer) {
+            preferencesDrawer.classList.remove('open');
+            preferencesDrawer.style.display = 'none';
+            preferencesDrawer.setAttribute('aria-hidden', 'true');
+        }
+    }
+    
+    showHistorySection() {
+        // Only show for verified users
+        if (!this.isVerified) {
+            this.interfaceManager.showToast('History is only available for profile users', 'info');
+            return;
+        }
+        
+        const historySection = document.getElementById('historySection');
+        if (historySection) {
+            historySection.style.display = 'block';
+            historySection.removeAttribute('aria-hidden');
+            
+            // Set up close button handler
+            this.setupCloseHandler('closeHistory', () => this.hideHistorySection());
+            
+            // Load history data (placeholder for now)
+            this.loadHistoryData();
+            
+            console.log('🕐 History section shown');
+        }
+    }
+    
+    hideHistorySection() {
+        const historySection = document.getElementById('historySection');
+        if (historySection) {
+            historySection.style.display = 'none';
+            historySection.setAttribute('aria-hidden', 'true');
+        }
+    }
+    
+    showInfoSection() {
+        const infoSection = document.getElementById('infoSection');
+        if (infoSection) {
+            infoSection.style.display = 'block';
+            infoSection.removeAttribute('aria-hidden');
+            
+            // Set up close button handler
+            this.setupCloseHandler('closeInfo', () => this.hideInfoSection());
+            
+            console.log('ℹ️ Info section shown');
+        }
+    }
+    
+    hideInfoSection() {
+        const infoSection = document.getElementById('infoSection');
+        if (infoSection) {
+            infoSection.style.display = 'none';
+            infoSection.setAttribute('aria-hidden', 'true');
+        }
+    }
+    
+    hideAllOverlays() {
+        this.hidePreferencesDrawer();
+        this.hideHistorySection();
+        this.hideInfoSection();
+    }
+    
+    setupCloseHandler(buttonId, callback) {
+        const closeButton = document.getElementById(buttonId);
+        if (closeButton) {
+            // Remove existing listeners to prevent duplicates
+            const newButton = closeButton.cloneNode(true);
+            closeButton.parentNode.replaceChild(newButton, closeButton);
+            
+            // Add new listener
+            newButton.addEventListener('click', callback);
+        }
+    }
+    
+    loadHistoryData() {
+        const historyBody = document.getElementById('historyBody');
+        if (historyBody) {
+            // Placeholder - in real implementation this would fetch from API
+            historyBody.innerHTML = `
+                <p class="history-placeholder">No call history available. Complete voice calls to see your history here.</p>
+            `;
+        }
     }
     
     // Cleanup method for page unload
