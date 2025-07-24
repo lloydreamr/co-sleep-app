@@ -1,130 +1,103 @@
 const express = require('express');
-const prisma = require('../lib/prisma');
 const { hashPassword, comparePassword, generateToken, authenticateUser } = require('../lib/auth');
+const { 
+  findUserByEmailOrUsername, 
+  findUserByEmailWithAuth, 
+  findUserById, 
+  createUser, 
+  updateUserById,
+  userExistsByUsername 
+} = require('../lib/userSelectors');
+const { 
+  asyncHandler, 
+  ErrorTypes, 
+  createSuccessResponse,
+  handleDatabaseError 
+} = require('../lib/errorHandler');
+const { 
+  validateRegistrationInput, 
+  validateLoginInput, 
+  validateProfileUpdateInput 
+} = require('../lib/validationUtils');
 
 const router = express.Router();
 
 // Register new user
-router.post('/register', async (req, res) => {
-  try {
-    const { email, username, name, password } = req.body;
+router.post('/register', asyncHandler(async (req, res) => {
+  const { email, username, name, password } = req.body;
+  
+  // Validate input using centralized validation
+  const validation = validateRegistrationInput({ email, username, name, password });
+  if (!validation.isValid) {
+    const { statusCode, error } = ErrorTypes.VALIDATION_ERROR(validation.errors.join(', '));
+    return res.status(statusCode).json(error);
+  }
     
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
-    
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
-    }
-    
-    // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email },
-          { username: username || null }
-        ]
-      }
-    });
+    // Check if user already exists using centralized selector
+    const existingUser = await findUserByEmailOrUsername(email, username);
     
     if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
+      const { statusCode, error } = ErrorTypes.CONFLICT('User already exists');
+      return res.status(statusCode).json(error);
     }
     
-    // Hash password
+    // Hash password and create user using centralized operations
     const hashedPassword = await hashPassword(password);
     
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        username,
-        name,
-        password: hashedPassword,
-        userType: 'profile', // Default to profile for registered users
-      },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        name: true,
-        userType: true,
-        isVerified: true,
-        createdAt: true
-      }
+    const user = await createUser({
+      email,
+      username,
+      name,
+      password: hashedPassword,
+      userType: 'profile' // Default to profile for registered users
     });
     
     // Generate token
     const token = generateToken(user.id);
     
-    res.json({
+    res.json(createSuccessResponse({
       user,
-      token,
-      message: 'User registered successfully'
-    });
-    
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
-  }
-});
+      token
+    }, 'User registered successfully'));
+}));
 
-// Login user
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
+// Login user  
+router.post('/login', asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  
+  // Validate input using centralized validation
+  const validation = validateLoginInput({ email, password });
+  if (!validation.isValid) {
+    const { statusCode, error } = ErrorTypes.VALIDATION_ERROR(validation.errors.join(', '));
+    return res.status(statusCode).json(error);
+  }
     
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
-    
-    // Find user with password
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        name: true,
-        password: true,
-        userType: true,
-        displayName: true,
-        isVerified: true,
-        sleepTime: true,
-        wakeTime: true,
-        timezone: true,
-        allowAnalytics: true,
-        showOnline: true,
-        createdAt: true
-      }
-    });
+    // Find user with auth fields using centralized selector
+    const user = await findUserByEmailWithAuth(email);
     
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      const { statusCode, error } = ErrorTypes.UNAUTHORIZED('Invalid credentials');
+      return res.status(statusCode).json(error);
     }
     
     // Verify password
     const isValidPassword = await comparePassword(password, user.password);
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      const { statusCode, error } = ErrorTypes.UNAUTHORIZED('Invalid credentials');
+      return res.status(statusCode).json(error);
     }
+    
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
     
     // Generate token
     const token = generateToken(user.id);
     
-    res.json({
-      user,
-      token,
-      message: 'Login successful'
-    });
-    
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
-  }
-});
+    res.json(createSuccessResponse({
+      user: userWithoutPassword,
+      token
+    }, 'Login successful'));
+}));
 
 // Get current user profile
 router.get('/profile', authenticateUser, async (req, res) => {
