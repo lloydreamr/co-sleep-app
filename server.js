@@ -1,9 +1,31 @@
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
-const helmet = require('helmet');
 const path = require('path');
 const prisma = require('./lib/prisma');
+
+// Phase 3: Production hardening imports
+const { 
+  createRateLimiters, 
+  getSecurityHeaders, 
+  sanitizeInput, 
+  securityHeaders, 
+  suspiciousActivityDetector, 
+  requestValidator 
+} = require('./lib/securityMiddleware');
+const { 
+  createLogger, 
+  requestLogger, 
+  errorLogger, 
+  authAuditLogger, 
+  securityLogger 
+} = require('./lib/auditLogger');
+const { 
+  PerformanceMonitor, 
+  createPerformanceMiddleware, 
+  createHealthCheck 
+  } = require('./lib/performanceMonitor');
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const onboardingRoutes = require('./routes/onboarding');
@@ -19,63 +41,85 @@ const { initSocketService } = require('./services/socket');
 const app = express();
 const server = http.createServer(app);
 
-// Trust proxy for rate limiting behind load balancers
+// Phase 3: Initialize production hardening systems
+const logger = createLogger();
+const performanceMonitor = new PerformanceMonitor();
+const authAudit = authAuditLogger(logger);
+const securityAudit = securityLogger(logger);
+const healthCheck = createHealthCheck(performanceMonitor);
+
+// Trust proxy for accurate client IPs
 app.set('trust proxy', 1);
 
-// Performance optimizations
-const rateLimit = require('express-rate-limit');
+// Phase 3: Enhanced security middleware
+const rateLimiters = createRateLimiters();
+const securityHeadersConfig = getSecurityHeaders();
 
-// Rate limiting configuration
-const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: 'Too many API requests from this IP, please try again later.',
-    standardHeaders: true,
-    legacyHeaders: false,
-    // Skip rate limiting for health checks
-    skip: (req) => req.path === '/health'
-});
+// Phase 3: Production middleware stack (order matters!)
+logger.info('Starting Co-Sleep server with production hardening');
 
-// Apply rate limiting to API routes
-app.use('/api/', apiLimiter);
+// Security: Request validation and size limits
+app.use(requestValidator);
 
-// Middleware
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            connectSrc: ["'self'", "wss:", "ws:"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
-            scriptSrcAttr: ["'unsafe-inline'"], // FIXED: Allow inline event handlers
-            styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
-            imgSrc: ["'self'", "data:", "https:"],
-            fontSrc: ["'self'", "https:", "data:", "https://fonts.gstatic.com"],
-            objectSrc: ["'none'"],
-            mediaSrc: ["'self'", "https://www.soundjay.com", "https:"],
-            frameSrc: ["'none'"],
-            baseUri: ["'self'"],
-            formAction: ["'self'"],
-            frameAncestors: ["'self'"],
-            upgradeInsecureRequests: []
+// Security: Enhanced helmet configuration  
+app.use(securityHeadersConfig);
+
+// Security: Additional headers and server info removal
+app.use(securityHeaders);
+
+// Security: Input sanitization
+app.use(sanitizeInput);
+
+// Security: Suspicious activity detection
+app.use(suspiciousActivityDetector);
+
+// Monitoring: Performance tracking
+app.use(createPerformanceMiddleware(performanceMonitor));
+
+// Logging: Request/response audit trail
+app.use(requestLogger(logger));
+
+// CORS configuration
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+        ? ['https://yourdomain.com'] // Replace with actual domain
+        : true,
+    credentials: true
+}));
+
+// Enhanced JSON parsing with size limits
+app.use(express.json({ 
+    limit: '1mb',
+    verify: (req, res, buf, encoding) => {
+        // Log large payloads
+        if (buf.length > 100000) { // 100KB
+            logger.warn('Large JSON payload received', {
+                size: buf.length,
+                url: req.originalUrl,
+                ip: req.ip
+            });
         }
     }
 }));
-app.use(cors());
-app.use(express.json({ limit: '10mb' })); // Limit JSON payload size
-app.use(express.static(path.join(__dirname), {
-    maxAge: '1h', // Cache static files for 1 hour
+// Static files with generous rate limiting
+app.use(rateLimiters.staticLimiter, express.static(path.join(__dirname), {
+    maxAge: process.env.NODE_ENV === 'production' ? '24h' : '1h',
     etag: true,
-    lastModified: true
+    lastModified: true,
+    immutable: false
 }));
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/onboarding', onboardingRoutes);
-app.use('/api/history', historyRoutes); // Hence Enhancement
-// Phase 3: New route registrations
-app.use('/api/favorites', favoritesRoutes);
-app.use('/api/scheduling', schedulingRoutes);
-app.use('/api/analytics', analyticsRoutes);
+// Phase 3: Enhanced route registration with security
+// Authentication routes with strict rate limiting
+app.use('/api/auth', rateLimiters.authLimiter, authRoutes);
+
+// API routes with moderate rate limiting and speed limiting
+app.use('/api/onboarding', rateLimiters.apiLimiter, rateLimiters.speedLimiter, onboardingRoutes);
+app.use('/api/history', rateLimiters.apiLimiter, rateLimiters.speedLimiter, historyRoutes);
+app.use('/api/favorites', rateLimiters.apiLimiter, rateLimiters.speedLimiter, favoritesRoutes);
+app.use('/api/scheduling', rateLimiters.apiLimiter, rateLimiters.speedLimiter, schedulingRoutes);
+app.use('/api/analytics', rateLimiters.apiLimiter, rateLimiters.speedLimiter, analyticsRoutes);
+
 // Premium routes disabled for freemium version
 // app.use('/api/premium', premiumRoutes);
 
@@ -100,34 +144,42 @@ app.get('/onboarding', (req, res) => {
 // Initialize Socket.IO and matchmaking
 const socketService = initSocketService(server);
 
-// Enhanced health check endpoint with performance metrics
+// Phase 3: Enhanced health check with comprehensive monitoring
 app.get('/health', (req, res) => {
-    const memUsage = process.memoryUsage();
-    const uptime = process.uptime();
-    
-    // Hence Enhancement: Include new metrics
-    const performanceMetrics = socketService.getPerformanceMetrics();
-    
-    res.json({
-        status: 'healthy',
-        onlineUsers: socketService.getOnlineUserCount(),
-        queueLength: socketService.getQueueLength(),
-        activeConnections: socketService.getActiveConnections(),
-        // Hence Enhancement: New state metrics
-        activeUserStates: socketService.getActiveUserStates().length,
-        userStatesTotal: performanceMetrics.userStates || 0,
-        performance: {
-            uptime: Math.floor(uptime),
-            memory: {
-                rss: memUsage.rss,
-                heapUsed: memUsage.heapUsed,
-                heapTotal: memUsage.heapTotal,
-                external: memUsage.external
+    try {
+        const health = healthCheck();
+        const socketMetrics = socketService.getPerformanceMetrics();
+        
+        const response = {
+            ...health,
+            socket: {
+                onlineUsers: socketService.getOnlineUserCount(),
+                queueLength: socketService.getQueueLength(),
+                activeConnections: socketService.getActiveConnections(),
+                activeUserStates: socketService.getActiveUserStates().length,
+                userStatesTotal: socketMetrics.userStates || 0
             },
-            cpu: process.cpuUsage()
-        },
-        timestamp: new Date().toISOString()
-    });
+            version: process.env.npm_package_version || '1.0.0',
+            environment: process.env.NODE_ENV || 'development'
+        };
+        
+        // Log health check requests for monitoring
+        if (health.status !== 'healthy') {
+            logger.warn('Health check shows degraded status', { 
+                status: health.status, 
+                alerts: health.activeAlerts 
+            });
+        }
+        
+        res.json(response);
+    } catch (error) {
+        logger.error('Health check failed', { error: error.message });
+        res.status(503).json({
+            status: 'error',
+            message: 'Health check failed',
+            timestamp: new Date().toISOString()
+        });
+    }
 });
 
 // Simple health check that doesn't require database
@@ -182,21 +234,30 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Enhanced error handling with performance logging
+// Phase 3: Production error handling with comprehensive logging
+app.use(errorLogger(logger));
+
 app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
+    // Security: Don't expose internal errors in production
+    const isDevelopment = process.env.NODE_ENV !== 'production';
     
-    // Log performance impact
-    const memUsage = process.memoryUsage();
-    console.error('Memory usage at error:', {
-        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024 * 100) / 100 + 'MB',
-        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024 * 100) / 100 + 'MB'
-    });
-    
-    res.status(500).json({ 
+    const errorResponse = {
         error: 'Internal server error',
         timestamp: new Date().toISOString()
-    });
+    };
+    
+    // Add error details only in development
+    if (isDevelopment) {
+        errorResponse.details = {
+            message: err.message,
+            stack: err.stack
+        };
+    }
+    
+    // Track error in performance monitor
+    performanceMonitor.recordRequest(req, { statusCode: 500 }, 0);
+    
+    res.status(500).json(errorResponse);
 });
 
 // 404 handler

@@ -4,7 +4,7 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const authRoutes = require('../../routes/auth');
 const onboardingRoutes = require('../../routes/onboarding');
-const premiumRoutes = require('../../routes/premium');
+// Premium routes removed in Phase 1 - freemium app
 
 describe('Complete User Journey', () => {
     let app;
@@ -16,7 +16,7 @@ describe('Complete User Journey', () => {
         app.use(express.json());
         app.use('/api/auth', authRoutes);
         app.use('/api/onboarding', onboardingRoutes);
-        app.use('/api/premium', premiumRoutes);
+        // Premium routes removed in Phase 1 - freemium app
 
         // Initialize Prisma
         prisma = new PrismaClient();
