@@ -20,9 +20,7 @@ NODE_ENV=production
 ### Optional Variables
 
 ```bash
-# Stripe (for premium features)
-STRIPE_SECRET_KEY="sk_test_..."
-STRIPE_PUBLISHABLE_KEY="pk_test_..."
+# Note: No optional variables needed - this is a freemium app
 ```
 
 ## Railway Deployment

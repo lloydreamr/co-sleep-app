@@ -8,9 +8,7 @@ process.env.DATABASE_URL = 'postgresql://test:test@localhost:5433/test_cosleep?s
 process.env.JWT_SECRET = 'test-jwt-secret-for-hence-testing';
 process.env.PORT = '3001';
 process.env.HOST = 'localhost';
-process.env.STRIPE_SECRET_KEY = 'sk_test_placeholder';
-process.env.STRIPE_PUBLISHABLE_KEY = 'pk_test_placeholder';
-process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_placeholder';
+// Note: Stripe environment variables removed - freemium app
 
 // Set longer timeout for tests
 jest.setTimeout(30000);

@@ -42,15 +42,11 @@ model User {
   voicePreferences   Json?                   // Voice-related preferences (pitch, accent, etc.)
   availabilityStatus String   @default("available") // "available", "busy", "scheduled"
   
-  // Premium features disabled for freemium version
-  // isPremium       Boolean  @default(false)
-  // premiumUntil    DateTime?
-  // stripeCustomerId String? @unique
-  // stripeSubscriptionId String? @unique
+  // Note: Premium features removed - this is a freemium app
   timezone        String?
   sleepTime       String?
   wakeTime        String?
-  // backgroundSounds String[] @default([]) // Removed for freemium version
+  // Note: Background sounds feature removed for freemium simplicity
   autoDisconnect  Boolean  @default(false)
   disconnectTime  Int?     // in minutes
   allowAnalytics  Boolean  @default(true)

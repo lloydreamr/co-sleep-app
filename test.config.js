@@ -7,9 +7,7 @@ module.exports = {
         JWT_SECRET: 'test-jwt-secret-for-hence-testing',
         PORT: 3001,
         HOST: 'localhost',
-        STRIPE_SECRET_KEY: 'sk_test_placeholder',
-        STRIPE_PUBLISHABLE_KEY: 'pk_test_placeholder',
-        STRIPE_WEBHOOK_SECRET: 'whsec_test_placeholder'
+        // Note: Stripe variables removed - freemium app
     },
     
     // Jest configuration

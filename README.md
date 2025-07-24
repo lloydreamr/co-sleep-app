@@ -52,11 +52,10 @@ Visit `http://localhost:3000` to use the app!
 ## 🗄️ Database Schema
 
 ### Core Models
-- **User** - User accounts, preferences, premium status
-- **SleepSession** - Co-sleeping sessions and analytics
-- **BackgroundSound** - Available background sounds
-- **Subscription** - Premium subscription management
+- **User** - User accounts and preferences
+- **SleepSession** - Co-sleeping sessions and analytics  
 - **SleepAnalytics** - User sleep pattern analytics
+- **CallHistory** - Call history tracking for verified users
 
 ### Social Features
 - **Block** - User blocking system
@@ -77,19 +76,12 @@ Visit `http://localhost:3000` to use the app!
 - `GET /` - Main app interface
 - WebSocket events for real-time communication
 
-## 💳 Premium Integration
+## 🆓 Freemium Model
 
-### Stripe Setup
-1. Create Stripe account
-2. Add keys to `.env`:
-   ```
-   STRIPE_SECRET_KEY=sk_test_...
-   STRIPE_PUBLISHABLE_KEY=pk_test_...
-   ```
-
-### Subscription Plans
-- **Premium** ($9.99/month) - Advanced features
-- **Pro** ($19.99/month) - All features + priority
+This app follows a freemium model with no subscription requirements:
+- All core features available for free
+- Enhanced user experience features included
+- No payment processing or subscription complexity
 
 ## 📱 Mobile Support
 
@@ -113,8 +105,6 @@ npm run db:seed        # Seed database
 ```bash
 DATABASE_URL=          # PostgreSQL connection string
 JWT_SECRET=           # JWT signing secret
-STRIPE_SECRET_KEY=    # Stripe secret key
-STRIPE_PUBLISHABLE_KEY= # Stripe publishable key
 PORT=3000             # Server port
 HOST=0.0.0.0          # Server host
 NODE_ENV=development  # Environment

@@ -226,71 +226,8 @@ describe('Sound Management System', () => {
         });
     });
 
-    describe('Premium Feature Gating', () => {
-        let soundManager;
-
-        beforeEach(() => {
-            const SoundManager = require('../../sounds');
-            soundManager = new SoundManager();
-
-            // Mock fetch for premium check
-            global.fetch = jest.fn();
-            global.localStorage = {
-                getItem: jest.fn()
-            };
-        });
-
-        afterEach(() => {
-            delete global.fetch;
-            delete global.localStorage;
-        });
-
-        test('should check premium access', async () => {
-            global.localStorage.getItem.mockReturnValue('test-token');
-            global.fetch.mockResolvedValue({
-                ok: true,
-                json: () => Promise.resolve({ isPremium: true })
-            });
-
-            const isPremium = await soundManager.checkPremiumAccess();
-            
-            expect(isPremium).toBe(true);
-            expect(global.fetch).toHaveBeenCalledWith('/api/premium/status', {
-                headers: { 'Authorization': 'Bearer test-token' }
-            });
-        });
-
-        test('should return false when no token', async () => {
-            global.localStorage.getItem.mockReturnValue(null);
-
-            const isPremium = await soundManager.checkPremiumAccess();
-            
-            expect(isPremium).toBe(false);
-            expect(global.fetch).not.toHaveBeenCalled();
-        });
-
-        test('should allow basic sounds for non-premium users', async () => {
-            global.localStorage.getItem.mockReturnValue('test-token');
-            global.fetch.mockResolvedValue({
-                ok: true,
-                json: () => Promise.resolve({ isPremium: false })
-            });
-
-            // Should not throw error for basic sounds
-            await expect(soundManager.playSound('whiteNoise')).resolves.not.toThrow();
-        });
-
-        test('should block premium sounds for non-premium users', async () => {
-            global.localStorage.getItem.mockReturnValue('test-token');
-            global.fetch.mockResolvedValue({
-                ok: true,
-                json: () => Promise.resolve({ isPremium: false })
-            });
-
-            // Should throw error for premium sounds
-            await expect(soundManager.playSound('ocean')).rejects.toThrow('Premium subscription required for this sound');
-        });
-    });
+    // Note: Premium feature gating tests removed - this is now a freemium app
+    // All sounds are available to all users without premium restrictions
 
     describe('Sound Fading', () => {
         let soundManager;
